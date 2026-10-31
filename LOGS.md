@@ -6,8 +6,11 @@
 Código decompilado (C#, .NET 8 WinForms/WPF) do programa que traz a **Capri** (Cyberpunk Edgerunners 2) para o desktop. Os termos do programa permitem modificações para **uso pessoal**, por isso o repositório é **privado** e nunca deve ser público nem redistribuído.
 
 - Versão base do app: **0.7.7** (`src/Properties/AssemblyInfo.cs`)
-- Fonte: `C:\Users\Usuário\AppData\Local\Temp\capri-decomp\src`
-- Build de teste (o que roda): `C:\Users\Usuário\AppData\Local\Temp\capri-test\` (`Capri.exe.bak` = executável original)
+- Pasta geral: `D:\usuario alternativo\Documents\Capri Desktop\`
+  - `capri-decomp\` — fonte + git (`src\`)
+  - `capri-test\` — build modificado que roda (`Capri.exe.bak` = executável original)
+  - `capri-normal\` — cópia do `Capri.exe`/`Uninstall.exe` originais 0.7.7
+- Instalação real e dados (memórias, chat, modelos, ~6 GB): `C:\Users\Usuário\AppData\Local\Capri` — **não mover**: o app procura os dados em `%LOCALAPPDATA%\Capri` (fixo no código, `Program.cs:48`)
 
 ## Fluxo de trabalho
 1. Editar em `src/CapriDesktop/*.cs`
@@ -26,7 +29,8 @@ Código decompilado (C#, .NET 8 WinForms/WPF) do programa que traz a **Capri** (
 
 ## Onde paramos
 - Projeto decompilado e recompilando sem erros (19 builds feitos). Repositório criado em 2026-10-31.
-- **TODO:** registrar aqui as modificações e consertos já feitos antes do repo (o histórico das sessões anteriores não foi salvo).
+- Feito antes do repo: **tradução da Capri ajustada** e **EyePopup adicionado** (`EyePopup.cs` + `src/EyePopup.png`).
+- 2026-10-31: projeto movido de `AppData\Local\Temp` para `D:\usuario alternativo\Documents\Capri Desktop`.
 
 ## Pedidos pendentes
 - (preencher)

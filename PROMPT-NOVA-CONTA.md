@@ -6,8 +6,9 @@ Copie tudo abaixo da linha e cole como primeira mensagem (com o Claude Code aber
 
 Olá! Estou continuando com você meu mod pessoal da **Capri Desktop** (decompilado, os termos permitem modificação para uso pessoal). Responda sempre em português; sou leigo, você é o desenvolvedor.
 
-- Projeto: `C:\Users\Usuário\AppData\Local\Temp\capri-decomp`
-- Build de teste: `C:\Users\Usuário\AppData\Local\Temp\capri-test\`
+- Projeto: `D:\usuario alternativo\Documents\Capri Desktop\capri-decomp`
+- Build de teste: `D:\usuario alternativo\Documents\Capri Desktop\capri-test\`
+- Original: `D:\usuario alternativo\Documents\Capri Desktop\capri-normal\`
 - GitHub (privado): https://github.com/KoZuuYT/capri-desktop
 
 **Antes de tudo leia o `LOGS.md`** (status, onde paramos, fluxo, mapa dos sistemas). Depois de cada pedido: build, copie para o capri-test, atualize `CHANGELOG.md` e `LOGS.md` e faça commit + push.
