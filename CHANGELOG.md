@@ -1,5 +1,8 @@
 # Changelog
 
+## Correção do nome
+- Quando o reconhecimento de voz escreve o nome dela errado ("capre", "cápria", "cabre", "kapri"...), o texto é corrigido para "Capri".
+
 ## Atalhos por voz
 - Corrigido: as falas das ordens saem na hora, sem atraso e sem sumir.
 - Corrigido: as falas das ordens agora aparecem. Na conversa por voz e fora dela, a Capri cria a própria fala sobre o que acabou de fazer.

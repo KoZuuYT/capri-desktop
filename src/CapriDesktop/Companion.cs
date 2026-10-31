@@ -12396,6 +12396,18 @@ internal sealed class Companion : Form
 
 	private static readonly string[] RideLines = new string[5] { "Segura firme, choom!", "Sobe, Capri! Ninguém me tira daqui.", "Seu cursor agora é meu.", "Vamos dar uma volta.", "Hehe, carona grátis." };
 
+	// what speech recognition makes of her name (capre, cápria, cabre, kapri...) turned back into "Capri"
+	private static readonly Regex NameSlip = new Regex(@"\b(?:[ck]+[aáàâã]+[pb]+[rl]+[eéêiíy]+[aeo]?|[ck]+[aáàâã]+[pb]+[eéêiíy]+[rl]+[ey]?|[ck]+[aáàâã]+[pb]+r[iíy]+[aáeé])\b", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+
+	private static string FixName(string said)
+	{
+		if (string.IsNullOrEmpty(said))
+		{
+			return said;
+		}
+		return NameSlip.Replace(said, (Match m) => Regex.IsMatch(m.Value, "^(?i:caprese|capiro|cabere)$") ? m.Value : "Capri");
+	}
+
 	// her keyboard shortcuts, said out loud: lie down, go quiet, hide, show up, ride the mouse
 	private bool VoiceShortcut(string said)
 	{
@@ -12587,6 +12599,7 @@ internal sealed class Companion : Form
 		{
 			return;
 		}
+		text = FixName(text);
 		Brain.Transcribe("You (voice)", text);
 		spoke = true;
 		stirred = Environment.TickCount;
@@ -12930,7 +12943,8 @@ internal sealed class Companion : Form
 
 	private void Hear(string text, string shown, string prompt, int switches = 0)
 	{
-		text = (text ?? "").Trim();
+		text = FixName((text ?? "").Trim());
+		shown = FixName(shown);
 		if (text.Length == 0)
 		{
 			return;
