@@ -2,6 +2,12 @@
 
 > A partir daqui, cada alteração é uma nova versão do mod (mostrada no Mainframe como "Modded vX.Y.Z").
 
+## v0.0.8 — Redimensionar por qualquer lado
+
+- Nova opção "90%" em Mainframe size.
+- O Mainframe agora redimensiona por qualquer borda ou canto. Os lados esquerdo e direito mudam o tamanho de tudo (de 5 em 5%, entre 75% e 200%). Nas configurações, o topo e a base mudam a altura da página. Os cantos fazem as duas coisas.
+- Com o Mainframe focado, a rodinha do mouse em cima dele rola só o Mainframe e não mexe mais no programa que está por baixo.
+
 ## v0.0.7 — Mainframe em 75%
 
 - Nova opção "75%" em Settings > Mainframe size, para o Mainframe caber em telas menores.

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -3381,9 +3381,9 @@ internal sealed class Mainframe : Form, IMessageFilter
 
 	private readonly Readout perchFpsName;
 
-	private static readonly int[] FrameSizes = new int[7] { 0, 75, 100, 125, 150, 175, 200 };
+	private static readonly int[] FrameSizes = new int[8] { 0, 75, 90, 100, 125, 150, 175, 200 };
 
-	private static readonly string[] FrameSizeNames = new string[7] { "Auto", "75%", "100%", "125%", "150%", "175%", "200%" };
+	private static readonly string[] FrameSizeNames = new string[8] { "Auto", "75%", "90%", "100%", "125%", "150%", "175%", "200%" };
 
 	private readonly Slider frameSize;
 
@@ -3831,7 +3831,7 @@ internal sealed class Mainframe : Form, IMessageFilter
 	internal string VoiceStatus => voiceNote.Text + " | " + voiceEntry.Box.Text + " | " + speechModels.Text + " | " + connect.Text;
 
 	// version of this personal mod: bumped on every change (see CHANGELOG.md)
-	internal const string ModVersion = "0.0.7";
+	internal const string ModVersion = "0.0.8";
 
 	internal Mainframe(Companion owner, Icon icon, string version)
 	{
@@ -5101,19 +5101,132 @@ internal sealed class Mainframe : Form, IMessageFilter
 		{
 			// the mod: in settings the bottom edge drags to resize the page height
 			Point at = PointToClient(new Point((short)(message.LParam.ToInt64() & 0xFFFF), (short)((message.LParam.ToInt64() >> 16) & 0xFFFF)));
-			message.Result = new IntPtr((paged && at.Y >= ClientSize.Height - Scaled(8)) ? 15 : 2);
+			// sides and corners: left/right scale the whole Mainframe, top/bottom set the settings page height
+			int edge = Scaled(8);
+			bool left = at.X < edge;
+			bool right = at.X >= ClientSize.Width - edge;
+			bool top = paged && at.Y < edge;
+			bool bottom = paged && at.Y >= ClientSize.Height - edge;
+			int hit = 2;
+			if (top)
+			{
+				hit = left ? 13 : (right ? 14 : 12);
+			}
+			else if (bottom)
+			{
+				hit = left ? 16 : (right ? 17 : 15);
+			}
+			else if (left)
+			{
+				hit = 10;
+			}
+			else if (right)
+			{
+				hit = 11;
+			}
+			message.Result = new IntPtr(hit);
 		}
+	}
+
+	// the mod: while the Mainframe is focused, the wheel over it scrolls only the Mainframe, never the window below
+	private delegate IntPtr WheelHook(int code, IntPtr kind, IntPtr data);
+
+	[DllImport("user32.dll")]
+	private static extern IntPtr SetWindowsHookEx(int id, WheelHook hook, IntPtr module, uint thread);
+
+	[DllImport("user32.dll")]
+	private static extern bool UnhookWindowsHookEx(IntPtr hook);
+
+	[DllImport("user32.dll")]
+	private static extern IntPtr CallNextHookEx(IntPtr hook, int code, IntPtr kind, IntPtr data);
+
+	[DllImport("user32.dll")]
+	private static extern IntPtr WindowFromPoint(Point at);
+
+	[DllImport("user32.dll")]
+	private static extern bool PostMessage(IntPtr window, int message, IntPtr wide, IntPtr lparam);
+
+	[DllImport("kernel32.dll")]
+	private static extern IntPtr GetModuleHandle(string name);
+
+	private WheelHook wheelHook;
+
+	private IntPtr wheelHooked;
+
+	protected override void OnActivated(EventArgs e)
+	{
+		base.OnActivated(e);
+		if (wheelHooked == IntPtr.Zero)
+		{
+			wheelHook = CatchWheel;
+			wheelHooked = SetWindowsHookEx(14, wheelHook, GetModuleHandle(null), 0u);
+		}
+	}
+
+	protected override void OnDeactivate(EventArgs e)
+	{
+		base.OnDeactivate(e);
+		DropWheelHook();
+	}
+
+	protected override void OnHandleDestroyed(EventArgs e)
+	{
+		DropWheelHook();
+		base.OnHandleDestroyed(e);
+	}
+
+	private void DropWheelHook()
+	{
+		if (wheelHooked != IntPtr.Zero)
+		{
+			UnhookWindowsHookEx(wheelHooked);
+			wheelHooked = IntPtr.Zero;
+		}
+	}
+
+	private IntPtr CatchWheel(int code, IntPtr kind, IntPtr data)
+	{
+		int msg = kind.ToInt32();
+		if (code >= 0 && (msg == 522 || msg == 526) && Visible && WindowState != FormWindowState.Minimized)
+		{
+			Point at = new Point(Marshal.ReadInt32(data), Marshal.ReadInt32(data, 4));
+			if (Bounds.Contains(at))
+			{
+				int delta = Marshal.ReadInt32(data, 8) >> 16;
+				Control under = Control.FromChildHandle(WindowFromPoint(at));
+				IntPtr target = (under != null && under.FindForm() == this) ? under.Handle : Handle;
+				PostMessage(target, msg, new IntPtr(delta << 16), new IntPtr((at.Y << 16) | (at.X & 0xFFFF)));
+				return new IntPtr(1);
+			}
+		}
+		return CallNextHookEx(wheelHooked, code, kind, data);
 	}
 
 	protected override void OnResizeEnd(EventArgs e)
 	{
 		base.OnResizeEnd(e);
-		if (paged && loaded)
+		if (!loaded)
+		{
+			return;
+		}
+		int wide = Scaled(paged ? 760 : 380);
+		if (Math.Abs(ClientSize.Width - wide) > 2)
+		{
+			float next = (float)ClientSize.Width / wide * zoom;
+			int size = Math.Max(75, Math.Min(200, (int)Math.Round(next * 20f) * 5));
+			capri.SetMainframeSize(size);
+			syncing = true;
+			frameSize.Value = Math.Max(0, Array.IndexOf(FrameSizes, size));
+			syncing = false;
+			Rezoom(Wanted());
+			ShowFrameSize();
+		}
+		if (paged)
 		{
 			int tall = Math.Max(144, Math.Min(1160, (int)Math.Round((float)ClientSize.Height / Unit())));
 			capri.MainframeTall = (tall >= 1160) ? 0 : tall;
-			Arrange(expanded);
 		}
+		Arrange(expanded);
 	}
 
 	protected override void OnLoad(EventArgs e)
@@ -5140,7 +5253,7 @@ internal sealed class Mainframe : Form, IMessageFilter
 	private void ShowFrameSize()
 	{
 		int num = (int)Math.Round(autoZoom * 100f);
-		frameSizeName.Text = ((frameSize.Value == 0 && num != 100) ? ("Auto · " + num + "%") : FrameSizeNames[frameSize.Value]);
+		frameSizeName.Text = ((capri.MainframeSize > 0 && Array.IndexOf(FrameSizes, capri.MainframeSize) < 0) ? (capri.MainframeSize + "%") : ((frameSize.Value == 0 && num != 100) ? ("Auto · " + num + "%") : FrameSizeNames[frameSize.Value]));
 	}
 
 	private void Rezoom(float next)
