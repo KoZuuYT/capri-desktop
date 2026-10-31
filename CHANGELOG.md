@@ -1,5 +1,8 @@
 # Changelog
 
+## Atalhos por voz
+- Fale com a Capri: "deita", "fica quieta", "se esconde", "aparece" e "sobe no meu mouse" (este último com raios, som e uma fala).
+
 ## Raios sólidos com glitch
 - Raios em cor sólida, vermelho e verde da Capri, sem brilho ou degradê.
 - Glitch: cópia verde deslocada, trechos pulando de lado, piscadas e linhas de scanline.

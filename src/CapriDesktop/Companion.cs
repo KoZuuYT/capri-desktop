@@ -12382,6 +12382,99 @@ internal sealed class Companion : Form
 		return Environment.TickCount - stirred >= 12000;
 	}
 
+	private static readonly string[] RideLines = new string[5] { "Segura firme, choom!", "Sobe, Capri! Ninguém me tira daqui.", "Seu cursor agora é meu.", "Vamos dar uma volta.", "Hehe, carona grátis." };
+
+	// her keyboard shortcuts, said out loud: lie down, go quiet, hide, show up, ride the mouse
+	private bool VoiceShortcut(string said)
+	{
+		string text = new string((said ?? "").Normalize(NormalizationForm.FormD).Where((char c) => CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark).ToArray()).ToLowerInvariant();
+		if (text.Length > 80 || Regex.IsMatch(text, "\\b(nao|never|don'?t|dont)\\b"))
+		{
+			return false;
+		}
+		Action action = null;
+		if (Regex.IsMatch(text, "\\b(sob[ea]|subir?|monta[r]?|pula[r]?|ride)\\b.*\\b(mouse|cursor|ponteiro|setinha)\\b"))
+		{
+			action = RideByVoice;
+		}
+		else if (Regex.IsMatch(text, "\\b(deit[aeo]r?|deita[- ]?se|lie down|lay down)\\b"))
+		{
+			action = () =>
+			{
+				if (lying)
+				{
+					Say("Já tô deitada, choom.");
+				}
+				else if (seat == null || clip != perch || !LieDown())
+				{
+					Say("Me põe em cima de uma janela que eu deito.");
+				}
+			};
+		}
+		else if (Regex.IsMatch(text, "\\b(fica[r]? quiet[ao]|fica[r]? em silencio|silencio|cala (a )?boca|be quiet|shush|shh+)\\b"))
+		{
+			action = () =>
+			{
+				if (!shushed)
+				{
+					ToggleShush();
+				}
+				else
+				{
+					Say("Já tô quietinha.");
+				}
+			};
+		}
+		else if (Regex.IsMatch(text, "\\b(escond[ea]r?|se esconde|sumir?|some daqui|hide)\\b"))
+		{
+			action = () =>
+			{
+				if (!hidden)
+				{
+					SetHidden(value: true);
+				}
+			};
+		}
+		else if (Regex.IsMatch(text, "\\b(aparec[ea]r?|volta[r]?|show yourself|come back|cade voce)\\b"))
+		{
+			action = () =>
+			{
+				if (hidden)
+				{
+					SetHidden(value: false);
+				}
+				else
+				{
+					Say("Já tô aqui, choom.");
+				}
+			};
+		}
+		if (action == null || !IsHandleCreated)
+		{
+			return false;
+		}
+		BeginInvoke(action);
+		return true;
+	}
+
+	// hops onto the cursor with a burst of lightning, a crackle and a line
+	private void RideByVoice()
+	{
+		if (riding)
+		{
+			Say("Já tô no seu cursor, choom.");
+			return;
+		}
+		if (hidden)
+		{
+			SetHidden(value: false);
+		}
+		Zap(0.8, ground: seat != null, Cue.Zap);
+		StartRide(quiet: true);
+		Zap(1.0, ground: false, Cue.Arrive);
+		Say(RideLines[random.Next(RideLines.Length)] + (hotkey ? (" (" + hopName + " pra eu descer)") : ""));
+	}
+
 	private void ChatHeard(string text)
 	{
 		if (!chatting)
@@ -12398,6 +12491,10 @@ internal sealed class Companion : Form
 		box.Prompt = "> you: ";
 		Brain.Learn(text);
 		dropping = false;
+		if (VoiceShortcut(text))
+		{
+			return;
+		}
 		string tool = null;
 		ToolArguments args = null;
 		bool flag = VoiceAnswer(text, ticket, agent);
