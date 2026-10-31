@@ -3831,7 +3831,7 @@ internal sealed class Mainframe : Form, IMessageFilter
 	internal string VoiceStatus => voiceNote.Text + " | " + voiceEntry.Box.Text + " | " + speechModels.Text + " | " + connect.Text;
 
 	// version of this personal mod: bumped on every change (see CHANGELOG.md)
-	internal const string ModVersion = "0.0.10";
+	internal const string ModVersion = "0.0.11";
 
 	internal Mainframe(Companion owner, Icon icon, string version)
 	{
@@ -3853,7 +3853,7 @@ internal sealed class Mainframe : Form, IMessageFilter
 		build = Caption("Modded v" + ModVersion, 200, 20, font, Faint);
 		build.AutoSize = false;
 		build.TextAlign = ContentAlignment.MiddleRight;
-		build.Bounds = new Rectangle(196, 20, 98, 22);
+		build.Bounds = new Rectangle(146, 20, 148, 22);
 		EventHandler click = (object param0, EventArgs param1) =>
 		{
 			WindowState = FormWindowState.Minimized;
@@ -4939,7 +4939,7 @@ internal sealed class Mainframe : Form, IMessageFilter
 			item2.Key.Left = Scaled(item2.Value) + ((!paged) ? 30000 : 0);
 		}
 		int num = (paged ? 380 : 0);
-		build.Left = Scaled(196 + num);
+		build.Left = Scaled(146 + num);
 		minimize.Left = Scaled(300 + num);
 		close.Left = Scaled(330 + num);
 	}

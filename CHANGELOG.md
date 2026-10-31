@@ -2,6 +2,10 @@
 
 > A partir daqui, cada alteração é uma nova versão do mod (mostrada no Mainframe como "Modded vX.Y.Z").
 
+## v0.0.11 — Versão de volta no título
+
+- O canto do Mainframe volta a mostrar "Modded v0.0.11" inteiro (o texto não cabia e cortava a versão).
+
 ## v0.0.10 — Sem travadas no Windows
 
 - A rodinha "presa" no Mainframe usava um gancho de mouse ligado o tempo todo, o que fazia o mouse do Windows inteiro engasgar quando a Capri estava ocupada. Agora o gancho só liga enquanto o cursor está em cima do Mainframe e ele está na frente.
