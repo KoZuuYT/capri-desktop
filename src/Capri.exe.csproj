@@ -1,0 +1,157 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>Capri</AssemblyName>
+    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+    <OutputType>WinExe</OutputType>
+    <UseWindowsForms>True</UseWindowsForms>
+    <UseWPF>True</UseWPF>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+  </PropertyGroup>
+  <PropertyGroup>
+    <LangVersion>14.0</LangVersion>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>app.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <RootNamespace />
+  </PropertyGroup>
+  <ItemGroup>
+    <None Remove="Capri.Chip.ico" />
+    <None Remove="Capri.Font.Mono.ttf" />
+    <None Remove="Capri.Sprite.arrive.png" />
+    <None Remove="Capri.Sprite.blink.png" />
+    <None Remove="Capri.Sprite.blink_glitch.png" />
+    <None Remove="Capri.Sprite.dance.png" />
+    <None Remove="Capri.Sprite.dangle.png" />
+    <None Remove="Capri.Sprite.face.png" />
+    <None Remove="Capri.Sprite.glitch.png" />
+    <None Remove="Capri.Sprite.grin.png" />
+    <None Remove="Capri.Sprite.idle.png" />
+    <None Remove="Capri.Sprite.laydown.png" />
+    <None Remove="Capri.Sprite.laydown_blink.png" />
+    <None Remove="Capri.Sprite.laydown_blink_flipped.png" />
+    <None Remove="Capri.Sprite.laydown_blink_glitch.png" />
+    <None Remove="Capri.Sprite.laydown_blink_glitch_flipped.png" />
+    <None Remove="Capri.Sprite.laydown_flipped.png" />
+    <None Remove="Capri.Sprite.laydown_glitch.png" />
+    <None Remove="Capri.Sprite.laydown_glitch_flipped.png" />
+    <None Remove="Capri.Sprite.laydown_leave.png" />
+    <None Remove="Capri.Sprite.laydown_leave_flipped.png" />
+    <None Remove="Capri.Sprite.laydown_sleep.png" />
+    <None Remove="Capri.Sprite.laydown_sleep_flipped.png" />
+    <None Remove="Capri.Sprite.laydown_talk.png" />
+    <None Remove="Capri.Sprite.laydown_talk_flipped.png" />
+    <None Remove="Capri.Sprite.leave.png" />
+    <None Remove="Capri.Sprite.mouth.png" />
+    <None Remove="Capri.Sprite.perch.png" />
+    <None Remove="Capri.Sprite.perch_arrive.png" />
+    <None Remove="Capri.Sprite.perch_arrive_flipped.png" />
+    <None Remove="Capri.Sprite.perch_blink.png" />
+    <None Remove="Capri.Sprite.perch_blink_flipped.png" />
+    <None Remove="Capri.Sprite.perch_blink_glitch.png" />
+    <None Remove="Capri.Sprite.perch_blink_glitch_flipped.png" />
+    <None Remove="Capri.Sprite.perch_flipped.png" />
+    <None Remove="Capri.Sprite.perch_glitch.png" />
+    <None Remove="Capri.Sprite.perch_glitch_flipped.png" />
+    <None Remove="Capri.Sprite.perch_leave.png" />
+    <None Remove="Capri.Sprite.perch_leave_flipped.png" />
+    <None Remove="Capri.Sprite.perch_music.png" />
+    <None Remove="Capri.Sprite.perch_music_flipped.png" />
+    <None Remove="Capri.Sprite.perch_talk.png" />
+    <None Remove="Capri.Sprite.perch_talk_flipped.png" />
+    <None Remove="Capri.Sprite.sleep.png" />
+    <None Remove="Capri.Sprite.wake.png" />
+    <None Remove="Capri.Sprite.walk.png" />
+    <None Remove="Capri.Voice.hello-late.wav" />
+    <None Remove="Capri.Voice.hello-miss.wav" />
+    <None Remove="Capri.Voice.hello-morning.wav" />
+    <EmbeddedResource Include="Capri.Chip.ico" LogicalName="Capri.Chip.ico" />
+    <EmbeddedResource Include="Capri.Font.Mono.ttf" LogicalName="Capri.Font.Mono.ttf" />
+    <EmbeddedResource Include="Capri.Sprite.arrive.png" LogicalName="Capri.Sprite.arrive.png" />
+    <EmbeddedResource Include="Capri.Sprite.blink.png" LogicalName="Capri.Sprite.blink.png" />
+    <EmbeddedResource Include="Capri.Sprite.blink_glitch.png" LogicalName="Capri.Sprite.blink_glitch.png" />
+    <EmbeddedResource Include="Capri.Sprite.dance.png" LogicalName="Capri.Sprite.dance.png" />
+    <EmbeddedResource Include="Capri.Sprite.dangle.png" LogicalName="Capri.Sprite.dangle.png" />
+    <EmbeddedResource Include="Capri.Sprite.face.png" LogicalName="Capri.Sprite.face.png" />
+    <EmbeddedResource Include="Capri.Sprite.glitch.png" LogicalName="Capri.Sprite.glitch.png" />
+    <EmbeddedResource Include="Capri.Sprite.grin.png" LogicalName="Capri.Sprite.grin.png" />
+    <EmbeddedResource Include="Capri.Sprite.idle.png" LogicalName="Capri.Sprite.idle.png" />
+    <EmbeddedResource Include="Capri.Sprite.laydown.png" LogicalName="Capri.Sprite.laydown.png" />
+    <EmbeddedResource Include="Capri.Sprite.laydown_blink.png" LogicalName="Capri.Sprite.laydown_blink.png" />
+    <EmbeddedResource Include="Capri.Sprite.laydown_blink_flipped.png" LogicalName="Capri.Sprite.laydown_blink_flipped.png" />
+    <EmbeddedResource Include="Capri.Sprite.laydown_blink_glitch.png" LogicalName="Capri.Sprite.laydown_blink_glitch.png" />
+    <EmbeddedResource Include="Capri.Sprite.laydown_blink_glitch_flipped.png" LogicalName="Capri.Sprite.laydown_blink_glitch_flipped.png" />
+    <EmbeddedResource Include="Capri.Sprite.laydown_flipped.png" LogicalName="Capri.Sprite.laydown_flipped.png" />
+    <EmbeddedResource Include="Capri.Sprite.laydown_glitch.png" LogicalName="Capri.Sprite.laydown_glitch.png" />
+    <EmbeddedResource Include="Capri.Sprite.laydown_glitch_flipped.png" LogicalName="Capri.Sprite.laydown_glitch_flipped.png" />
+    <EmbeddedResource Include="Capri.Sprite.laydown_leave.png" LogicalName="Capri.Sprite.laydown_leave.png" />
+    <EmbeddedResource Include="Capri.Sprite.laydown_leave_flipped.png" LogicalName="Capri.Sprite.laydown_leave_flipped.png" />
+    <EmbeddedResource Include="Capri.Sprite.laydown_sleep.png" LogicalName="Capri.Sprite.laydown_sleep.png" />
+    <EmbeddedResource Include="Capri.Sprite.laydown_sleep_flipped.png" LogicalName="Capri.Sprite.laydown_sleep_flipped.png" />
+    <EmbeddedResource Include="Capri.Sprite.laydown_talk.png" LogicalName="Capri.Sprite.laydown_talk.png" />
+    <EmbeddedResource Include="Capri.Sprite.laydown_talk_flipped.png" LogicalName="Capri.Sprite.laydown_talk_flipped.png" />
+    <EmbeddedResource Include="Capri.Sprite.leave.png" LogicalName="Capri.Sprite.leave.png" />
+    <EmbeddedResource Include="Capri.Sprite.mouth.png" LogicalName="Capri.Sprite.mouth.png" />
+    <EmbeddedResource Include="Capri.Sprite.perch.png" LogicalName="Capri.Sprite.perch.png" />
+    <EmbeddedResource Include="Capri.Sprite.perch_arrive.png" LogicalName="Capri.Sprite.perch_arrive.png" />
+    <EmbeddedResource Include="Capri.Sprite.perch_arrive_flipped.png" LogicalName="Capri.Sprite.perch_arrive_flipped.png" />
+    <EmbeddedResource Include="Capri.Sprite.perch_blink.png" LogicalName="Capri.Sprite.perch_blink.png" />
+    <EmbeddedResource Include="Capri.Sprite.perch_blink_flipped.png" LogicalName="Capri.Sprite.perch_blink_flipped.png" />
+    <EmbeddedResource Include="Capri.Sprite.perch_blink_glitch.png" LogicalName="Capri.Sprite.perch_blink_glitch.png" />
+    <EmbeddedResource Include="Capri.Sprite.perch_blink_glitch_flipped.png" LogicalName="Capri.Sprite.perch_blink_glitch_flipped.png" />
+    <EmbeddedResource Include="Capri.Sprite.perch_flipped.png" LogicalName="Capri.Sprite.perch_flipped.png" />
+    <EmbeddedResource Include="Capri.Sprite.perch_glitch.png" LogicalName="Capri.Sprite.perch_glitch.png" />
+    <EmbeddedResource Include="Capri.Sprite.perch_glitch_flipped.png" LogicalName="Capri.Sprite.perch_glitch_flipped.png" />
+    <EmbeddedResource Include="Capri.Sprite.perch_leave.png" LogicalName="Capri.Sprite.perch_leave.png" />
+    <EmbeddedResource Include="Capri.Sprite.perch_leave_flipped.png" LogicalName="Capri.Sprite.perch_leave_flipped.png" />
+    <EmbeddedResource Include="Capri.Sprite.perch_music.png" LogicalName="Capri.Sprite.perch_music.png" />
+    <EmbeddedResource Include="Capri.Sprite.perch_music_flipped.png" LogicalName="Capri.Sprite.perch_music_flipped.png" />
+    <EmbeddedResource Include="Capri.Sprite.perch_talk.png" LogicalName="Capri.Sprite.perch_talk.png" />
+    <EmbeddedResource Include="Capri.Sprite.perch_talk_flipped.png" LogicalName="Capri.Sprite.perch_talk_flipped.png" />
+    <EmbeddedResource Include="Capri.Sprite.sleep.png" LogicalName="Capri.Sprite.sleep.png" />
+    <EmbeddedResource Include="Capri.Sprite.wake.png" LogicalName="Capri.Sprite.wake.png" />
+    <EmbeddedResource Include="Capri.Sprite.walk.png" LogicalName="Capri.Sprite.walk.png" />
+    <EmbeddedResource Include="Capri.Voice.hello-late.wav" LogicalName="Capri.Voice.hello-late.wav" />
+    <EmbeddedResource Include="Capri.Voice.hello-miss.wav" LogicalName="Capri.Voice.hello-miss.wav" />
+    <EmbeddedResource Include="Capri.Voice.hello-morning.wav" LogicalName="Capri.Voice.hello-morning.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System.Core" />
+    <Reference Include="Windows" />
+    <Reference Include="System.Speech" />
+    <Reference Include="UIAutomationTypes" />
+    <Reference Include="UIAutomationClient" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Runtime.WindowsRuntime" />
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.Compression.FileSystem" />
+    <Reference Include="System.Xml" />
+    <Reference Include="WindowsBase" />
+    <Reference Include="System.Security" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System.Speech">
+      <HintPath>C:\Windows\Microsoft.NET\assembly\GAC_MSIL\System.Speech\v4.0_4.0.0.0__31bf3856ad364e35\System.Speech.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="UIAutomationClient">
+      <HintPath>C:\Windows\Microsoft.NET\assembly\GAC_MSIL\UIAutomationClient\v4.0_4.0.0.0__31bf3856ad364e35\UIAutomationClient.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="UIAutomationTypes">
+      <HintPath>C:\Windows\Microsoft.NET\assembly\GAC_MSIL\UIAutomationTypes\v4.0_4.0.0.0__31bf3856ad364e35\UIAutomationTypes.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="WindowsBase">
+      <HintPath>C:\Windows\Microsoft.NET\assembly\GAC_MSIL\WindowsBase\v4.0_4.0.0.0__31bf3856ad364e35\WindowsBase.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="EyePopup.png" />
+  </ItemGroup>
+</Project>
