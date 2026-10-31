@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-10-31 — Olhos: caixinha irregular e opções no Mainframe
+- Caixinha com formatos mais irregulares (incluindo "estilhaço" de 5–6 cantos) e cantos que balançam devagar.
+- Nova seção EYES no Mainframe: liga/desliga, frequência (Rarely/Sometimes/Often/Swarm), tamanho (Small/Medium/Large/Mixed), máximo de olhos ao mesmo tempo (1–5) e botão "Peek now".
+
 ## 2026-10-31 — Olho no estilo da Capri
 - Visual igual à arte dela: caixinha verde (visor) atrás do olho, olho preto com espinhos, anel verde, íris azul e pupila branca, em cores chapadas.
 - A caixinha varia de forma: torta, trapézio largo em cima, trapézio largo embaixo ou paralelogramo inclinado.

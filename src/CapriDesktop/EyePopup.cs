@@ -59,7 +59,13 @@ internal sealed class EyePopup : Form
 	private readonly string tag;
 
 	// the green visor panel behind the eye is a slightly crooked quad, like her face art
-	private readonly PointF[] skew = new PointF[4];
+	private readonly PointF[] skew = new PointF[6];
+
+	// each corner sways on its own slow wave
+	private readonly float[] sway = new float[12];
+
+	// 4 corners, or 5-6 for a jagged shard
+	private readonly int corners;
 
 	private Bitmap canvas;
 
@@ -77,7 +83,7 @@ internal sealed class EyePopup : Form
 
 	private float peak;
 
-	internal EyePopup(IList<Rectangle> taken, int delayMs)
+	internal EyePopup(IList<Rectangle> taken, int delayMs, float scale = 1f)
 	{
 		this.delayMs = delayMs;
 		// moods: squinting, sleepy, wide awake, or plain watching
@@ -108,36 +114,45 @@ internal sealed class EyePopup : Form
 			irisScale = Roll(0.85f, 1f);
 			break;
 		}
+		eyeWidth *= scale;
 		tilt = Roll(-12f, 12f);
 		coreScale = Roll(0.32f, 0.5f);
 		(accent, iris) = Palettes[rolls.Next(Palettes.Length)];
 		holdMs = rolls.Next(2800, 6500);
-		// box shapes: crooked quad, trapezoid wide on top, trapezoid wide below, slanted parallelogram
-		int box = rolls.Next(4);
-		float slant = Roll(0.12f, 0.22f) * (rolls.Next(2) == 0 ? 1f : -1f);
+		// box shapes: crooked quad, trapezoids, slanted parallelogram, or a jagged 5-6 corner shard
+		int box = rolls.Next(5);
+		corners = box == 4 ? 5 + rolls.Next(2) : 4;
+		float slant = Roll(0.12f, 0.26f) * (rolls.Next(2) == 0 ? 1f : -1f);
 		for (int i = 0; i < 4; i++)
 		{
 			bool topCorner = i < 2;
 			bool leftCorner = i == 0 || i == 3;
-			float x = Roll(-0.05f, 0.05f);
-			float y = Roll(-0.1f, 0.1f);
+			float x = Roll(-0.08f, 0.08f);
+			float y = Roll(-0.18f, 0.18f);
 			switch (box)
 			{
 			case 0:
-				x += Roll(-0.06f, 0.06f);
-				y += Roll(-0.14f, 0.14f);
+				x += Roll(-0.1f, 0.1f);
+				y += Roll(-0.22f, 0.22f);
 				break;
 			case 1:
-				x += topCorner ? 0.08f : -0.14f;
+				x += topCorner ? Roll(0.06f, 0.14f) : Roll(-0.22f, -0.1f);
 				break;
 			case 2:
-				x += topCorner ? -0.14f : 0.08f;
+				x += topCorner ? Roll(-0.22f, -0.1f) : Roll(0.06f, 0.14f);
 				break;
-			default:
+			case 3:
 				x += (topCorner == leftCorner ? -1f : 1f) * slant;
 				break;
 			}
 			skew[i] = new PointF(x, y);
+		}
+		// extra shard corners: a notch on the top edge and/or a jut on the bottom edge
+		skew[4] = new PointF(Roll(-0.5f, 0.5f), Roll(-0.35f, 0.3f));
+		skew[5] = new PointF(Roll(-0.5f, 0.5f), Roll(-0.3f, 0.35f));
+		for (int i = 0; i < sway.Length; i++)
+		{
+			sway[i] = Roll(0f, 6.283f);
 		}
 		tag = "OPTIC." + rolls.Next(0x1000, 0xFFFF).ToString("X4");
 		FormBorderStyle = FormBorderStyle.None;
@@ -416,13 +431,29 @@ internal sealed class EyePopup : Form
 		{
 			grow = peak = Math.Max(grow, peak);
 		}
-		PointF[] panel =
+		float wobble = eyeWidth * 0.018f;
+		PointF Corner(int i, float x, float y)
 		{
-			new PointF(-panelX * (1f + skew[0].X), -panelY * grow * (1f + skew[0].Y)),
-			new PointF(panelX * (1f + skew[1].X), -panelY * grow * (1f + skew[1].Y)),
-			new PointF(panelX * (1f + skew[2].X), panelY * grow * (1f + skew[2].Y)),
-			new PointF(-panelX * (1f + skew[3].X), panelY * grow * (1f + skew[3].Y))
+			double t = ms / 1000.0;
+			return new PointF(x + wobble * (float)Math.Sin(t * (1.3 + i * 0.27) + sway[i * 2]), y + wobble * (float)Math.Sin(t * (1.1 + i * 0.31) + sway[i * 2 + 1]));
+		}
+		float h = panelY * grow;
+		List<PointF> outline = new List<PointF>
+		{
+			Corner(0, -panelX * (1f + skew[0].X), -h * (1f + skew[0].Y))
 		};
+		if (corners >= 5)
+		{
+			outline.Add(Corner(4, panelX * skew[4].X, -h * (1f + skew[4].Y)));
+		}
+		outline.Add(Corner(1, panelX * (1f + skew[1].X), -h * (1f + skew[1].Y)));
+		outline.Add(Corner(2, panelX * (1f + skew[2].X), h * (1f + skew[2].Y)));
+		if (corners >= 6)
+		{
+			outline.Add(Corner(5, panelX * skew[5].X, h * (1f + skew[5].Y)));
+		}
+		outline.Add(Corner(3, -panelX * (1f + skew[3].X), h * (1f + skew[3].Y)));
+		PointF[] panel = outline.ToArray();
 		for (int i = 3; i >= 1; i--)
 		{
 			using Pen glow = new Pen(Fade(accent, 0.1), i * 6f);
@@ -435,7 +466,7 @@ internal sealed class EyePopup : Form
 		}
 		using (Pen scan = new Pen(Color.FromArgb(28, 0, 0, 0)))
 		{
-			float top = -panelY * grow * 1.15f;
+			float top = -panelY * grow * 1.5f;
 			for (float y = top; y < -top; y += 3f)
 			{
 				g.DrawLine(scan, -panelX * 1.1f, y, panelX * 1.1f, y);

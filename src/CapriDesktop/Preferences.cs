@@ -27,6 +27,15 @@ internal sealed class Preferences
 	public bool EyePopups = true;
 
 	[DataMember]
+	public int EyePace = 1;
+
+	[DataMember]
+	public int EyeSize = 1;
+
+	[DataMember]
+	public int EyeMost = 2;
+
+	[DataMember]
 	public long UpdateCheckedAt;
 
 	[DataMember]
@@ -352,6 +361,9 @@ internal sealed class Preferences
 	private void Defaults(StreamingContext context)
 	{
 		EyePopups = true;
+		EyePace = 1;
+		EyeSize = 1;
+		EyeMost = 2;
 		VoiceSpeed = 100;
 		HdRobot = 0;
 		LayerPitch1 = 2.0;

@@ -7651,7 +7651,52 @@ internal sealed class Companion : Form
 
 	private readonly List<EyePopup> eyePopups = new List<EyePopup>();
 
-	// every 25-75 s an eye peeks in; one time in five a small cluster of 2-3 staggered eyes
+	// gap between eyes per pace (Rarely, Sometimes, Often, Swarm): base seconds and random spread
+	private static readonly double[,] EyePaces = { { 60.0, 90.0 }, { 25.0, 50.0 }, { 10.0, 20.0 }, { 3.0, 7.0 } };
+
+	// eye size per setting (Small, Medium, Large); Mixed rolls one each time
+	private static readonly float[] EyeScales = { 0.65f, 1f, 1.4f };
+
+	internal bool EyesOn => preferences.EyePopups;
+
+	internal int EyePace => preferences.EyePace;
+
+	internal int EyeSize => preferences.EyeSize;
+
+	internal int EyeMost => preferences.EyeMost;
+
+	internal void ToggleEyes()
+	{
+		preferences.EyePopups = !preferences.EyePopups;
+		nextEyePopup = -1.0;
+		SavePreferences();
+	}
+
+	internal void SetEyePace(int pace)
+	{
+		preferences.EyePace = Math.Max(0, Math.Min(3, pace));
+		nextEyePopup = -1.0;
+		SavePreferences();
+	}
+
+	internal void SetEyeSize(int size)
+	{
+		preferences.EyeSize = Math.Max(0, Math.Min(3, size));
+		SavePreferences();
+	}
+
+	internal void SetEyeMost(int most)
+	{
+		preferences.EyeMost = Math.Max(0, Math.Min(4, most));
+		SavePreferences();
+	}
+
+	internal void PeekNow()
+	{
+		nextEyePopup = 0.0;
+	}
+
+	// an eye peeks in at the chosen pace; one time in five a small staggered cluster, up to the chosen most at once
 	private void CheckEyePopup(double now)
 	{
 		eyePopups.RemoveAll((EyePopup eye) => eye.IsDisposed);
@@ -7661,17 +7706,21 @@ internal sealed class Companion : Form
 		}
 		if (nextEyePopup < 0.0)
 		{
-			nextEyePopup = now + 20.0;
+			nextEyePopup = now + Math.Min(20.0, EyePaces[Math.Clamp(preferences.EyePace, 0, 3), 0]);
 		}
 		if (now < nextEyePopup)
 		{
 			return;
 		}
-		nextEyePopup = now + 25.0 + random.NextDouble() * 50.0;
+		int pace = Math.Clamp(preferences.EyePace, 0, 3);
+		int most = Math.Clamp(preferences.EyeMost, 0, 4) + 1;
+		nextEyePopup = now + EyePaces[pace, 0] + random.NextDouble() * EyePaces[pace, 1];
 		int count = (random.NextDouble() < 0.2) ? (2 + random.Next(2)) : 1;
-		for (int i = 0; i < count && eyePopups.Count < 3; i++)
+		for (int i = 0; i < count && eyePopups.Count < most; i++)
 		{
-			EyePopup eye = new EyePopup(eyePopups.ConvertAll((EyePopup other) => other.Bounds), i * random.Next(250, 700));
+			int size = Math.Clamp(preferences.EyeSize, 0, 3);
+			float scale = size < 3 ? EyeScales[size] : 0.55f + (float)random.NextDouble();
+			EyePopup eye = new EyePopup(eyePopups.ConvertAll((EyePopup other) => other.Bounds), i * random.Next(250, 700), scale);
 			eyePopups.Add(eye);
 			eye.Show();
 		}

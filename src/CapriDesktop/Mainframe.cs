@@ -2871,7 +2871,7 @@ internal sealed class Mainframe : Form, IMessageFilter
 
 	private const int SetupHeight = 118;
 
-	private const int PageTall = 860;
+	private const int PageTall = 960;
 
 	private const int Column = 380;
 
@@ -2998,6 +2998,26 @@ internal sealed class Mainframe : Form, IMessageFilter
 	private static readonly string[] SleepNames = new string[6] { "Never", "1 min", "2 min", "5 min", "10 min", "30 min" };
 
 	private static readonly string[] PopNames = new string[3] { "Rarely", "Sometimes", "Often" };
+
+	private static readonly string[] EyePaceNames = new string[4] { "Rarely", "Sometimes", "Often", "Swarm" };
+
+	private static readonly string[] EyeSizeNames = new string[4] { "Small", "Medium", "Large", "Mixed" };
+
+	private static readonly string[] EyeMostNames = new string[5] { "1", "2", "3", "4", "5" };
+
+	private Toggle eyesOn;
+
+	private Slider eyePace;
+
+	private Readout eyePaceName;
+
+	private Slider eyeSize;
+
+	private Readout eyeSizeName;
+
+	private Slider eyeMost;
+
+	private Readout eyeMostName;
 
 	private static readonly string[] BubbleNames = new string[3] { "Quick", "Normal", "Long" };
 
@@ -3245,7 +3265,7 @@ internal sealed class Mainframe : Form, IMessageFilter
 
 	private readonly Dictionary<Control, int> tops = new Dictionary<Control, int>();
 
-	private int pageView = 860;
+	private int pageView = 960;
 
 	private int pageScroll;
 
@@ -3466,15 +3486,15 @@ internal sealed class Mainframe : Form, IMessageFilter
 			{
 				return ClientRectangle;
 			}
-			return new Rectangle(0, -Scaled(pageScroll), ClientSize.Width, Math.Max(ClientSize.Height, Scaled(860)));
+			return new Rectangle(0, -Scaled(pageScroll), ClientSize.Width, Math.Max(ClientSize.Height, Scaled(960)));
 		}
 	}
 
-	internal string ScrollStatus => ((paged && pageView < 860) ? (pageView + " tall") : "whole") + " | " + ((topRim.Visible && bottomRim.Visible) ? "rims" : "-");
+	internal string ScrollStatus => ((paged && pageView < 960) ? (pageView + " tall") : "whole") + " | " + ((topRim.Visible && bottomRim.Visible) ? "rims" : "-");
 
 	internal int Scrolled => pageScroll;
 
-	internal int ScrollMost => Math.Max(0, 860 - pageView);
+	internal int ScrollMost => Math.Max(0, 960 - pageView);
 
 	internal int BackTop => more.Top;
 
@@ -4559,6 +4579,49 @@ internal sealed class Mainframe : Form, IMessageFilter
 		perchNote.AutoSize = false;
 		perchNote.TextAlign = ContentAlignment.MiddleRight;
 		perchNote.Bounds = new Rectangle(408, 756, 328, 18);
+		Section("EYES >", 380, 790);
+		Make("Peek now", 600, 787, 136, 20, (object param0, EventArgs param1) =>
+		{
+			capri.PeekNow();
+		}).AccessibleName = "Make one of her eyes peek in right now";
+		eyesOn = Switch("Eye pop-ups", 380, 814, (object param0, EventArgs param1) =>
+		{
+			if (!syncing)
+			{
+				capri.ToggleEyes();
+			}
+		});
+		eyesOn.AccessibleName = "Eye pop-ups: her eyes peek in around the screen now and then";
+		eyePace = Setting("How often", EyePaceNames, 380, 842, "How often her eyes peek in");
+		eyePaceName = new Readout(eyePace);
+		eyePace.Changed += (object param0, EventArgs param1) =>
+		{
+			if (!syncing)
+			{
+				eyePaceName.Text = EyePaceNames[eyePace.Value];
+				capri.SetEyePace(eyePace.Value);
+			}
+		};
+		eyeSize = Setting("Eye size", EyeSizeNames, 380, 870, "How big her eyes are");
+		eyeSizeName = new Readout(eyeSize);
+		eyeSize.Changed += (object param0, EventArgs param1) =>
+		{
+			if (!syncing)
+			{
+				eyeSizeName.Text = EyeSizeNames[eyeSize.Value];
+				capri.SetEyeSize(eyeSize.Value);
+			}
+		};
+		eyeMost = Setting("Most at once", EyeMostNames, 380, 898, "How many eyes can show at once");
+		eyeMostName = new Readout(eyeMost);
+		eyeMost.Changed += (object param0, EventArgs param1) =>
+		{
+			if (!syncing)
+			{
+				eyeMostName.Text = EyeMostNames[eyeMost.Value];
+				capri.SetEyeMost(eyeMost.Value);
+			}
+		};
 		for (int num10 = count2; num10 < Controls.Count; num10++)
 		{
 			Control control = Controls[num10];
@@ -4739,7 +4802,7 @@ internal sealed class Mainframe : Form, IMessageFilter
 
 	private void Reveal(Control control)
 	{
-		if (paged && pageView < 860 && Control.MouseButtons == MouseButtons.None)
+		if (paged && pageView < 960 && Control.MouseButtons == MouseButtons.None)
 		{
 			float num = Unit();
 			int num2 = Scaled(8);
@@ -4757,7 +4820,7 @@ internal sealed class Mainframe : Form, IMessageFilter
 
 	private void ScrollPage(int to)
 	{
-		int num = (paged ? Math.Max(0, Math.Min(860 - pageView, to)) : 0);
+		int num = (paged ? Math.Max(0, Math.Min(960 - pageView, to)) : 0);
 		if (num == pageScroll)
 		{
 			return;
@@ -4789,13 +4852,13 @@ internal sealed class Mainframe : Form, IMessageFilter
 	private int Fit()
 	{
 		int val = ((ShortScreen > 0) ? ShortScreen : ((int)((float)Screen.FromControl(this).WorkingArea.Height / Unit())));
-		return Math.Max(144, Math.Min(860, val));
+		return Math.Max(144, Math.Min(960, val));
 	}
 
 	protected override void OnMouseWheel(MouseEventArgs e)
 	{
 		base.OnMouseWheel(e);
-		if (paged && pageView < 860)
+		if (paged && pageView < 960)
 		{
 			wheel += e.Delta;
 			int num = wheel / 120;
@@ -4981,11 +5044,11 @@ internal sealed class Mainframe : Form, IMessageFilter
 		Edging(graphics, this, num);
 		if (paged)
 		{
-			if (pageView < 860)
+			if (pageView < 960)
 			{
 				float num2 = (float)Height - 36f * num;
 				float num3 = num2 * (float)pageView / 860f;
-				float num4 = 18f * num + (num2 - num3) * (float)pageScroll / (float)(860 - pageView);
+				float num4 = 18f * num + (num2 - num3) * (float)pageScroll / (float)(960 - pageView);
 				using (Brush brush = new SolidBrush(Dash))
 				{
 					graphics.FillRectangle(brush, (float)Width - 8f * num, 18f * num, 2f * num, num2);
@@ -5201,7 +5264,7 @@ internal sealed class Mainframe : Form, IMessageFilter
 		}
 		ClientSize = new Size(Scaled(paged ? 760 : 380), Scaled(paged ? pageView : (642 + num2 + num3 - num4)));
 		ScrollPage(pageScroll);
-		bool flag2 = paged && pageView < 860;
+		bool flag2 = paged && pageView < 960;
 		Rim rim = topRim;
 		bool visible2 = (bottomRim.Visible = flag2);
 		rim.Visible = visible2;
@@ -5345,6 +5408,13 @@ internal sealed class Mainframe : Form, IMessageFilter
 		recallName.Text = Lengths[recall.Value];
 		perchFps.Value = Math.Max(0, Array.IndexOf(Companion.PerchRates, capri.PerchFps));
 		ShowPerch();
+		eyesOn.Checked = capri.EyesOn;
+		eyePace.Value = Math.Clamp(capri.EyePace, 0, EyePaceNames.Length - 1);
+		eyePaceName.Text = EyePaceNames[eyePace.Value];
+		eyeSize.Value = Math.Clamp(capri.EyeSize, 0, EyeSizeNames.Length - 1);
+		eyeSizeName.Text = EyeSizeNames[eyeSize.Value];
+		eyeMost.Value = Math.Clamp(capri.EyeMost, 0, EyeMostNames.Length - 1);
+		eyeMostName.Text = EyeMostNames[eyeMost.Value];
 		syncing = false;
 	}
 
