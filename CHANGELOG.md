@@ -1,5 +1,8 @@
 # Changelog
 
+## 2026-10-31 — Botão TYPE/TALK ao lado dela
+- O botão TYPE/TALK agora aparece ao lado da Capri (à direita, ou à esquerda perto da borda da tela), e não mais em cima do sprite.
+
 ## 2026-10-31 — Carinho menos sensível
 - Só conta como carinho um vai-e-vem de verdade: cada ida precisa andar uns 30 px e as viradas precisam vir em ritmo (até 0,7 s entre elas). São 6 viradas para ela reagir (antes eram 4, com qualquer tremidinha de 6 px).
 - A faísca no cursor só aparece depois que o carinho começou de fato, não ao passar o mouse por cima.

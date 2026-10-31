@@ -11009,7 +11009,16 @@ internal sealed class Companion : Form
 		Rectangle workingArea = Screen.FromPoint(point2).WorkingArea;
 		int num2 = Math.Min(point2.Y + (int)(2f * num), workingArea.Bottom - TalkPill.Measure(num).Height - 2);
 		pill.Motion = preferences.Motion;
-		pill.Place(new Point(point2.X - (int)(4f * num), num2), num);
+		// beside her instead of over her: to the right of the sprite, or the left if it would leave the screen
+		int half = TalkPill.Measure(num).Width / 2;
+		int gap = (int)((float)preferences.Size * 0.34f) + half;
+		int side = point2.X + gap;
+		if (side + half + (int)(44f * num) > workingArea.Right)
+		{
+			side = point2.X - gap;
+		}
+		num2 = Math.Min(point2.Y - TalkPill.Measure(num).Height - (int)((float)preferences.Size * 0.2f), num2);
+		pill.Place(new Point(side, num2), num);
 	}
 
 	private void OpenTyper()
