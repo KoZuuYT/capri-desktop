@@ -3831,7 +3831,7 @@ internal sealed class Mainframe : Form, IMessageFilter
 	internal string VoiceStatus => voiceNote.Text + " | " + voiceEntry.Box.Text + " | " + speechModels.Text + " | " + connect.Text;
 
 	// version of this personal mod: bumped on every change (see CHANGELOG.md)
-	internal const string ModVersion = "0.0.8";
+	internal const string ModVersion = "0.0.9";
 
 	internal Mainframe(Companion owner, Icon icon, string version)
 	{
@@ -5096,13 +5096,19 @@ internal sealed class Mainframe : Form, IMessageFilter
 
 	protected override void WndProc(ref Message message)
 	{
+		// the mod: the window has no frame, so Windows won't size it; a press on an edge starts our own resize
+		if (message.Msg == 161 && message.WParam.ToInt32() >= 10 && message.WParam.ToInt32() <= 17)
+		{
+			StartResize(message.WParam.ToInt32());
+			message.Result = IntPtr.Zero;
+			return;
+		}
 		base.WndProc(ref message);
 		if (message.Msg == 132 && message.Result == new IntPtr(1))
 		{
-			// the mod: in settings the bottom edge drags to resize the page height
-			Point at = PointToClient(new Point((short)(message.LParam.ToInt64() & 0xFFFF), (short)((message.LParam.ToInt64() >> 16) & 0xFFFF)));
 			// sides and corners: left/right scale the whole Mainframe, top/bottom set the settings page height
-			int edge = Scaled(8);
+			Point at = PointToClient(new Point((short)(message.LParam.ToInt64() & 0xFFFF), (short)((message.LParam.ToInt64() >> 16) & 0xFFFF)));
+			int edge = Scaled(10);
 			bool left = at.X < edge;
 			bool right = at.X >= ClientSize.Width - edge;
 			bool top = paged && at.Y < edge;
@@ -5128,10 +5134,192 @@ internal sealed class Mainframe : Form, IMessageFilter
 		}
 	}
 
-	// the mod: while the Mainframe is focused, the wheel over it scrolls only the Mainframe, never the window below
+	// the resize preview: a see-through neon frame that follows the mouse and shows the size it will land on
+	private sealed class SizeGhost : Form
+	{
+		internal string Label = "";
+
+		private readonly System.Diagnostics.Stopwatch clock = System.Diagnostics.Stopwatch.StartNew();
+
+		internal SizeGhost()
+		{
+			FormBorderStyle = FormBorderStyle.None;
+			ShowInTaskbar = false;
+			StartPosition = FormStartPosition.Manual;
+			BackColor = Ground;
+			Opacity = 0.0;
+			DoubleBuffered = true;
+			TopMost = true;
+		}
+
+		protected override bool ShowWithoutActivation => true;
+
+		internal double Age => clock.Elapsed.TotalSeconds;
+
+		protected override void OnPaint(PaintEventArgs e)
+		{
+			Graphics g = e.Graphics;
+			float pulse = (float)(0.5 + 0.5 * Math.Sin(Age * 9.0));
+			using (Pen pen = new Pen(Color.FromArgb(180 + (int)(75f * pulse), Cyan), 3f))
+			{
+				pen.DashStyle = DashStyle.Dash;
+				pen.DashOffset = (float)(Age * 14.0);
+				g.DrawRectangle(pen, 2, 2, Width - 5, Height - 5);
+			}
+			using (Font font = Look.Mono(18f, FontStyle.Bold, GraphicsUnit.Pixel))
+			{
+				SizeF size = g.MeasureString(Label, font);
+				float x = (Width - size.Width) / 2f;
+				float y = (Height - size.Height) / 2f;
+				using (Brush chip = new SolidBrush(Color.FromArgb(230, Rose)))
+				{
+					g.FillRectangle(chip, x - 10f, y - 6f, size.Width + 20f, size.Height + 12f);
+				}
+				using Brush ink = new SolidBrush(Ground);
+				g.DrawString(Label, font, ink, x, y);
+			}
+		}
+	}
+
+	private readonly System.Windows.Forms.Timer resizeFrames = new System.Windows.Forms.Timer { Interval = 15 };
+
+	private SizeGhost ghost;
+
+	private int resizeEdge;
+
+	private Point resizeFrom;
+
+	private Rectangle resizeStart;
+
+	private Rectangle resizeTo;
+
+	private int resizeSize;
+
+	private bool resizeHooked;
+
+	private void StartResize(int edge)
+	{
+		if (!loaded || resizeEdge != 0)
+		{
+			return;
+		}
+		resizeEdge = edge;
+		resizeFrom = Cursor.Position;
+		resizeStart = Bounds;
+		resizeTo = Bounds;
+		resizeSize = (int)Math.Round(zoom * 100f);
+		ghost?.Dispose();
+		ghost = new SizeGhost();
+		ghost.Bounds = Bounds;
+		ghost.Show(this);
+		Sfx.Play(Cue.Click);
+		if (!resizeHooked)
+		{
+			resizeHooked = true;
+			resizeFrames.Tick += (object param0, EventArgs param1) => ResizeStep();
+		}
+		resizeFrames.Start();
+	}
+
+	private void ResizeStep()
+	{
+		if (ghost == null)
+		{
+			resizeFrames.Stop();
+			return;
+		}
+		if (resizeEdge == 0)
+		{
+			// fade the preview out after the drop
+			ghost.Opacity = Math.Max(0.0, ghost.Opacity - 0.08);
+			if (ghost.Opacity <= 0.0)
+			{
+				ghost.Dispose();
+				ghost = null;
+				resizeFrames.Stop();
+			}
+			return;
+		}
+		ghost.Opacity = Math.Min(0.85, ghost.Age / 0.15 * 0.85);
+		Point now = Cursor.Position;
+		int dx = now.X - resizeFrom.X;
+		int dy = now.Y - resizeFrom.Y;
+		bool left = resizeEdge == 10 || resizeEdge == 13 || resizeEdge == 16;
+		bool right = resizeEdge == 11 || resizeEdge == 14 || resizeEdge == 17;
+		bool top = resizeEdge >= 12 && resizeEdge <= 14;
+		bool bottom = resizeEdge >= 15;
+		Rectangle start = resizeStart;
+		int size = (int)Math.Round(zoom * 100f);
+		float ratio = 1f;
+		if (left || right)
+		{
+			int wantW = start.Width + (right ? dx : (-dx));
+			size = Math.Max(75, Math.Min(200, (int)Math.Round((float)wantW / start.Width * zoom * 20f) * 5));
+			ratio = size / (zoom * 100f);
+		}
+		int w = (int)Math.Round(start.Width * ratio);
+		int h = (int)Math.Round(start.Height * ratio);
+		if (top || bottom)
+		{
+			float unit = DeviceScale() * size / 100f;
+			h = Math.Max((int)(144f * unit), Math.Min((int)(1160f * unit), start.Height + (bottom ? dy : (-dy))));
+		}
+		int x = left ? (start.Right - w) : start.Left;
+		int y = top ? (start.Bottom - h) : start.Top;
+		Rectangle next = new Rectangle(x, y, w, h);
+		if (size != resizeSize)
+		{
+			Sfx.Play(Cue.Spark);
+		}
+		resizeSize = size;
+		resizeTo = next;
+		ghost.Label = size + "%" + (paged ? ("  ·  " + (int)Math.Round(h / (DeviceScale() * size / 100f)) + " tall") : "");
+		if (ghost.Bounds != next)
+		{
+			ghost.Bounds = next;
+		}
+		ghost.Invalidate();
+		if ((Control.MouseButtons & MouseButtons.Left) == 0)
+		{
+			FinishResize();
+		}
+	}
+
+	private void FinishResize()
+	{
+		resizeEdge = 0;
+		Rectangle to = resizeTo;
+		bool moved = to != resizeStart;
+		if (!moved)
+		{
+			return;
+		}
+		int size = resizeSize;
+		if (size != (int)Math.Round(zoom * 100f))
+		{
+			capri.SetMainframeSize(size);
+			syncing = true;
+			frameSize.Value = Math.Max(0, Array.IndexOf(FrameSizes, size));
+			syncing = false;
+			Rezoom(Wanted());
+			ShowFrameSize();
+		}
+		if (paged)
+		{
+			int tall = Math.Max(144, Math.Min(1160, (int)Math.Round((float)to.Height / Unit())));
+			capri.MainframeTall = (tall >= 1160) ? 0 : tall;
+		}
+		Arrange(expanded);
+		bool fromLeft = resizeStart.Right == to.Right && resizeStart.Left != to.Left;
+		bool fromTop = resizeStart.Bottom == to.Bottom && resizeStart.Top != to.Top;
+		Location = new Point(fromLeft ? (to.Right - Width) : to.Left, fromTop ? (to.Bottom - Height) : to.Top);
+		Sfx.Play(Cue.Hop);
+	}
+
+	// the mod: while the Mainframe is in front, the wheel over it scrolls only the Mainframe, never the window below
 	private delegate IntPtr WheelHook(int code, IntPtr kind, IntPtr data);
 
-	[DllImport("user32.dll")]
+	[DllImport("user32.dll", SetLastError = true)]
 	private static extern IntPtr SetWindowsHookEx(int id, WheelHook hook, IntPtr module, uint thread);
 
 	[DllImport("user32.dll")]
@@ -5144,89 +5332,55 @@ internal sealed class Mainframe : Form, IMessageFilter
 	private static extern IntPtr WindowFromPoint(Point at);
 
 	[DllImport("user32.dll")]
-	private static extern bool PostMessage(IntPtr window, int message, IntPtr wide, IntPtr lparam);
+	private static extern IntPtr GetForegroundWindow();
 
-	[DllImport("kernel32.dll")]
+	[DllImport("user32.dll")]
+	private static extern IntPtr GetAncestor(IntPtr window, uint flags);
+
+	[DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
 	private static extern IntPtr GetModuleHandle(string name);
 
 	private WheelHook wheelHook;
 
 	private IntPtr wheelHooked;
 
-	protected override void OnActivated(EventArgs e)
+	protected override void OnVisibleChanged(EventArgs e)
 	{
-		base.OnActivated(e);
-		if (wheelHooked == IntPtr.Zero)
+		base.OnVisibleChanged(e);
+		if (Visible && wheelHooked == IntPtr.Zero)
 		{
 			wheelHook = CatchWheel;
 			wheelHooked = SetWindowsHookEx(14, wheelHook, GetModuleHandle(null), 0u);
 		}
 	}
 
-	protected override void OnDeactivate(EventArgs e)
-	{
-		base.OnDeactivate(e);
-		DropWheelHook();
-	}
-
 	protected override void OnHandleDestroyed(EventArgs e)
-	{
-		DropWheelHook();
-		base.OnHandleDestroyed(e);
-	}
-
-	private void DropWheelHook()
 	{
 		if (wheelHooked != IntPtr.Zero)
 		{
 			UnhookWindowsHookEx(wheelHooked);
 			wheelHooked = IntPtr.Zero;
 		}
+		base.OnHandleDestroyed(e);
 	}
+
+	internal bool WheelHooked => wheelHooked != IntPtr.Zero;
 
 	private IntPtr CatchWheel(int code, IntPtr kind, IntPtr data)
 	{
 		int msg = kind.ToInt32();
-		if (code >= 0 && (msg == 522 || msg == 526) && Visible && WindowState != FormWindowState.Minimized)
+		if (code >= 0 && msg == 522 && Visible && WindowState != FormWindowState.Minimized && GetForegroundWindow() == Handle)
 		{
 			Point at = new Point(Marshal.ReadInt32(data), Marshal.ReadInt32(data, 4));
 			if (Bounds.Contains(at))
 			{
-				int delta = Marshal.ReadInt32(data, 8) >> 16;
-				Control under = Control.FromChildHandle(WindowFromPoint(at));
-				IntPtr target = (under != null && under.FindForm() == this) ? under.Handle : Handle;
-				PostMessage(target, msg, new IntPtr(delta << 16), new IntPtr((at.Y << 16) | (at.X & 0xFFFF)));
+				int delta = (short)(Marshal.ReadInt32(data, 8) >> 16);
+				Point local = PointToClient(at);
+				BeginInvoke((Action)(() => OnMouseWheel(new MouseEventArgs(MouseButtons.None, 0, local.X, local.Y, delta))));
 				return new IntPtr(1);
 			}
 		}
 		return CallNextHookEx(wheelHooked, code, kind, data);
-	}
-
-	protected override void OnResizeEnd(EventArgs e)
-	{
-		base.OnResizeEnd(e);
-		if (!loaded)
-		{
-			return;
-		}
-		int wide = Scaled(paged ? 760 : 380);
-		if (Math.Abs(ClientSize.Width - wide) > 2)
-		{
-			float next = (float)ClientSize.Width / wide * zoom;
-			int size = Math.Max(75, Math.Min(200, (int)Math.Round(next * 20f) * 5));
-			capri.SetMainframeSize(size);
-			syncing = true;
-			frameSize.Value = Math.Max(0, Array.IndexOf(FrameSizes, size));
-			syncing = false;
-			Rezoom(Wanted());
-			ShowFrameSize();
-		}
-		if (paged)
-		{
-			int tall = Math.Max(144, Math.Min(1160, (int)Math.Round((float)ClientSize.Height / Unit())));
-			capri.MainframeTall = (tall >= 1160) ? 0 : tall;
-		}
-		Arrange(expanded);
 	}
 
 	protected override void OnLoad(EventArgs e)
@@ -5728,34 +5882,9 @@ internal sealed class Mainframe : Form, IMessageFilter
 		string text;
 		using (Stream stream = typeof(Mainframe).Assembly.GetManifestResourceStream("Capri.Changelog.md"))
 		{
-			text = (stream == null) ? "No changelog." : new StreamReader(stream).ReadToEnd();
+			text = (stream == null) ? "" : new StreamReader(stream).ReadToEnd();
 		}
-		Form form = new Form
-		{
-			Text = "Changelog",
-			Icon = Icon,
-			BackColor = Ground,
-			StartPosition = FormStartPosition.CenterParent,
-			ClientSize = new Size(Scaled(520), Scaled(600))
-		};
-		TextBox box = new TextBox
-		{
-			Multiline = true,
-			ReadOnly = true,
-			ScrollBars = ScrollBars.Vertical,
-			Dock = DockStyle.Fill,
-			BorderStyle = BorderStyle.None,
-			BackColor = Ground,
-			ForeColor = White,
-			Font = Type(10f),
-			Text = text.Replace("\r\n", "\n").Replace("\n", "\r\n")
-		};
-		form.Controls.Add(box);
-		form.Shown += (object param0, EventArgs param1) =>
-		{
-			box.SelectionLength = 0;
-		};
-		form.Show(this);
+		new ChangelogView(text, Icon, Unit()).Show(this);
 	}
 
 	private void ShowPerch()

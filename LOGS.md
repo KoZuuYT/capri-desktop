@@ -56,6 +56,7 @@ Código decompilado (C#, .NET 8 WinForms/WPF) do programa que traz a **Capri** (
 - 2026-10-31: **v0.0.6** — página de settings redimensionável pela borda de baixo (hit-test 15 no `WndProc` do Mainframe, `OnResizeEnd` salva `MainframeTall`, usado em `Fit`; 0 = automático).
 - 2026-10-31: **v0.0.7** — opção 75% em `FrameSizes`/`FrameSizeNames` (Mainframe.cs) e limite mínimo de `SetMainframeSize` baixado de 100 para 75.
 - 2026-10-31: **v0.0.8** — opção 90%. Hit-test de todas as bordas/cantos no `WndProc` do Mainframe. Em `OnResizeEnd`, a largura vira zoom (`SetMainframeSize`, passos de 5%) e a altura vira `MainframeTall`. `ShowFrameSize` mostra tamanhos fora da lista (ex.: 85%). Hook de mouse de baixo nível (`CatchWheel`, WH_MOUSE_LL), ativo só enquanto o Mainframe está focado: engole a rodinha sobre ele e repassa por `PostMessage` ao controle debaixo do cursor.
+- 2026-10-31: **v0.0.9** — sem `WS_THICKFRAME` o hit-test de borda não redimensiona; agora `WM_NCLBUTTONDOWN` (161) nas bordas chama `StartResize`, um timer (`ResizeStep`) segue o cursor com a prévia `SizeGhost` e `FinishResize` aplica o zoom e a altura. O hook da rodinha fica instalado enquanto visível (`OnVisibleChanged`), exige `GetForegroundWindow() == Handle` e chama `OnMouseWheel` direto. Changelog em `ChangelogView.cs`. Teste na tela não foi possível: a Capri não fica em primeiro plano para a ferramenta de clique.
 
 ## Pedidos pendentes
 - (preencher)

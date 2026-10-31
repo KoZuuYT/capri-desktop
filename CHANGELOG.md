@@ -2,6 +2,12 @@
 
 > A partir daqui, cada alteração é uma nova versão do mod (mostrada no Mainframe como "Modded vX.Y.Z").
 
+## v0.0.9 — Resize e rodinha consertados, changelog novo
+
+- **Redimensionar de verdade**: a janela do Mainframe não tem moldura, então o Windows ignorava as bordas. Agora o próprio Mainframe cuida disso. Ao puxar qualquer borda ou canto, aparece uma **prévia neon animada** com o tamanho final (ex.: "90% · 700 tall"), com um estalo a cada 5% e um som ao soltar.
+- **Rodinha do mouse**: com o Mainframe na frente, a rodinha em cima dele rola só o Mainframe. Não depende mais do evento de foco que falhava.
+- **Changelog novo**: janela própria em estilo neon, com cartões por versão que deslizam um após o outro, a versão mais nova em destaque piscando, rolagem suave (rodinha, setas, Page Up/Down), destaque ao passar o mouse, sons ao abrir, passar e fechar. Fecha no X ou com Esc e pode ser arrastada pelo topo.
+
 ## v0.0.8 — Redimensionar por qualquer lado
 
 - Nova opção "90%" em Mainframe size.
