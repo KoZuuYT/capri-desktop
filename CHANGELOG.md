@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-31 — Rework do carinho
+- Ao esfregar o cursor nela: faísca com coraçãozinho de pixel, anel verde e um "blip" digital a cada vai-e-vem.
+- Reação: anéis verde/azul, corações de pixel que pulam, sobem balançando e dão glitch, com acorde digital de três notas e o texto "+AFFECTION".
+- Ronronar digital (1 em cada 3 carinhos): som de ronronar sintetizado, onda de osciloscópio "~prrrr.exe~" e uma fala própria de ronronar.
+- Fim: os corações se juntam num coração grande que estoura em pixels com anel, e um som de "fechamento" em duas notas.
+
 ## 2026-10-31 — Olhos: caixinha irregular e opções no Mainframe
 - Caixinha com formatos mais irregulares (incluindo "estilhaço" de 5–6 cantos) e cantos que balançam devagar.
 - Nova seção EYES no Mainframe: liga/desliga, frequência (Rarely/Sometimes/Often/Swarm), tamanho (Small/Medium/Large/Mixed), máximo de olhos ao mesmo tempo (1–5) e botão "Peek now".

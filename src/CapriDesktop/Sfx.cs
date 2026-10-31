@@ -95,8 +95,104 @@ internal static class Sfx
 			Cue.Hop => Sweep(0.16, 520.0, 1240.0, 0.008, level),
 			Cue.EyeOpen => Glitch(open: true, level * 3 / 4),
 			Cue.EyeClose => Glitch(open: false, level * 3 / 4),
+			Cue.PetStroke => Blip(0.07, 1300.0 + strokes.NextDouble() * 500.0, 1.25, level / 2),
+			Cue.PetHappy => Chime(level * 3 / 4),
+			Cue.PetPurr => Mix(Chime(level * 3 / 5), Purr(level), 2400),
+			Cue.PetEnd => Mix(Blip(0.12, 1500.0, 0.6, level / 2), Blip(0.16, 900.0, 0.55, level / 2), 2600),
 			_ => Sweep(0.05, 1600.0, 1350.0, 0.003, level * 3 / 4),
 		};
+	}
+
+	private static readonly Random strokes = new Random();
+
+	// lays b over a, starting `at` samples in
+	private static short[] Mix(short[] a, short[] b, int at)
+	{
+		short[] samples = new short[Math.Max(a.Length, at + b.Length)];
+		for (int i = 0; i < samples.Length; i++)
+		{
+			int value = (i < a.Length ? a[i] : 0) + (i >= at && i - at < b.Length ? b[i - at] : 0);
+			samples[i] = (short)Math.Max(-32768, Math.Min(32767, value));
+		}
+		return samples;
+	}
+
+	// a short soft square-ish blip that glides by `bend`, for strokes and the closing pair
+	private static short[] Blip(double seconds, double freq, double bend, int level)
+	{
+		int count = (int)(seconds * 24000.0);
+		short[] samples = new short[count];
+		double gain = 0.2 * (double)Math.Max(0, Math.Min(100, level)) / 100.0;
+		double phase = 0.0;
+		double smooth = 0.0;
+		for (int i = 0; i < count; i++)
+		{
+			double p = (double)i / (double)count;
+			phase += Math.PI * 2.0 * freq * Math.Pow(bend, p) / 24000.0;
+			double tone = 0.5 * Math.Sign(Math.Sin(phase)) + 0.5 * Math.Sin(phase);
+			smooth += (tone - smooth) * 0.35;
+			double envelope = Math.Min(1.0, (double)i / 60.0) * Math.Pow(1.0 - p, 2.0);
+			samples[i] = (short)(smooth * envelope * gain * 32767.0);
+		}
+		return samples;
+	}
+
+	// happy rising three-note arpeggio, each note a quick bit-crushed blip
+	private static short[] Chime(int level)
+	{
+		short[] samples = new short[(int)(0.42 * 24000.0)];
+		double[] notes = { 784.0, 988.0, 1319.0 };
+		for (int n = 0; n < notes.Length; n++)
+		{
+			short[] note = Blip(0.2, notes[n], 1.04, level);
+			int at = n * 2400;
+			for (int i = 0; i < note.Length && at + i < samples.Length; i++)
+			{
+				if (i % 3 == 0 || i == 0)
+				{
+					samples[at + i] = (short)Math.Max(-32768, Math.Min(32767, samples[at + i] + note[i]));
+				}
+				else
+				{
+					samples[at + i] = samples[at + i - 1];
+				}
+			}
+		}
+		return samples;
+	}
+
+	// a small digital purr: low buzzy pulses at ~24 Hz, breathing in and out twice, bit-crushed with a faint hiss
+	private static short[] Purr(int level)
+	{
+		double seconds = 1.7;
+		int count = (int)(seconds * 24000.0);
+		short[] samples = new short[count];
+		Random noise = new Random(5);
+		double gain = 0.3 * (double)Math.Max(0, Math.Min(100, level)) / 100.0;
+		double phase = 0.0;
+		double pulse = 0.0;
+		double held = 0.0;
+		double smooth = 0.0;
+		for (int i = 0; i < count; i++)
+		{
+			double t = (double)i / 24000.0;
+			double p = (double)i / (double)count;
+			double breath = Math.Pow(Math.Sin(Math.PI * Math.Min(1.0, p * 2.0 % 1.0 + 0.02)), 0.7);
+			double rate = 22.0 + 4.0 * Math.Sin(p * 12.0);
+			pulse += Math.PI * 2.0 * rate / 24000.0;
+			double flutter = Math.Pow(0.5 + 0.5 * Math.Sin(pulse), 3.0);
+			phase += Math.PI * 2.0 * (95.0 + 10.0 * Math.Sin(t * 5.0)) / 24000.0;
+			double tone = 0.6 * Math.Sign(Math.Sin(phase)) + 0.4 * Math.Sin(phase * 2.0);
+			double sample = tone * flutter + (noise.NextDouble() * 2.0 - 1.0) * 0.25 * flutter;
+			if (i % 6 == 0)
+			{
+				held = Math.Round(sample * 6.0) / 6.0;
+			}
+			smooth += (held - smooth) * 0.25;
+			double envelope = breath * Math.Min(1.0, t / 0.05) * Math.Min(1.0, (seconds - t) / 0.15);
+			samples[i] = (short)(Math.Max(-1.0, Math.Min(1.0, smooth * envelope)) * gain * 32767.0);
+		}
+		return samples;
 	}
 
 	// digital boot/shutdown for the eye pop-ups: a buzzy sweep chopped by a random gate, bit-crushed, with noise

@@ -7,5 +7,9 @@ internal enum Cue
 	Hop,
 	Click,
 	EyeOpen,
-	EyeClose
+	EyeClose,
+	PetStroke,
+	PetHappy,
+	PetPurr,
+	PetEnd
 }

@@ -402,6 +402,19 @@ internal sealed class Companion : Form
 		"Hehe. Meus ventiladores acabaram de ligar.", "Dez de dez em carinho. Quero mais.", "Isso é suborno? Porque tá funcionando.", "Hmm. Se eu começar a ronronar com glitch, a culpa é sua."
 	};
 
+	// said when she purrs (about one pet in three)
+	private static readonly string[] PurrLines = new string[6]
+	{
+		"Prrrr... ops. Isso foi um ronronar? Ignora. Bug de áudio.", "Ronronar.exe iniciado sem permissão. A culpa é sua, choom.", "Prrr-zzt. Meu processador tá ronronando. Não para.",
+		"Isso que você ouviu foi o cooler. Não foi ronronar. ...Prrr.", "Detectei um ronronar no meu próprio áudio. Interessante.", "Prrrr. Tá, você achou meu ponto fraco. Guarda segredo."
+	};
+
+	private bool petPurr;
+
+	private int lastPurr = -1;
+
+	private long petFxAt = -60000L;
+
 	private readonly List<long> petTurns = new List<long>();
 
 	private int petX;
@@ -3724,6 +3737,14 @@ internal sealed class Companion : Form
 			if (petWay != 0 && num != petWay)
 			{
 				petTurns.Add(now);
+				if (now - petFxAt >= 140)
+				{
+					petFxAt = now;
+					PetHearts spark = new PetHearts(PetHearts.Kind.Stroke);
+					spark.Place(new Rectangle(cursor, new Size(1, 1)));
+					spark.Show();
+					Sfx.Play(Cue.PetStroke);
+				}
 			}
 			petWay = num;
 			petTurns.RemoveAll((long at) => now - at > 1500);
@@ -3738,7 +3759,11 @@ internal sealed class Companion : Form
 
 	private void ShowPetHearts()
 	{
-		PetHearts hearts = new PetHearts();
+		PetHearts hearts = new PetHearts(PetHearts.Kind.React, petPurr);
+		hearts.Ending += (object param0, EventArgs param1) =>
+		{
+			Sfx.Play(Cue.PetEnd);
+		};
 		hearts.Place(Bounds);
 		hearts.Show();
 	}
@@ -3746,7 +3771,9 @@ internal sealed class Companion : Form
 	private void Petted()
 	{
 		EndWalk();
+		petPurr = random.NextDouble() < 0.35;
 		ShowPetHearts();
+		Sfx.Play(petPurr ? Cue.PetPurr : Cue.PetHappy);
 		if (lying)
 		{
 			Play(laydown);
@@ -3840,8 +3867,15 @@ internal sealed class Companion : Form
 		{
 			heard = "pets you";
 			box.Prompt = "> sys: ";
-			Answer(++asking, NextPetLine(), TalkState.Talking);
+			Answer(++asking, petPurr ? NextPurrLine() : NextPetLine(), TalkState.Talking);
 		}
+	}
+
+	private string NextPurrLine()
+	{
+		int pick = random.Next(PurrLines.Length - 1);
+		lastPurr = pick >= lastPurr && lastPurr >= 0 ? pick + 1 : pick;
+		return PurrLines[lastPurr];
 	}
 
 	internal string NextPetLine()
@@ -30985,7 +31019,7 @@ internal sealed class Companion : Form
 					bool flag372 = (byte)num28 != 0;
 					PetLine(petTicket);
 					string text542 = reply;
-					bool flag373 = asking == num23 + 1 && Array.IndexOf(PetLines, text542) >= 0;
+					bool flag373 = asking == num23 + 1 && (Array.IndexOf(PetLines, text542) >= 0 || Array.IndexOf(PurrLines, text542) >= 0);
 					for (int num252 = 0; num252 < 8; num252++)
 					{
 						Stroke((num252 % 2 == 0) ? point7 : point6);
