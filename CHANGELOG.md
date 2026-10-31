@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-10-31 — Carinho menos sensível
+- Só conta como carinho um vai-e-vem de verdade: cada ida precisa andar uns 30 px e as viradas precisam vir em ritmo (até 0,7 s entre elas). São 6 viradas para ela reagir (antes eram 4, com qualquer tremidinha de 6 px).
+- A faísca no cursor só aparece depois que o carinho começou de fato, não ao passar o mouse por cima.
+
 ## 2026-10-31 — Rework do carinho
 - Ao esfregar o cursor nela: faísca com coraçãozinho de pixel, anel verde e um "blip" digital a cada vai-e-vem.
 - Reação: anéis verde/azul, corações de pixel que pulam, sobem balançando e dão glitch, com acorde digital de três notas e o texto "+AFFECTION".

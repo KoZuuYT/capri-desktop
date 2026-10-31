@@ -35,6 +35,7 @@ Código decompilado (C#, .NET 8 WinForms/WPF) do programa que traz a **Capri** (
 - 2026-10-31: olho redesenhado no estilo da arte da Capri (visor verde com 4 formas, olho preto com espinhos, anel verde, íris azul, pupila branca). Animações e sons mantidos.
 - 2026-10-31: caixinha irregular e balançando; seção EYES no Mainframe (`Mainframe.cs`, coluna direita y=790; página aumentada de 860 para 960). Preferências `EyePace`, `EyeSize`, `EyeMost` em `Preferences.cs`.
 - 2026-10-31: rework do carinho (`PetHearts.cs` virou janela layered com tipos Stroke/React; cues `PetStroke`/`PetHappy`/`PetPurr`/`PetEnd` em `Cue.cs`/`Sfx.cs`; `PurrLines` e `petPurr` em `Companion.cs`, perto de `Stroke`/`Petted`). Ronrona em 35% dos carinhos.
+- 2026-10-31: detecção do carinho menos sensível (`petSwing` em `Stroke`: ida >= 30 px, viradas em até 700 ms, 6 viradas).
 
 ## Pedidos pendentes
 - (preencher)

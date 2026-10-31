@@ -415,6 +415,8 @@ internal sealed class Companion : Form
 
 	private long petFxAt = -60000L;
 
+	private int petSwing;
+
 	private readonly List<long> petTurns = new List<long>();
 
 	private int petX;
@@ -3726,6 +3728,7 @@ internal sealed class Companion : Form
 		{
 			petTurns.Clear();
 			petWay = 0;
+			petSwing = 0;
 			return;
 		}
 		int value = cursor.X - petX;
@@ -3736,8 +3739,19 @@ internal sealed class Companion : Form
 			petX = cursor.X;
 			if (petWay != 0 && num != petWay)
 			{
-				petTurns.Add(now);
-				if (now - petFxAt >= 140)
+				// a turn only counts after a real swing (>= 30 px) and in rhythm with the last one;
+				// passing over her or jittering in place never adds up
+				bool swung = petSwing >= 30;
+				petSwing = 0;
+				if (!swung || (petTurns.Count > 0 && now - petTurns[petTurns.Count - 1] > 700))
+				{
+					petTurns.Clear();
+				}
+				if (swung)
+				{
+					petTurns.Add(now);
+				}
+				if (swung && petTurns.Count >= 2 && now - petFxAt >= 140)
 				{
 					petFxAt = now;
 					PetHearts spark = new PetHearts(PetHearts.Kind.Stroke);
@@ -3747,8 +3761,9 @@ internal sealed class Companion : Form
 				}
 			}
 			petWay = num;
-			petTurns.RemoveAll((long at) => now - at > 1500);
-			if (petTurns.Count >= 4 && now - petAt >= 20000)
+			petSwing += Math.Abs(value);
+			petTurns.RemoveAll((long at) => now - at > 2500);
+			if (petTurns.Count >= 6 && now - petAt >= 20000)
 			{
 				petTurns.Clear();
 				petAt = now;
