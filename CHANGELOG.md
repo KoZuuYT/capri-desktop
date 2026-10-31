@@ -1,5 +1,9 @@
 # Changelog
 
+## Raios sólidos com glitch
+- Raios em cor sólida, vermelho e verde da Capri, sem brilho ou degradê.
+- Glitch: cópia verde deslocada, trechos pulando de lado, piscadas e linhas de scanline.
+
 ## Raios vermelhos
 - Os raios da Capri agora são vermelhos, finos e angulares como no anime, no lugar dos raios rosa/laranja que pareciam trovões.
 

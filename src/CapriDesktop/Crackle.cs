@@ -43,13 +43,14 @@ internal sealed class Crackle : Overlay
 		internal Color Colour;
 	}
 
-	internal static readonly Color Hot = Color.FromArgb(255, 34, 52);
+	// her flat solid palette: one red, one green, no gradients
+	internal static readonly Color Hot = Color.FromArgb(240, 18, 40);
 
-	internal static readonly Color Ember = Color.FromArgb(214, 0, 28);
+	internal static readonly Color Ember = Hot;
 
-	internal static readonly Color Flame = Color.FromArgb(255, 120, 120);
+	internal static readonly Color Flame = Color.FromArgb(40, 255, 110);
 
-	internal static readonly Color Ice = Color.FromArgb(150, 0, 18);
+	internal static readonly Color Ice = Hot;
 
 	private static readonly Color Soot = Color.FromArgb(22, 2, 6);
 
@@ -109,7 +110,14 @@ internal sealed class Crackle : Overlay
 		for (int i = 0; i < blocks; i++)
 		{
 			Add(Kind.Block, body.Left + (float)random.NextDouble() * body.Width, body.Top + (float)random.NextDouble() * body.Height, 0f,
-				(float)((6.0 + random.NextDouble() * 22.0) * scale), (float)((2.0 + random.NextDouble() * 5.0) * scale), now + random.NextDouble() * 0.2, 0.08 + random.NextDouble() * 0.12, Pick(Hot, Ice, Soot, Flame));
+				(float)((6.0 + random.NextDouble() * 22.0) * scale), (float)((2.0 + random.NextDouble() * 5.0) * scale), now + random.NextDouble() * 0.2, 0.08 + random.NextDouble() * 0.12, Pick(Hot, Hot, Soot, Flame));
+		}
+		// glitch scanlines: long thin bars torn sideways across her
+		int tears = 1 + (int)Math.Round(power * 3.0);
+		for (int i = 0; i < tears; i++)
+		{
+			Add(Kind.Block, cx, body.Top + (float)random.NextDouble() * body.Height, 0f,
+				(float)(body.Width * (0.8 + random.NextDouble() * 0.9)), Math.Max(1f, (float)((1.0 + random.NextDouble() * 2.0) * scale)), now + random.NextDouble() * 0.25, 0.05 + random.NextDouble() * 0.08, Pick(Hot, Flame, Soot));
 		}
 		Run();
 	}
@@ -212,7 +220,7 @@ internal sealed class Crackle : Overlay
 		Bitmap bitmap = new Bitmap(area.Width, area.Height, PixelFormat.Format32bppPArgb);
 		using (Graphics graphics = Graphics.FromImage(bitmap))
 		{
-			graphics.SmoothingMode = SmoothingMode.AntiAlias;
+			graphics.SmoothingMode = SmoothingMode.None;
 			graphics.TranslateTransform(-area.Left, -area.Top);
 			foreach (Zap zap in zaps)
 			{
@@ -236,7 +244,11 @@ internal sealed class Crackle : Overlay
 			// shoots out fast, holds, then the tail catches up to the tip
 			float grow = (float)Math.Min(1.0, u / 0.25);
 			float tail = (float)Math.Max(0.0, (u - 0.55) / 0.45);
-			float alpha = (pick.Next(5) == 0) ? 0.45f : 1f;
+			if (pick.Next(6) == 0)
+			{
+				break;
+			}
+			float alpha = 1f;
 			PointF from = new PointF(zap.X + (float)Math.Cos(zap.Angle) * zap.Length * tail, zap.Y + (float)Math.Sin(zap.Angle) * zap.Length * tail);
 			PointF to = new PointF(zap.X + (float)Math.Cos(zap.Angle) * zap.Length * grow, zap.Y + (float)Math.Sin(zap.Angle) * zap.Length * grow);
 			Bolt(graphics, from, to, zap.Width, zap.Colour, alpha, pick, 0.35f, 1);
@@ -250,7 +262,7 @@ internal sealed class Crackle : Overlay
 			if (pick.Next(3) != 0)
 			{
 				float jitter = (float)((pick.NextDouble() - 0.5) * zap.Length);
-				using Brush brush = new SolidBrush(Color.FromArgb((int)(230.0 * (1.0 - u * 0.5)), zap.Colour));
+				using Brush brush = new SolidBrush(zap.Colour);
 				graphics.FillRectangle(brush, zap.X + jitter - zap.Length / 2f, zap.Y, zap.Length, zap.Width);
 			}
 			break;
@@ -297,8 +309,11 @@ internal sealed class Crackle : Overlay
 			new PointF(x + lean * h * 0.6f, y - h * 0.6f),
 			new PointF(x + w * 0.4f, y)
 		};
-		using Brush core = new SolidBrush(Color.FromArgb(230, Flame));
-		graphics.FillPolygon(core, inner);
+		if (pick.Next(4) == 0)
+		{
+			using Brush core = new SolidBrush(Soot);
+			graphics.FillPolygon(core, inner);
+		}
 	}
 
 	// her red electric line from a to b, the anime way: thin and angular, a walk of short straight runs that snap to
@@ -334,10 +349,23 @@ internal sealed class Crackle : Overlay
 		}
 		points.Add(b);
 		PointF[] line = points.ToArray();
-		Color deep = Color.FromArgb(Math.Max(0, colour.R - 110), 0, Math.Max(0, colour.B / 4));
-		Stroke(graphics, line, width * 3.2f, Color.FromArgb((int)(60f * alpha), deep));
-		Stroke(graphics, line, width * 1.3f, Color.FromArgb((int)(235f * alpha), colour));
-		Stroke(graphics, line, Math.Max(0.8f, width * 0.45f), Color.FromArgb((int)(220f * alpha), 255, 165, 165));
+		// glitch: sometimes a green copy split off to the side, and sometimes a slice of the line jumps sideways
+		if (pick.Next(3) == 0)
+		{
+			float off = (pick.Next(2) == 0 ? 1 : -1) * (2f + width * 1.5f);
+			PointF[] ghost = Array.ConvertAll(line, (PointF p) => new PointF(p.X + off, p.Y));
+			Stroke(graphics, ghost, width * 1.3f, Color.FromArgb((int)(255f * alpha), Flame));
+		}
+		if (line.Length > 3 && pick.Next(3) == 0)
+		{
+			int cut = 1 + pick.Next(line.Length - 2);
+			float shove = (float)((pick.NextDouble() - 0.5) * width * 10f);
+			for (int i = cut; i < line.Length; i++)
+			{
+				line[i].X += shove;
+			}
+		}
+		Stroke(graphics, line, width * 1.3f, Color.FromArgb((int)(255f * alpha), colour));
 		for (int i = 0; i < forks && line.Length > 3; i++)
 		{
 			PointF start = line[1 + pick.Next(line.Length - 2)];
@@ -350,7 +378,7 @@ internal sealed class Crackle : Overlay
 	private static void Stroke(Graphics graphics, PointF[] line, float width, Color colour)
 	{
 		using Pen pen = new Pen(colour, Math.Max(0.8f, width));
-		pen.LineJoin = LineJoin.Bevel;
+		pen.LineJoin = LineJoin.Miter;
 		pen.StartCap = LineCap.Flat;
 		pen.EndCap = LineCap.Flat;
 		graphics.DrawLines(pen, line);
