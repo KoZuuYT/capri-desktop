@@ -3831,7 +3831,7 @@ internal sealed class Mainframe : Form, IMessageFilter
 	internal string VoiceStatus => voiceNote.Text + " | " + voiceEntry.Box.Text + " | " + speechModels.Text + " | " + connect.Text;
 
 	// version of this personal mod: bumped on every change (see CHANGELOG.md)
-	internal const string ModVersion = "0.0.5";
+	internal const string ModVersion = "0.0.6";
 
 	internal Mainframe(Companion owner, Icon icon, string version)
 	{
@@ -5005,6 +5005,10 @@ internal sealed class Mainframe : Form, IMessageFilter
 	private int Fit()
 	{
 		int val = ((ShortScreen > 0) ? ShortScreen : ((int)((float)Screen.FromControl(this).WorkingArea.Height / Unit())));
+		if (capri.MainframeTall > 0)
+		{
+			val = Math.Min(val, capri.MainframeTall);
+		}
 		return Math.Max(144, Math.Min(1160, val));
 	}
 
@@ -5095,7 +5099,20 @@ internal sealed class Mainframe : Form, IMessageFilter
 		base.WndProc(ref message);
 		if (message.Msg == 132 && message.Result == new IntPtr(1))
 		{
-			message.Result = new IntPtr(2);
+			// the mod: in settings the bottom edge drags to resize the page height
+			Point at = PointToClient(new Point((short)(message.LParam.ToInt64() & 0xFFFF), (short)((message.LParam.ToInt64() >> 16) & 0xFFFF)));
+			message.Result = new IntPtr((paged && at.Y >= ClientSize.Height - Scaled(8)) ? 15 : 2);
+		}
+	}
+
+	protected override void OnResizeEnd(EventArgs e)
+	{
+		base.OnResizeEnd(e);
+		if (paged && loaded)
+		{
+			int tall = Math.Max(144, Math.Min(1160, (int)Math.Round((float)ClientSize.Height / Unit())));
+			capri.MainframeTall = (tall >= 1160) ? 0 : tall;
+			Arrange(expanded);
 		}
 	}
 

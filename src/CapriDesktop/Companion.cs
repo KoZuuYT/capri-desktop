@@ -1129,6 +1129,19 @@ internal sealed class Companion : Form
 
 	internal int MainframeSize => preferences.MainframeSize;
 
+	internal int MainframeTall
+	{
+		get
+		{
+			return preferences.MainframeTall;
+		}
+		set
+		{
+			preferences.MainframeTall = value;
+			SavePreferences();
+		}
+	}
+
 	internal int WanderLevel
 	{
 		get

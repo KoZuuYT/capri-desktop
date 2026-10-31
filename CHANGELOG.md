@@ -2,6 +2,10 @@
 
 > A partir daqui, cada alteração é uma nova versão do mod (mostrada no Mainframe como "Modded vX.Y.Z").
 
+## v0.0.6 — Mainframe redimensionável
+
+- Nas configurações, dá para puxar a borda de baixo do Mainframe para deixar a janela mais baixa (ou mais alta). O resto vira rolagem, e o tamanho fica salvo.
+
 ## v0.0.5 — Ajudantes, estatísticas e proteção do mod
 
 - **Bloquear atualizações oficiais** (ligado por padrão): o app não baixa mais a versão oficial por cima do mod.

@@ -53,6 +53,7 @@ Código decompilado (C#, .NET 8 WinForms/WPF) do programa que traz a **Capri** (
 - 2026-10-31: **v0.0.3** — rótulo `build` movido para x=185, largura 107 (cobria o botão ao lado do título).
 - 2026-10-31: **v0.0.4** — Settings em x=120 largura 72, versão em x=196 largura 98. Seção MOD na coluna esquerda da página (y=822): botão Changelog (CHANGELOG.md embutido como `Capri.Changelog.md`, `ShowChangelog`), switches `VoiceOrders`/`Petting` e sliders `PurrChance`/`PetFeel` (`Preferences.cs`; `PetFeels`/`PurrChances` em `Companion.cs`).
 - 2026-10-31: **v0.0.5** — página do Mainframe de 960 para 1160. Esquerda: `Block official updates` (y=958, `BlockUpdates`, checado em `CheckForUpdates` e na checagem automática), Profile Calm/Normal/Chaos (`UseProfile`), Test now Zap/Pet/Time, seção STATS (y=1050, `Pets`/`Purrs`/`Throws`/`FirstMet`). Direita: seção HELPERS (y=958) com Pomodoro, Say the time (`Chime`) e PC alerts (`GetSystemTimes` + `PowerStatus`). Lembretes por voz em `ReminderByVoice` (chamado no começo de `VoiceShortcut`, só em memória). Tudo roda em `CheckHelpers` no timer `signals`.
+- 2026-10-31: **v0.0.6** — página de settings redimensionável pela borda de baixo (hit-test 15 no `WndProc` do Mainframe, `OnResizeEnd` salva `MainframeTall`, usado em `Fit`; 0 = automático).
 
 ## Pedidos pendentes
 - (preencher)

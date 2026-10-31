@@ -237,6 +237,9 @@ internal sealed class Preferences
 	public int MainframeSize;
 
 	[DataMember]
+	public int MainframeTall;
+
+	[DataMember]
 	public string AgentPolyglot;
 
 	[DataMember]
