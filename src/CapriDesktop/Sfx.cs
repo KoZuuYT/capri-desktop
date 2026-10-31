@@ -92,9 +92,53 @@ internal static class Sfx
 		{
 			Cue.Arrive => Sweep(0.42, 330.0, 990.0, 0.03, level), 
 			Cue.Leave => Sweep(0.36, 880.0, 250.0, 0.012, level), 
-			Cue.Hop => Sweep(0.16, 520.0, 1240.0, 0.008, level), 
-			_ => Sweep(0.05, 1600.0, 1350.0, 0.003, level * 3 / 4), 
+			Cue.Hop => Sweep(0.16, 520.0, 1240.0, 0.008, level),
+			Cue.EyeOpen => Glitch(open: true, level * 3 / 4),
+			Cue.EyeClose => Glitch(open: false, level * 3 / 4),
+			_ => Sweep(0.05, 1600.0, 1350.0, 0.003, level * 3 / 4),
 		};
+	}
+
+	// digital boot/shutdown for the eye pop-ups: a buzzy sweep chopped by a random gate, bit-crushed, with noise
+	private static short[] Glitch(bool open, int level)
+	{
+		double seconds = open ? 0.6 : 0.42;
+		int count = (int)(seconds * 24000.0);
+		short[] samples = new short[count];
+		Random noise = new Random(open ? 7 : 11);
+		double gain = 0.24 * (double)Math.Max(0, Math.Min(100, level)) / 100.0;
+		double phase = 0.0;
+		double held = 0.0;
+		bool gate = true;
+		int gateLeft = 0;
+		for (int i = 0; i < count; i++)
+		{
+			double t = (double)i / 24000.0;
+			double p = (double)i / (double)count;
+			double freq = open ? 140.0 * Math.Pow(1800.0 / 140.0, p * p) : 1600.0 * Math.Pow(90.0 / 1600.0, Math.Sqrt(p));
+			phase += Math.PI * 2.0 * freq / 24000.0;
+			double tone = 0.35 * Math.Sign(Math.Sin(phase)) + 0.65 * Math.Sin(phase);
+			if (--gateLeft <= 0)
+			{
+				gate = noise.NextDouble() < (open ? 0.35 + 0.65 * p : 1.0 - 0.6 * p);
+				gateLeft = noise.Next(240, 900);
+			}
+			double hiss = (noise.NextDouble() * 2.0 - 1.0) * (open ? 0.5 * (1.0 - p) : 0.35 * p);
+			double sample = (gate ? tone : tone * 0.15) + hiss;
+			int crush = open ? 1 + (int)(14.0 * (1.0 - p)) : 1 + (int)(16.0 * p);
+			if (i % crush == 0)
+			{
+				held = sample;
+			}
+			double envelope = Math.Min(1.0, t / 0.006) * (open ? Math.Pow(1.0 - p, 0.6) : Math.Pow(1.0 - p, 1.4));
+			double value = held * envelope;
+			if (open && p > 0.68 && p < 0.76)
+			{
+				value += Math.Sin(Math.PI * 2.0 * 2400.0 * t) * 0.5 * (1.0 - (p - 0.68) / 0.08); // lock-on blip
+			}
+			samples[i] = (short)(Math.Max(-1.0, Math.Min(1.0, value / 1.3)) * gain * 32767.0);
+		}
+		return samples;
 	}
 
 	private static short[] Sweep(double seconds, double from, double to, double attack, int level)

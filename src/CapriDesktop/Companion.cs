@@ -7649,39 +7649,32 @@ internal sealed class Companion : Form
 
 	private double nextEyePopup = -1.0;
 
-	private DateTime eyeLogAt = DateTime.MinValue;
+	private readonly List<EyePopup> eyePopups = new List<EyePopup>();
 
-	private EyePopup eyePopup;
-
+	// every 25-75 s an eye peeks in; one time in five a small cluster of 2-3 staggered eyes
 	private void CheckEyePopup(double now)
 	{
-		if (DateTime.Now - eyeLogAt > TimeSpan.FromSeconds(20)) { eyeLogAt = DateTime.Now; System.IO.File.AppendAllText(System.IO.Path.Combine(System.IO.Path.GetTempPath(), "eyepopup-debug.log"), DateTime.Now.ToString("HH:mm:ss") + " called now=" + now.ToString("0") + " next=" + nextEyePopup.ToString("0") + Environment.NewLine); }
+		eyePopups.RemoveAll((EyePopup eye) => eye.IsDisposed);
 		if (!preferences.EyePopups || hidden || Hushed || quitting || dragging || PlayingGame)
 		{
-			if (DateTime.Now - eyeLogAt > TimeSpan.FromSeconds(20)) { eyeLogAt = DateTime.Now; System.IO.File.AppendAllText(System.IO.Path.Combine(System.IO.Path.GetTempPath(), "eyepopup-debug.log"), DateTime.Now.ToString("HH:mm:ss") + " blocked: enabled=" + preferences.EyePopups + " hidden=" + hidden + " hushed=" + Hushed + " quitting=" + quitting + " dragging=" + dragging + " playing=" + PlayingGame + Environment.NewLine); }
 			return;
 		}
 		if (nextEyePopup < 0.0)
 		{
-			nextEyePopup = now + 120.0;
+			nextEyePopup = now + 20.0;
 		}
 		if (now < nextEyePopup)
 		{
 			return;
 		}
-		System.IO.File.AppendAllText(System.IO.Path.Combine(System.IO.Path.GetTempPath(), "eyepopup-debug.log"), DateTime.Now.ToString("HH:mm:ss") + " due, showing" + Environment.NewLine);
-		nextEyePopup = now + 120.0 * (0.8 + random.NextDouble() * 0.4);
-		if (eyePopup != null && !eyePopup.IsDisposed)
+		nextEyePopup = now + 25.0 + random.NextDouble() * 50.0;
+		int count = (random.NextDouble() < 0.2) ? (2 + random.Next(2)) : 1;
+		for (int i = 0; i < count && eyePopups.Count < 3; i++)
 		{
-			return;
+			EyePopup eye = new EyePopup(eyePopups.ConvertAll((EyePopup other) => other.Bounds), i * random.Next(250, 700));
+			eyePopups.Add(eye);
+			eye.Show();
 		}
-		Bitmap art = LoadArt("EyePopup.png") ?? Takeover.Face ?? LoadArt("Capri.Sprite.face.png");
-		if (art == null)
-		{
-			return;
-		}
-		eyePopup = new EyePopup(art);
-		eyePopup.Show();
 	}
 
 	private void CheckGlance(double now, long quiet)

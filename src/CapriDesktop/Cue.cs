@@ -5,5 +5,7 @@ internal enum Cue
 	Arrive,
 	Leave,
 	Hop,
-	Click
+	Click,
+	EyeOpen,
+	EyeClose
 }
