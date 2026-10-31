@@ -324,7 +324,7 @@ internal sealed class Shatter : Overlay
 		float bolt = Math.Max(1.5f, num5 * 0.22f);
 		Crackle.Bolt(graphics, new PointF(middle, num3), new PointF(middle, num4), bolt, Crackle.Hot, 1f, pick, 0.12f, 4);
 		Crackle.Bolt(graphics, new PointF(middle + (float)(pick.NextDouble() - 0.5) * num5, num3), new PointF(middle, num4), bolt * 0.6f, Crackle.Ember, 0.8f, pick, 0.16f, 2);
-		using Brush brush3 = new SolidBrush(Color.FromArgb((int)(170f * glow), 255, 230, 240));
+		using Brush brush3 = new SolidBrush(Color.FromArgb((int)(150f * glow), 255, 60, 70));
 		graphics.FillEllipse(brush3, middle - num5 * 1.6f, num4 - num5 * 0.35f, num5 * 3.2f, num5 * 0.7f);
 	}
 

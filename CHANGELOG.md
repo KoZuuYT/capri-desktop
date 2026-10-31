@@ -1,5 +1,8 @@
 # Changelog
 
+## Raios vermelhos
+- Os raios da Capri agora são vermelhos, finos e angulares como no anime, no lugar dos raios rosa/laranja que pareciam trovões.
+
 ## 2026-10-31 — Raios no estilo do anime
 - Teleporte e pulos: o feixe reto virou um raio em zigue-zague (rosa/laranja com núcleo branco) com ramificações que mudam a cada quadro.
 - Transformação em raio: no começo e no fim ela fica disforme, esticando para cima, afinando e ondulando como chama.

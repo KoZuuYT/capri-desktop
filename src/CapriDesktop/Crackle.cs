@@ -8,8 +8,8 @@ using System.Windows.Forms;
 
 namespace CapriDesktop;
 
-// Her little lightning, in the anime's look: jagged pink/orange arcs with a white-hot core that re-jag every couple of
-// frames, orange flame-spikes with dark outlines bursting out of the floor, and pink/cyan glitch blocks.
+// Her little lightning, in the anime's look: thin angular red electric lines that re-trace every couple of frames,
+// red spikes with near-black outlines bursting out of the floor, and red/black glitch blocks.
 // One click-through layered window that grows to cover whatever zaps are alive, in screen coordinates.
 internal sealed class Crackle : Overlay
 {
@@ -43,15 +43,15 @@ internal sealed class Crackle : Overlay
 		internal Color Colour;
 	}
 
-	internal static readonly Color Hot = Color.FromArgb(255, 70, 150);
+	internal static readonly Color Hot = Color.FromArgb(255, 34, 52);
 
-	internal static readonly Color Ember = Color.FromArgb(255, 132, 24);
+	internal static readonly Color Ember = Color.FromArgb(214, 0, 28);
 
-	internal static readonly Color Flame = Color.FromArgb(255, 214, 60);
+	internal static readonly Color Flame = Color.FromArgb(255, 120, 120);
 
-	internal static readonly Color Ice = Color.FromArgb(70, 230, 255);
+	internal static readonly Color Ice = Color.FromArgb(150, 0, 18);
 
-	private static readonly Color Soot = Color.FromArgb(28, 10, 24);
+	private static readonly Color Soot = Color.FromArgb(22, 2, 6);
 
 	private readonly Timer ticks = new Timer();
 
@@ -109,7 +109,7 @@ internal sealed class Crackle : Overlay
 		for (int i = 0; i < blocks; i++)
 		{
 			Add(Kind.Block, body.Left + (float)random.NextDouble() * body.Width, body.Top + (float)random.NextDouble() * body.Height, 0f,
-				(float)((6.0 + random.NextDouble() * 22.0) * scale), (float)((2.0 + random.NextDouble() * 5.0) * scale), now + random.NextDouble() * 0.2, 0.08 + random.NextDouble() * 0.12, Pick(Hot, Ice, Color.White));
+				(float)((6.0 + random.NextDouble() * 22.0) * scale), (float)((2.0 + random.NextDouble() * 5.0) * scale), now + random.NextDouble() * 0.2, 0.08 + random.NextDouble() * 0.12, Pick(Hot, Ice, Soot, Flame));
 		}
 		Run();
 	}
@@ -301,8 +301,9 @@ internal sealed class Crackle : Overlay
 		graphics.FillPolygon(core, inner);
 	}
 
-	// a jagged lightning stroke from a to b: a wide soft pink glow, a coloured body and a white-hot core,
-	// with short forks hanging off the sharp turns
+	// her red electric line from a to b, the anime way: thin and angular, a walk of short straight runs that snap to
+	// 45-degree turns like a circuit trace, a faint dark-red haze, a crimson body and a pale red hot line inside;
+	// little side twigs break off at some corners
 	internal static void Bolt(Graphics graphics, PointF a, PointF b, float width, Color colour, float alpha, Random pick, float jag, int forks)
 	{
 		float dx = b.X - a.X;
@@ -312,41 +313,46 @@ internal sealed class Crackle : Overlay
 		{
 			return;
 		}
-		List<PointF> points = new List<PointF> { a, b };
-		float spread = length * jag;
-		while (points.Count < 2 + Math.Min(24, (int)(length / 6f)))
+		List<PointF> points = new List<PointF> { a };
+		PointF at = a;
+		float run = Math.Max(4f, length / (5f + jag * 18f));
+		for (int guard = 0; guard < 40; guard++)
 		{
-			List<PointF> next = new List<PointF> { points[0] };
-			for (int i = 1; i < points.Count; i++)
+			float gx = b.X - at.X;
+			float gy = b.Y - at.Y;
+			float left = (float)Math.Sqrt(gx * gx + gy * gy);
+			if (left <= run * 1.2f)
 			{
-				PointF p = points[i - 1];
-				PointF q = points[i];
-				float off = (float)((pick.NextDouble() * 2.0 - 1.0) * spread);
-				next.Add(new PointF((p.X + q.X) / 2f - dy / length * off, (p.Y + q.Y) / 2f + dx / length * off));
-				next.Add(q);
+				break;
 			}
-			points = next;
-			spread *= 0.5f;
+			double toward = Math.Atan2(gy, gx);
+			double turn = (pick.NextDouble() < 0.55) ? 0.0 : ((pick.Next(2) == 0 ? 1 : -1) * Math.PI / 4.0 * (1 + pick.Next(2)));
+			double way = Math.Round((toward + turn) / (Math.PI / 4.0)) * (Math.PI / 4.0);
+			float step = run * (0.5f + (float)pick.NextDouble() * 0.9f);
+			at = new PointF(at.X + (float)Math.Cos(way) * step, at.Y + (float)Math.Sin(way) * step);
+			points.Add(at);
 		}
+		points.Add(b);
 		PointF[] line = points.ToArray();
-		Stroke(graphics, line, width * 4.5f, Color.FromArgb((int)(55f * alpha), colour));
-		Stroke(graphics, line, width * 2.2f, Color.FromArgb((int)(150f * alpha), colour));
-		Stroke(graphics, line, width, Color.FromArgb((int)(255f * alpha), 255, 255, 255));
-		for (int i = 0; i < forks && line.Length > 4; i++)
+		Color deep = Color.FromArgb(Math.Max(0, colour.R - 110), 0, Math.Max(0, colour.B / 4));
+		Stroke(graphics, line, width * 3.2f, Color.FromArgb((int)(60f * alpha), deep));
+		Stroke(graphics, line, width * 1.3f, Color.FromArgb((int)(235f * alpha), colour));
+		Stroke(graphics, line, Math.Max(0.8f, width * 0.45f), Color.FromArgb((int)(220f * alpha), 255, 165, 165));
+		for (int i = 0; i < forks && line.Length > 3; i++)
 		{
-			PointF start = line[1 + pick.Next(line.Length - 3)];
-			double way = Math.Atan2(dy, dx) + (pick.Next(2) == 0 ? 1 : -1) * (0.5 + pick.NextDouble() * 0.7);
-			float reach = length * (0.2f + (float)pick.NextDouble() * 0.25f);
-			Bolt(graphics, start, new PointF(start.X + (float)Math.Cos(way) * reach, start.Y + (float)Math.Sin(way) * reach), width * 0.6f, colour, alpha * 0.85f, pick, jag, 0);
+			PointF start = line[1 + pick.Next(line.Length - 2)];
+			double way = Math.Round((Math.Atan2(dy, dx) + (pick.Next(2) == 0 ? 1 : -1) * Math.PI / 2.0) / (Math.PI / 4.0)) * (Math.PI / 4.0);
+			float reach = length * (0.12f + (float)pick.NextDouble() * 0.2f);
+			Bolt(graphics, start, new PointF(start.X + (float)Math.Cos(way) * reach, start.Y + (float)Math.Sin(way) * reach), width * 0.6f, colour, alpha * 0.8f, pick, jag, 0);
 		}
 	}
 
 	private static void Stroke(Graphics graphics, PointF[] line, float width, Color colour)
 	{
 		using Pen pen = new Pen(colour, Math.Max(0.8f, width));
-		pen.LineJoin = LineJoin.Miter;
-		pen.StartCap = LineCap.Round;
-		pen.EndCap = LineCap.Triangle;
+		pen.LineJoin = LineJoin.Bevel;
+		pen.StartCap = LineCap.Flat;
+		pen.EndCap = LineCap.Flat;
 		graphics.DrawLines(pen, line);
 	}
 
