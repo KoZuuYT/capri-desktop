@@ -12393,11 +12393,11 @@ internal sealed class Companion : Form
 			return false;
 		}
 		Action action = null;
-		if (Regex.IsMatch(text, "\\b(sob[ea]|subir?|monta[r]?|pula[r]?|ride)\\b.*\\b(mouse|cursor|ponteiro|setinha)\\b"))
+		if (Regex.IsMatch(text, "\\b(s[ou]b[eai]r?|s[ou]bi|monta[r]?|mont[ae]|pula[r]?|pul[ae]|ride|rider|hop on)\\b.*\\b(m[ao]u?s[ei]?|mause|maus|mouses?|curs[oa]r?|cursos?|ponteiro|setinha|seta)\\b"))
 		{
 			action = RideByVoice;
 		}
-		else if (Regex.IsMatch(text, "\\b(deit[aeo]r?|deita[- ]?se|lie down|lay down)\\b"))
+		else if (Regex.IsMatch(text, "\\b(d[ei]i?t[aeio]r?|deitada|deitadinha|lie down|lay down|lie|deitase)\\b"))
 		{
 			action = () =>
 			{
@@ -12411,7 +12411,7 @@ internal sealed class Companion : Form
 				}
 			};
 		}
-		else if (Regex.IsMatch(text, "\\b(fica[r]? quiet[ao]|fica[r]? em silencio|silencio|cala (a )?boca|be quiet|shush|shh+)\\b"))
+		else if (Regex.IsMatch(text, "\\b(fi[ck][ae]r? (qu|k)i?e?t[ao]|(qu|k)i?etinh[ao]|fi[ck][ae]r? em silencio|silencio|silencia|cala (a )?boca|calad[ao]|be quiet|shush|shh+|psiu)\\b"))
 		{
 			action = () =>
 			{
@@ -12425,7 +12425,7 @@ internal sealed class Companion : Form
 				}
 			};
 		}
-		else if (Regex.IsMatch(text, "\\b(escond[ea]r?|se esconde|sumir?|some daqui|hide)\\b"))
+		else if (Regex.IsMatch(text, "\\b(e?s?cond[aeiou]r?|e?s?cond[ea]-?se|sumir?|sum[ae] daqui|some daqui|hide|raide)\\b"))
 		{
 			action = () =>
 			{
@@ -12435,7 +12435,7 @@ internal sealed class Companion : Form
 				}
 			};
 		}
-		else if (Regex.IsMatch(text, "\\b(aparec[ea]r?|volta[r]?|show yourself|come back|cade voce)\\b"))
+		else if (Regex.IsMatch(text, "\\b(apar[ae](c|ss|s)[aeiou]r?|aparecida|volt[ae]r?|show yourself|come back|cade voce|reaparec[ae])\\b"))
 		{
 			action = () =>
 			{
@@ -12826,6 +12826,10 @@ internal sealed class Companion : Form
 	{
 		text = (text ?? "").Trim();
 		if (text.Length == 0)
+		{
+			return;
+		}
+		if (prompt == "> you: " && VoiceShortcut(text))
 		{
 			return;
 		}

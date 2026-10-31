@@ -1,7 +1,7 @@
 # Changelog
 
 ## Atalhos por voz
-- Fale com a Capri: "deita", "fica quieta", "se esconde", "aparece" e "sobe no meu mouse" (este último com raios, som e uma fala).
+- Fale com a Capri: "deita", "fica quieta", "se esconde", "aparece" e "sobe no meu mouse" (este último com raios, som e uma fala). Funciona mesmo se o reconhecimento de voz escrever errado ("capre", "kieta", "mause").
 
 ## Raios sólidos com glitch
 - Raios em cor sólida, vermelho e verde da Capri, sem brilho ou degradê.

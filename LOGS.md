@@ -42,7 +42,7 @@ Código decompilado (C#, .NET 8 WinForms/WPF) do programa que traz a **Capri** (
 - 2026-10-31: raios trocados para o vermelho do anime (linhas finas e angulares em 45°, sem núcleo branco; `Crackle.Bolt` e cores `Hot`/`Ember`/`Flame`/`Ice` em `Crackle.cs`).
 - 2026-10-31: raios em cor sólida (vermelho `Hot` 247,6,63 + verde `Flame` 0,217,93, tons exatos da Capri; sem antialias nem degradê) e efeitos de glitch: cópia verde deslocada, pedaço do raio pulando de lado, piscadas e linhas de scanline (`Crackle.cs`).
 
-- 2026-10-31: atalhos por voz (`VoiceShortcut` e `RideByVoice` em `Companion.cs`, chamados no começo de `ChatHeard`): deita, fica quieta, se esconde, aparece, sobe no mouse (com raios, som e fala). Frases com "não" são ignoradas.
+- 2026-10-31: atalhos por voz (`VoiceShortcut` e `RideByVoice` em `Companion.cs`, chamados no começo de `ChatHeard`): deita, fica quieta, se esconde, aparece, sobe no mouse (com raios, som e fala). Frases com "não" são ignoradas. O nome "Capri" não é exigido e os verbos aceitam erros comuns do reconhecimento (capre, kieta, aparesse, mause...).
 
 ## Pedidos pendentes
 - (preencher)
