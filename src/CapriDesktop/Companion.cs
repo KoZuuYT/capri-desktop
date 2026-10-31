@@ -332,6 +332,9 @@ internal sealed class Companion : Form
 
 	private bool hidden;
 
+	// hidden by a voice order: she keeps listening so "aparece" can bring her back
+	private bool hideKeepsEars;
+
 	private Clip clip;
 
 	private double clipStart;
@@ -7537,8 +7540,11 @@ internal sealed class Companion : Form
 				Hide();
 				pill.Hide();
 				typer.Hide();
-				CloseTalk();
-				StopChat();
+				if (!hideKeepsEars)
+				{
+					CloseTalk();
+					StopChat();
+				}
 			}
 			else
 			{
@@ -7549,7 +7555,12 @@ internal sealed class Companion : Form
 				RenderFrame();
 				UpdateAnimation();
 				Static(everywhere: true, Cue.Arrive);
+				if (chatting)
+				{
+					pill.SetChat(on: true, micMuted: ears.Muted);
+				}
 			}
+			hideKeepsEars = false;
 			mainframe.Sync();
 		}
 	}
@@ -12460,6 +12471,7 @@ internal sealed class Companion : Form
 				{
 					SayOne("Fui!", "Me acha se puder.", "Sumindo...", "Até já, choom.");
 					Zap(1.0, ground: seat != null, Cue.Zap);
+					hideKeepsEars = chatting;
 					BeginInvoke((Action)(() => SetHidden(value: true)));
 				}
 			};
@@ -12529,7 +12541,7 @@ internal sealed class Companion : Form
 		box.Prompt = "> you: ";
 		Brain.Learn(text);
 		dropping = false;
-		if (VoiceShortcut(text))
+		if (VoiceShortcut(text) || hidden)
 		{
 			return;
 		}

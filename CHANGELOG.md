@@ -1,6 +1,7 @@
 # Changelog
 
 ## Atalhos por voz
+- Corrigido: a Capri agora volta quando você diz "aparece" depois de mandar ela se esconder por voz.
 - Cada ordem tem raios/som e uma fala dela (falas variadas). Nova ordem: "desce do mouse".
 - Fale com a Capri: "deita", "fica quieta", "se esconde", "aparece" e "sobe no meu mouse" (este último com raios, som e uma fala). Funciona mesmo se o reconhecimento de voz escrever errado ("capre", "kieta", "mause").
 
