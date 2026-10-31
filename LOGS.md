@@ -32,6 +32,7 @@ Código decompilado (C#, .NET 8 WinForms/WPF) do programa que traz a **Capri** (
 - Feito antes do repo: **tradução da Capri ajustada** e **EyePopup adicionado** (`EyePopup.cs` + `src/EyePopup.png`).
 - 2026-10-31: projeto movido de `AppData\Local\Temp` para `D:\usuario alternativo\Documents\Capri Desktop`.
 - 2026-10-31: **rework do EyePopup** (`EyePopup.cs`, `CheckEyePopup` em `Companion.cs`, cues `EyeOpen`/`EyeClose` em `Cue.cs`/`Sfx.cs`). O olho agora é desenhado por código (o `EyePopup.png` não é mais usado), em 4 humores (semicerrado, sonolento, arregalado, normal) com tamanho, inclinação e paleta aleatórios. Animação de boot e shutdown com glitch, olhar que segue o cursor e piscadas. A janela é transparente pixel a pixel, os cliques passam por ela e ela nunca pega foco. Aparece a cada 25–75 s; em 1 de cada 5 vezes vem um grupo de 2–3 olhos. Testado: o olho aparece corretamente na tela.
+- 2026-10-31: olho redesenhado no estilo da arte da Capri (visor verde com 4 formas, olho preto com espinhos, anel verde, íris azul, pupila branca). Animações e sons mantidos.
 
 ## Pedidos pendentes
 - (preencher)

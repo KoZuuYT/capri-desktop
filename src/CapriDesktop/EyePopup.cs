@@ -23,12 +23,14 @@ internal sealed class EyePopup : Form
 	// accent (lids, ring, HUD) and iris colours, after the green/blue look of her eye art
 	private static readonly (Color Accent, Color Iris)[] Palettes =
 	{
-		(Color.FromArgb(24, 255, 120), Color.FromArgb(30, 120, 255)),
-		(Color.FromArgb(0, 229, 255), Color.FromArgb(255, 46, 136)),
-		(Color.FromArgb(255, 46, 136), Color.FromArgb(0, 229, 255)),
-		(Color.FromArgb(255, 196, 40), Color.FromArgb(255, 70, 40)),
-		(Color.FromArgb(24, 255, 120), Color.FromArgb(0, 229, 255))
+		(Color.FromArgb(24, 255, 115), Color.FromArgb(28, 112, 255)),
+		(Color.FromArgb(24, 255, 115), Color.FromArgb(28, 112, 255)),
+		(Color.FromArgb(24, 255, 115), Color.FromArgb(28, 112, 255)),
+		(Color.FromArgb(60, 255, 150), Color.FromArgb(20, 90, 230)),
+		(Color.FromArgb(24, 240, 100), Color.FromArgb(40, 140, 255))
 	};
+
+	private static readonly Color Ink = Color.FromArgb(12, 10, 16);
 
 	private readonly Stopwatch watch = Stopwatch.StartNew();
 
@@ -56,6 +58,9 @@ internal sealed class EyePopup : Form
 
 	private readonly string tag;
 
+	// the green visor panel behind the eye is a slightly crooked quad, like her face art
+	private readonly PointF[] skew = new PointF[4];
+
 	private Bitmap canvas;
 
 	private PointF look;
@@ -70,6 +75,8 @@ internal sealed class EyePopup : Form
 
 	private bool closing;
 
+	private float peak;
+
 	internal EyePopup(IList<Rectangle> taken, int delayMs)
 	{
 		this.delayMs = delayMs;
@@ -78,13 +85,13 @@ internal sealed class EyePopup : Form
 		{
 		case 0:
 			eyeWidth = Roll(100f, 170f);
-			openUpper = Roll(0.28f, 0.45f);
+			openUpper = Roll(0.5f, 0.65f);
 			openLower = openUpper * 0.8f;
 			irisScale = Roll(0.85f, 1f);
 			break;
 		case 1:
 			eyeWidth = Roll(130f, 210f);
-			openUpper = Roll(0.4f, 0.55f);
+			openUpper = Roll(0.6f, 0.75f);
 			openLower = Roll(0.75f, 0.9f);
 			irisScale = Roll(0.95f, 1.1f);
 			break;
@@ -96,7 +103,7 @@ internal sealed class EyePopup : Form
 			break;
 		default:
 			eyeWidth = Roll(140f, 240f);
-			openUpper = Roll(0.65f, 0.85f);
+			openUpper = Roll(0.8f, 0.95f);
 			openLower = Roll(0.6f, 0.75f);
 			irisScale = Roll(0.85f, 1f);
 			break;
@@ -105,12 +112,39 @@ internal sealed class EyePopup : Form
 		coreScale = Roll(0.32f, 0.5f);
 		(accent, iris) = Palettes[rolls.Next(Palettes.Length)];
 		holdMs = rolls.Next(2800, 6500);
+		// box shapes: crooked quad, trapezoid wide on top, trapezoid wide below, slanted parallelogram
+		int box = rolls.Next(4);
+		float slant = Roll(0.12f, 0.22f) * (rolls.Next(2) == 0 ? 1f : -1f);
+		for (int i = 0; i < 4; i++)
+		{
+			bool topCorner = i < 2;
+			bool leftCorner = i == 0 || i == 3;
+			float x = Roll(-0.05f, 0.05f);
+			float y = Roll(-0.1f, 0.1f);
+			switch (box)
+			{
+			case 0:
+				x += Roll(-0.06f, 0.06f);
+				y += Roll(-0.14f, 0.14f);
+				break;
+			case 1:
+				x += topCorner ? 0.08f : -0.14f;
+				break;
+			case 2:
+				x += topCorner ? -0.14f : 0.08f;
+				break;
+			default:
+				x += (topCorner == leftCorner ? -1f : 1f) * slant;
+				break;
+			}
+			skew[i] = new PointF(x, y);
+		}
 		tag = "OPTIC." + rolls.Next(0x1000, 0xFFFF).ToString("X4");
 		FormBorderStyle = FormBorderStyle.None;
 		ShowInTaskbar = false;
 		StartPosition = FormStartPosition.Manual;
 		AutoScaleMode = AutoScaleMode.None;
-		Size = new Size((int)(eyeWidth + 150f), (int)(eyeWidth * 1.05f + 70f));
+		Size = new Size((int)(eyeWidth * 1.55f + 70f), (int)(eyeWidth * 1.2f + 80f));
 		Location = Spot(taken);
 		canvas = new Bitmap(Width, Height, PixelFormat.Format32bppArgb);
 		clock.Tick += (sender, args) => Step();
@@ -325,9 +359,9 @@ internal sealed class EyePopup : Form
 			float lower = (float)(eyeWidth * 0.3 * openLower * lid);
 			g.TranslateTransform(Width / 2f, Height / 2f);
 			g.RotateTransform(tilt);
-			if (upper + lower < 2.5f)
+			if (line < 0.999 && upper + lower < 2.5f)
 			{
-				DrawLine(g, half * (float)line, glitch);
+				DrawLine(g, half * 1.25f * (float)line, glitch);
 			}
 			else
 			{
@@ -374,91 +408,98 @@ internal sealed class EyePopup : Form
 
 	private void DrawEye(Graphics g, float half, float upper, float lower, double glitch, double ms)
 	{
-		using GraphicsPath lens = Lens(half, upper, lower);
-		// outer neon glow
-		for (int i = 4; i >= 1; i--)
+		// green visor panel: grows out of the boot line, stays put while she blinks
+		float panelX = half * 1.3f;
+		float panelY = eyeWidth * 0.3f * Math.Max(openUpper, openLower) * 1.15f + eyeWidth * 0.12f;
+		float grow = (float)Math.Clamp(Math.Max(upper + lower, 0f) / Math.Max(1f, eyeWidth * 0.3f * (openUpper + openLower)) * 1.6f, 0.08, 1.0);
+		if (!closing)
 		{
-			using Pen glow = new Pen(Fade(accent, 0.1), 3f + i * 5f);
+			grow = peak = Math.Max(grow, peak);
+		}
+		PointF[] panel =
+		{
+			new PointF(-panelX * (1f + skew[0].X), -panelY * grow * (1f + skew[0].Y)),
+			new PointF(panelX * (1f + skew[1].X), -panelY * grow * (1f + skew[1].Y)),
+			new PointF(panelX * (1f + skew[2].X), panelY * grow * (1f + skew[2].Y)),
+			new PointF(-panelX * (1f + skew[3].X), panelY * grow * (1f + skew[3].Y))
+		};
+		for (int i = 3; i >= 1; i--)
+		{
+			using Pen glow = new Pen(Fade(accent, 0.1), i * 6f);
 			glow.LineJoin = LineJoin.Round;
-			g.DrawPath(glow, lens);
+			g.DrawPolygon(glow, panel);
 		}
-		// spikes from her eye art, riding the lids
-		using (GraphicsPath spikes = new GraphicsPath())
+		using (SolidBrush plate = new SolidBrush(accent))
 		{
-			spikes.AddPolygon(new PointF[]
-			{
-				new PointF((0f - half) * 0.62f, (0f - upper) * 0.55f),
-				new PointF((0f - half) * 0.98f, (0f - upper) * 1.75f - 8f),
-				new PointF((0f - half) * 0.3f, (0f - upper) * 0.95f)
-			});
-			spikes.AddPolygon(new PointF[]
-			{
-				new PointF(half * 0.62f, lower * 0.55f),
-				new PointF(half * 0.92f, lower * 1.7f + 8f),
-				new PointF(half * 0.3f, lower * 0.95f)
-			});
-			using SolidBrush dark = new SolidBrush(Color.FromArgb(240, 12, 10, 18));
-			using Pen rim = new Pen(accent, 2f);
-			g.FillPath(dark, spikes);
-			g.DrawPath(rim, spikes);
+			g.FillPolygon(plate, panel);
 		}
-		using (LinearGradientBrush sclera = new LinearGradientBrush(new PointF(0f, 0f - upper - 1f), new PointF(0f, lower + 1f), Color.FromArgb(245, 26, 18, 36), Color.FromArgb(245, 6, 4, 12)))
+		using (Pen scan = new Pen(Color.FromArgb(28, 0, 0, 0)))
 		{
-			g.FillPath(sclera, lens);
+			float top = -panelY * grow * 1.15f;
+			for (float y = top; y < -top; y += 3f)
+			{
+				g.DrawLine(scan, -panelX * 1.1f, y, panelX * 1.1f, y);
+			}
 		}
+		using SolidBrush ink = new SolidBrush(Ink);
+		if (upper + lower < 3f)
+		{
+			// shut: a black curved lash with a crossing thorn, like her wink
+			using Pen lash = new Pen(Ink, Math.Max(3f, eyeWidth * 0.035f));
+			lash.StartCap = LineCap.Triangle;
+			lash.EndCap = LineCap.Triangle;
+			g.DrawBezier(lash, -half, 0f, -half * 0.4f, -eyeWidth * 0.07f, half * 0.4f, -eyeWidth * 0.07f, half * 1.05f, eyeWidth * 0.02f);
+			using Pen thorn = new Pen(Ink, Math.Max(2f, eyeWidth * 0.02f));
+			g.DrawLine(thorn, -half * 0.2f, -eyeWidth * 0.16f, half * 0.35f, eyeWidth * 0.08f);
+			return;
+		}
+		using GraphicsPath lens = Lens(half, upper, lower);
+		// thorns from her eye art: one up off the outer lid, one down off the inner lid, plus a small tick
+		using (GraphicsPath thorns = new GraphicsPath())
+		{
+			float reachUp = Math.Max(upper, 4f);
+			float reachDown = Math.Max(lower, 4f);
+			thorns.AddPolygon(new PointF[]
+			{
+				new PointF(half * 0.18f, -reachUp * 0.9f),
+				new PointF(half * 0.62f, -reachUp * 1.65f - eyeWidth * 0.05f),
+				new PointF(half * 0.42f, -reachUp * 0.7f)
+			});
+			thorns.AddPolygon(new PointF[]
+			{
+				new PointF(-half * 0.62f, reachDown * 0.55f),
+				new PointF(-half * 0.92f, reachDown * 1.6f + eyeWidth * 0.05f),
+				new PointF(-half * 0.38f, reachDown * 0.85f)
+			});
+			thorns.AddPolygon(new PointF[]
+			{
+				new PointF(half * 0.55f, reachDown * 0.6f),
+				new PointF(half * 0.78f, reachDown * 1.25f + eyeWidth * 0.02f),
+				new PointF(half * 0.68f, reachDown * 0.45f)
+			});
+			g.FillPath(ink, thorns);
+		}
+		g.FillPath(ink, lens);
 		GraphicsState state = g.Save();
 		g.SetClip(lens, CombineMode.Intersect);
 		float radius = eyeWidth * 0.2f * irisScale;
-		float cx = look.X * half * 0.38f;
-		float cy = look.Y * Math.Max(upper, lower) * 0.4f;
-		// thin outer ring like the art, then the iris and its glowing core
-		using (Pen ring = new Pen(accent, Math.Max(2f, radius * 0.07f)))
+		float cx = look.X * half * 0.32f;
+		float cy = look.Y * Math.Max(upper, lower) * 0.35f;
+		// flat target: green ring, black gap, blue iris, white pupil
+		using (Pen ring = new Pen(accent, Math.Max(2.5f, radius * 0.1f)))
 		{
-			g.DrawEllipse(ring, cx - radius * 1.22f, cy - radius * 1.22f, radius * 2.44f, radius * 2.44f);
+			g.DrawEllipse(ring, cx - radius * 1.2f, cy - radius * 1.2f, radius * 2.4f, radius * 2.4f);
 		}
-		using (GraphicsPath disc = new GraphicsPath())
+		using (SolidBrush blue = new SolidBrush(iris))
 		{
-			disc.AddEllipse(cx - radius, cy - radius, radius * 2f, radius * 2f);
-			using PathGradientBrush shade = new PathGradientBrush(disc);
-			shade.CenterPoint = new PointF(cx, cy);
-			shade.CenterColor = ControlPaint.Light(iris, 0.6f);
-			shade.SurroundColors = new Color[] { ControlPaint.Dark(iris, 0.35f) };
-			g.FillPath(shade, disc);
+			g.FillEllipse(blue, cx - radius * 0.9f, cy - radius * 0.9f, radius * 1.8f, radius * 1.8f);
 		}
-		// rotating HUD segments on the iris
-		using (Pen segments = new Pen(Fade(Color.White, 0.55), Math.Max(1.5f, radius * 0.06f)))
-		{
-			float r = radius * 0.78f;
-			float spin = (float)(ms * 0.09 % 360.0);
-			for (int i = 0; i < 6; i++)
-			{
-				g.DrawArc(segments, cx - r, cy - r, r * 2f, r * 2f, spin + i * 60f, 28f);
-			}
-		}
-		float core = radius * coreScale * (1f + 0.06f * (float)Math.Sin(ms / 260.0));
-		using (GraphicsPath glow = new GraphicsPath())
-		{
-			glow.AddEllipse(cx - core * 1.6f, cy - core * 1.6f, core * 3.2f, core * 3.2f);
-			using PathGradientBrush halo = new PathGradientBrush(glow);
-			halo.CenterColor = Fade(Color.White, 0.8);
-			halo.SurroundColors = new Color[] { Fade(Color.White, 0.0) };
-			g.FillPath(halo, glow);
-		}
+		float core = radius * coreScale * (1f + 0.05f * (float)Math.Sin(ms / 260.0));
+		float px = cx + look.X * radius * 0.15f;
+		float py = cy + look.Y * radius * 0.15f;
 		using (SolidBrush white = new SolidBrush(Color.White))
 		{
-			g.FillEllipse(white, cx - core, cy - core, core * 2f, core * 2f);
-		}
-		// shadow of the upper lid and scanlines
-		using (LinearGradientBrush shadow = new LinearGradientBrush(new PointF(0f, 0f - upper - 2f), new PointF(0f, 0f - upper * 0.2f), Color.FromArgb(190, 0, 0, 0), Color.FromArgb(0, 0, 0, 0)))
-		{
-			g.FillRectangle(shadow, 0f - half, 0f - upper - 1f, half * 2f, upper * 0.8f + 1f);
-		}
-		using (Pen scan = new Pen(Color.FromArgb(45, 0, 0, 0)))
-		{
-			for (float y = 0f - upper; y < lower; y += 3f)
-			{
-				g.DrawLine(scan, 0f - half, y, half, y);
-			}
+			g.FillEllipse(white, px - core, py - core, core * 2f, core * 2f);
 		}
 		g.Restore(state);
 		// chromatic split on the lids while glitching
@@ -467,15 +508,12 @@ internal sealed class EyePopup : Form
 			float shift = (float)(glitch * 6.0);
 			using Pen cyan = new Pen(Fade(Color.FromArgb(0, 229, 255), 0.75), 2f);
 			using Pen magenta = new Pen(Fade(Color.FromArgb(255, 46, 136), 0.75), 2f);
-			g.TranslateTransform(0f - shift, 0f);
+			g.TranslateTransform(-shift, 0f);
 			g.DrawPath(cyan, lens);
 			g.TranslateTransform(shift * 2f, 0f);
 			g.DrawPath(magenta, lens);
-			g.TranslateTransform(0f - shift, 0f);
+			g.TranslateTransform(-shift, 0f);
 		}
-		using Pen lid = new Pen(accent, 3f);
-		lid.LineJoin = LineJoin.Round;
-		g.DrawPath(lid, lens);
 	}
 
 	private void DrawHud(Graphics g, double hud, double ms)
