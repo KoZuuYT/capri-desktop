@@ -12393,7 +12393,7 @@ internal sealed class Companion : Form
 			return false;
 		}
 		Action action = null;
-		if (Regex.IsMatch(text, "\\b(d[ei]s[cs]?[ae]r?|d[ei]ss?[ae]|sai[ar]?|sai[ar]? de cima|hop off|get off|get down|para de andar)\\b"))
+		if (Regex.IsMatch(text, "\\b(d[ei]s?[cs]?[ae]r?|d[ei]ce|d[ei]ss?[ae]|sai[ar]?|sai[ar]? de cima|hop off|get off|get down|para de andar)\\b"))
 		{
 			action = () =>
 			{
