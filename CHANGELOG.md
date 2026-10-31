@@ -2,6 +2,16 @@
 
 > A partir daqui, cada alteração é uma nova versão do mod (mostrada no Mainframe como "Modded vX.Y.Z").
 
+## v0.0.4 — Novas opções no Mainframe
+
+- O botão Settings ficou mais estreito e mais à esquerda, e o texto da versão não cobre mais ele.
+- Nova seção MOD nas configurações:
+  - Botão "Changelog", que mostra esta lista de mudanças dentro da Capri.
+  - "Voice shortcuts": liga/desliga os atalhos por voz (deita, quieta, se esconde, aparece, sobe no mouse).
+  - "Petting": liga/desliga o carinho com o mouse.
+  - "Purr chance": quanto ela ronrona no carinho (nunca, às vezes, frequente, sempre).
+  - "Pet sensitivity": quão fácil o carinho é reconhecido (suave, normal, fácil).
+
 ## v0.0.3 — Versão não cobre mais o botão
 
 - O texto da versão no Mainframe começava em cima do botão quadrado ao lado do título. Agora começa mais à direita e não cobre mais o botão.

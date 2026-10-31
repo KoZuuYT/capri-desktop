@@ -3003,6 +3003,22 @@ internal sealed class Mainframe : Form, IMessageFilter
 
 	private static readonly string[] EyeSizeNames = new string[4] { "Small", "Medium", "Large", "Mixed" };
 
+	private static readonly string[] PurrNames = new string[4] { "Never", "Sometimes", "Often", "Always" };
+
+	private static readonly string[] PetFeelNames = new string[3] { "Gentle", "Normal", "Easy" };
+
+	private Toggle voiceOrders;
+
+	private Toggle pettingOn;
+
+	private Slider purr;
+
+	private Readout purrName;
+
+	private Slider petFeel;
+
+	private Readout petFeelName;
+
 	private static readonly string[] EyeMostNames = new string[5] { "1", "2", "3", "4", "5" };
 
 	private Toggle eyesOn;
@@ -3797,7 +3813,7 @@ internal sealed class Mainframe : Form, IMessageFilter
 	internal string VoiceStatus => voiceNote.Text + " | " + voiceEntry.Box.Text + " | " + speechModels.Text + " | " + connect.Text;
 
 	// version of this personal mod: bumped on every change (see CHANGELOG.md)
-	internal const string ModVersion = "0.0.3";
+	internal const string ModVersion = "0.0.4";
 
 	internal Mainframe(Companion owner, Icon icon, string version)
 	{
@@ -3819,7 +3835,7 @@ internal sealed class Mainframe : Form, IMessageFilter
 		build = Caption("Modded v" + ModVersion, 200, 20, font, Faint);
 		build.AutoSize = false;
 		build.TextAlign = ContentAlignment.MiddleRight;
-		build.Bounds = new Rectangle(185, 20, 107, 22);
+		build.Bounds = new Rectangle(196, 20, 98, 22);
 		EventHandler click = (object param0, EventArgs param1) =>
 		{
 			WindowState = FormWindowState.Minimized;
@@ -3833,7 +3849,7 @@ internal sealed class Mainframe : Form, IMessageFilter
 		});
 		close.Glyph = 2;
 		close.AccessibleName = "Close";
-		more = Make("Settings", 146, 20, 84, 22, (object param0, EventArgs param1) =>
+		more = Make("Settings", 120, 20, 72, 22, (object param0, EventArgs param1) =>
 		{
 			ShowSettings(!paged);
 		});
@@ -4582,6 +4598,47 @@ internal sealed class Mainframe : Form, IMessageFilter
 		perchNote.AutoSize = false;
 		perchNote.TextAlign = ContentAlignment.MiddleRight;
 		perchNote.Bounds = new Rectangle(408, 756, 328, 18);
+		Section("MOD >", 0, 822);
+		Make("Changelog", 220, 819, 136, 20, (object param0, EventArgs param1) =>
+		{
+			ShowChangelog();
+		}).AccessibleName = "What changed in each version of this mod";
+		voiceOrders = Switch("Voice shortcuts", 0, 846, (object param0, EventArgs param1) =>
+		{
+			if (!syncing)
+			{
+				capri.ToggleVoiceOrders();
+			}
+		});
+		voiceOrders.AccessibleName = "Voice shortcuts: lie down, quiet, hide, show up, ride the mouse";
+		pettingOn = Switch("Petting", 0, 874, (object param0, EventArgs param1) =>
+		{
+			if (!syncing)
+			{
+				capri.TogglePetting();
+			}
+		});
+		pettingOn.AccessibleName = "Petting: stroke her with the mouse";
+		purr = Setting("Purr chance", PurrNames, 0, 902, "How often she purrs when petted");
+		purrName = new Readout(purr);
+		purr.Changed += (object param0, EventArgs param1) =>
+		{
+			if (!syncing)
+			{
+				purrName.Text = PurrNames[purr.Value];
+				capri.SetPurrChance(purr.Value);
+			}
+		};
+		petFeel = Setting("Pet sensitivity", PetFeelNames, 0, 930, "How easily a stroke counts as petting");
+		petFeelName = new Readout(petFeel);
+		petFeel.Changed += (object param0, EventArgs param1) =>
+		{
+			if (!syncing)
+			{
+				petFeelName.Text = PetFeelNames[petFeel.Value];
+				capri.SetPetFeel(petFeel.Value);
+			}
+		};
 		Section("EYES >", 380, 790);
 		Make("Peek now", 600, 787, 136, 20, (object param0, EventArgs param1) =>
 		{
@@ -4789,7 +4846,7 @@ internal sealed class Mainframe : Form, IMessageFilter
 			item2.Key.Left = Scaled(item2.Value) + ((!paged) ? 30000 : 0);
 		}
 		int num = (paged ? 380 : 0);
-		build.Left = Scaled(185 + num);
+		build.Left = Scaled(196 + num);
 		minimize.Left = Scaled(300 + num);
 		close.Left = Scaled(330 + num);
 	}
@@ -5411,6 +5468,12 @@ internal sealed class Mainframe : Form, IMessageFilter
 		recallName.Text = Lengths[recall.Value];
 		perchFps.Value = Math.Max(0, Array.IndexOf(Companion.PerchRates, capri.PerchFps));
 		ShowPerch();
+		voiceOrders.Checked = capri.VoiceOrdersOn;
+		pettingOn.Checked = capri.PettingOn;
+		purr.Value = capri.PurrChance;
+		purrName.Text = PurrNames[purr.Value];
+		petFeel.Value = capri.PetFeel;
+		petFeelName.Text = PetFeelNames[petFeel.Value];
 		eyesOn.Checked = capri.EyesOn;
 		eyePace.Value = Math.Clamp(capri.EyePace, 0, EyePaceNames.Length - 1);
 		eyePaceName.Text = EyePaceNames[eyePace.Value];
@@ -5419,6 +5482,41 @@ internal sealed class Mainframe : Form, IMessageFilter
 		eyeMost.Value = Math.Clamp(capri.EyeMost, 0, EyeMostNames.Length - 1);
 		eyeMostName.Text = EyeMostNames[eyeMost.Value];
 		syncing = false;
+	}
+
+	private void ShowChangelog()
+	{
+		string text;
+		using (Stream stream = typeof(Mainframe).Assembly.GetManifestResourceStream("Capri.Changelog.md"))
+		{
+			text = (stream == null) ? "No changelog." : new StreamReader(stream).ReadToEnd();
+		}
+		Form form = new Form
+		{
+			Text = "Changelog",
+			Icon = Icon,
+			BackColor = Ground,
+			StartPosition = FormStartPosition.CenterParent,
+			ClientSize = new Size(Scaled(520), Scaled(600))
+		};
+		TextBox box = new TextBox
+		{
+			Multiline = true,
+			ReadOnly = true,
+			ScrollBars = ScrollBars.Vertical,
+			Dock = DockStyle.Fill,
+			BorderStyle = BorderStyle.None,
+			BackColor = Ground,
+			ForeColor = White,
+			Font = Type(10f),
+			Text = text.Replace("\r\n", "\n").Replace("\n", "\r\n")
+		};
+		form.Controls.Add(box);
+		form.Shown += (object param0, EventArgs param1) =>
+		{
+			box.SelectionLength = 0;
+		};
+		form.Show(this);
 	}
 
 	private void ShowPerch()

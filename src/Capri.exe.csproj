@@ -67,6 +67,7 @@
     <None Remove="Capri.Voice.hello-late.wav" />
     <None Remove="Capri.Voice.hello-miss.wav" />
     <None Remove="Capri.Voice.hello-morning.wav" />
+    <EmbeddedResource Include="..\CHANGELOG.md" LogicalName="Capri.Changelog.md" />
     <EmbeddedResource Include="Capri.Chip.ico" LogicalName="Capri.Chip.ico" />
     <EmbeddedResource Include="Capri.Font.Mono.ttf" LogicalName="Capri.Font.Mono.ttf" />
     <EmbeddedResource Include="Capri.Sprite.arrive.png" LogicalName="Capri.Sprite.arrive.png" />

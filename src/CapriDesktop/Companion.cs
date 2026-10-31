@@ -3755,7 +3755,7 @@ internal sealed class Companion : Form
 
 	private void Stroke(Point cursor)
 	{
-		if (pressed || dragging || riding || hidden || chatting || working != null || frame == null || !Solid(PointToClient(cursor)))
+		if (!preferences.Petting || pressed || dragging || riding || hidden || chatting || working != null || frame == null || !Solid(PointToClient(cursor)))
 		{
 			petTurns.Clear();
 			petWay = 0;
@@ -3772,9 +3772,9 @@ internal sealed class Companion : Form
 			{
 				// a turn only counts after a real swing (>= 30 px) and in rhythm with the last one;
 				// passing over her or jittering in place never adds up
-				bool swung = petSwing >= 30;
+				bool swung = petSwing >= PetFeels[PetFeel, 0];
 				petSwing = 0;
-				if (!swung || (petTurns.Count > 0 && now - petTurns[petTurns.Count - 1] > 700))
+				if (!swung || (petTurns.Count > 0 && now - petTurns[petTurns.Count - 1] > PetFeels[PetFeel, 2]))
 				{
 					petTurns.Clear();
 				}
@@ -3794,7 +3794,7 @@ internal sealed class Companion : Form
 			petWay = num;
 			petSwing += Math.Abs(value);
 			petTurns.RemoveAll((long at) => now - at > 2500);
-			if (petTurns.Count >= 6 && now - petAt >= 20000)
+			if (petTurns.Count >= PetFeels[PetFeel, 1] && now - petAt >= 20000)
 			{
 				petTurns.Clear();
 				petAt = now;
@@ -3817,7 +3817,7 @@ internal sealed class Companion : Form
 	private void Petted()
 	{
 		EndWalk();
-		petPurr = random.NextDouble() < 0.35;
+		petPurr = random.NextDouble() < PurrChances[PurrChance];
 		ShowPetHearts();
 		Sfx.Play(petPurr ? Cue.PetPurr : Cue.PetHappy);
 		if (lying)
@@ -7882,6 +7882,43 @@ internal sealed class Companion : Form
 
 	// eye size per setting (Small, Medium, Large); Mixed rolls one each time
 	private static readonly float[] EyeScales = { 0.65f, 1f, 1.4f };
+
+	// petting feel: { swing px, turns needed, max ms between turns } for Gentle / Normal / Easy
+	private static readonly int[,] PetFeels = { { 45, 8, 600 }, { 30, 6, 700 }, { 20, 4, 900 } };
+
+	private static readonly double[] PurrChances = { 0.0, 0.35, 0.65, 1.0 };
+
+	internal bool VoiceOrdersOn => preferences.VoiceOrders;
+
+	internal bool PettingOn => preferences.Petting;
+
+	internal int PurrChance => Math.Clamp(preferences.PurrChance, 0, 3);
+
+	internal int PetFeel => Math.Clamp(preferences.PetFeel, 0, 2);
+
+	internal void ToggleVoiceOrders()
+	{
+		preferences.VoiceOrders = !preferences.VoiceOrders;
+		SavePreferences();
+	}
+
+	internal void TogglePetting()
+	{
+		preferences.Petting = !preferences.Petting;
+		SavePreferences();
+	}
+
+	internal void SetPurrChance(int chance)
+	{
+		preferences.PurrChance = Math.Clamp(chance, 0, 3);
+		SavePreferences();
+	}
+
+	internal void SetPetFeel(int feel)
+	{
+		preferences.PetFeel = Math.Clamp(feel, 0, 2);
+		SavePreferences();
+	}
 
 	internal bool EyesOn => preferences.EyePopups;
 
@@ -12411,6 +12448,10 @@ internal sealed class Companion : Form
 	// her keyboard shortcuts, said out loud: lie down, go quiet, hide, show up, ride the mouse
 	private bool VoiceShortcut(string said)
 	{
+		if (!preferences.VoiceOrders)
+		{
+			return false;
+		}
 		string text = new string((said ?? "").Normalize(NormalizationForm.FormD).Where((char c) => CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark).ToArray()).ToLowerInvariant();
 		if (text.Length > 80 || Regex.IsMatch(text, "\\b(nao|never|don'?t|dont)\\b"))
 		{

@@ -51,6 +51,7 @@ Código decompilado (C#, .NET 8 WinForms/WPF) do programa que traz a **Capri** (
 - 2026-10-31: **v0.0.1** — Mainframe mostra "Modded v" + `ModVersion` (`Mainframe.cs`). Daqui pra frente toda alteração sobe a versão.
 - 2026-10-31: **v0.0.2** — rótulo `build` alargado (x=160, largura 132; também em `build.Left`), antes cortava o número.
 - 2026-10-31: **v0.0.3** — rótulo `build` movido para x=185, largura 107 (cobria o botão ao lado do título).
+- 2026-10-31: **v0.0.4** — Settings em x=120 largura 72, versão em x=196 largura 98. Seção MOD na coluna esquerda da página (y=822): botão Changelog (CHANGELOG.md embutido como `Capri.Changelog.md`, `ShowChangelog`), switches `VoiceOrders`/`Petting` e sliders `PurrChance`/`PetFeel` (`Preferences.cs`; `PetFeels`/`PurrChances` em `Companion.cs`).
 
 ## Pedidos pendentes
 - (preencher)

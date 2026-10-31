@@ -36,6 +36,18 @@ internal sealed class Preferences
 	public int EyeMost = 2;
 
 	[DataMember]
+	public bool VoiceOrders = true;
+
+	[DataMember]
+	public bool Petting = true;
+
+	[DataMember]
+	public int PurrChance = 1;
+
+	[DataMember]
+	public int PetFeel = 1;
+
+	[DataMember]
 	public long UpdateCheckedAt;
 
 	[DataMember]
@@ -364,6 +376,10 @@ internal sealed class Preferences
 		EyePace = 1;
 		EyeSize = 1;
 		EyeMost = 2;
+		VoiceOrders = true;
+		Petting = true;
+		PurrChance = 1;
+		PetFeel = 1;
 		VoiceSpeed = 100;
 		HdRobot = 0;
 		LayerPitch1 = 2.0;
