@@ -221,7 +221,8 @@ internal sealed class Shatter : Overlay
 			double glitch = (leave ? Math.Min(1.0, 0.35 + t / 0.12) : (1.0 - Smooth((t - 0.34) / 0.1) * 0.6));
 			if (num3 > 0.01)
 			{
-				Sliced(graphics, self, at, num3, glitch, scale, pick);
+				double warp = (leave ? Smooth(t / 0.34) : 1.0 - Smooth((t - 0.26) / 0.2));
+				Sliced(graphics, self, at, num3, glitch, scale, pick, warp, t);
 			}
 			PointF[] array = new PointF[4];
 			foreach (Shard shard in shards)
@@ -304,55 +305,32 @@ internal sealed class Shatter : Overlay
 			return;
 		}
 		float num5 = (float)num2;
-		float num6 = Math.Max(8f, 14f * scale);
-		List<PointF> list = new List<PointF>();
-		List<PointF> list2 = new List<PointF>();
-		float num7 = num3;
-		while (true)
-		{
-			float num8 = Math.Min(num7, num4);
-			list.Add(new PointF(middle - num5 / 2f - (float)(pick.NextDouble() * (double)num5 * 0.35), num8));
-			list2.Add(new PointF(middle + num5 / 2f + (float)(pick.NextDouble() * (double)num5 * 0.35), num8));
-			if (num8 >= num4)
-			{
-				break;
-			}
-			num7 += num6;
-		}
-		list2.Reverse();
-		List<PointF> list3 = new List<PointF>(list);
-		list3.AddRange(list2);
-		RectangleF rect = new RectangleF(middle - num5 * 1.4f, num3, num5 * 2.8f, num4 - num3);
+		float glow = (float)Math.Min(1.0, num2 / (double)(30f * scale));
+		RectangleF rect = new RectangleF(middle - num5 * 1.6f, num3, num5 * 3.2f, num4 - num3);
 		using (LinearGradientBrush linearGradientBrush = new LinearGradientBrush(rect, Color.Transparent, Color.Transparent, LinearGradientMode.Horizontal))
 		{
 			ColorBlend colorBlend = new ColorBlend();
 			colorBlend.Colors = new Color[3]
 			{
-				Color.FromArgb(0, Violet),
-				Color.FromArgb(90, Violet),
-				Color.FromArgb(0, Violet)
+				Color.FromArgb(0, Crackle.Hot),
+				Color.FromArgb((int)(70f * glow), Crackle.Hot),
+				Color.FromArgb(0, Crackle.Hot)
 			};
 			colorBlend.Positions = new float[3] { 0f, 0.5f, 1f };
 			linearGradientBrush.InterpolationColors = colorBlend;
 			graphics.FillRectangle(linearGradientBrush, rect);
 		}
-		using (Pen pen = new Pen(Violet, Math.Max(2f, 3f * scale)))
-		{
-			graphics.DrawPolygon(pen, list3.ToArray());
-		}
-		using (Brush brush = new SolidBrush(Look.Red))
-		{
-			graphics.FillPolygon(brush, list3.ToArray());
-		}
-		using (Brush brush2 = new SolidBrush(Color.FromArgb(245, 255, 255, 255)))
-		{
-			graphics.FillRectangle(brush2, middle - num5 * 0.16f, num3, num5 * 0.32f, num4 - num3);
-		}
-		using Brush brush3 = new SolidBrush(Color.FromArgb((int)(150.0 * Math.Min(1.0, num2 / (double)(30f * scale))), 255, 255, 255));
+		// the strike itself: two jagged bolts twisting around each other, re-jagged every frame, with forks
+		float bolt = Math.Max(1.5f, num5 * 0.22f);
+		Crackle.Bolt(graphics, new PointF(middle, num3), new PointF(middle, num4), bolt, Crackle.Hot, 1f, pick, 0.12f, 4);
+		Crackle.Bolt(graphics, new PointF(middle + (float)(pick.NextDouble() - 0.5) * num5, num3), new PointF(middle, num4), bolt * 0.6f, Crackle.Ember, 0.8f, pick, 0.16f, 2);
+		using Brush brush3 = new SolidBrush(Color.FromArgb((int)(170f * glow), 255, 230, 240));
 		graphics.FillEllipse(brush3, middle - num5 * 1.6f, num4 - num5 * 0.35f, num5 * 3.2f, num5 * 0.7f);
 	}
 
-	private static void Sliced(Graphics graphics, Bitmap self, Point at, double shown, double glitch, float scale, Random pick)
+	// warp is her lightning form taking over: the body stretches up into the bolt, thins, and each slice
+	// waves sideways like a flame, so she looks melted and misshapen at the start and end of the jump
+	private static void Sliced(Graphics graphics, Bitmap self, Point at, double shown, double glitch, float scale, Random pick, double warp, double t)
 	{
 		using (ImageAttributes key = Tint(Color.Empty, shown))
 		{
@@ -364,6 +342,14 @@ internal sealed class Shatter : Overlay
 			{
 				num2 = Math.Min(self.Height - i, Math.Max(3, (int)((double)self.Height * (0.03 + pick.NextDouble() * 0.13))));
 				float num3 = ((pick.Next(3) == 0) ? ((float)((pick.NextDouble() * 2.0 - 1.0) * 18.0 * (double)scale * glitch)) : 0f);
+				double rise = 1.0 - (double)(i + num2 / 2) / (double)self.Height;
+				num3 += (float)(Math.Sin(rise * 9.0 + t * 38.0) * 22.0 * (double)scale * warp * (0.3 + rise));
+				float stretch = (float)(1.0 + warp * 0.9);
+				float thin = (float)(1.0 - warp * 0.45 * (0.4 + rise));
+				int destW = Math.Max(1, (int)((float)self.Width * thin));
+				int destX = at.X + (self.Width - destW) / 2;
+				int destY = at.Y + self.Height - (int)((float)(self.Height - i) * stretch);
+				int destH = Math.Max(1, (int)Math.Ceiling((float)num2 * stretch));
 				KeyValuePair<ImageAttributes, float>[] array = new KeyValuePair<ImageAttributes, float>[3]
 				{
 					new KeyValuePair<ImageAttributes, float>(key2, num3 - num),
@@ -373,7 +359,7 @@ internal sealed class Shatter : Overlay
 				for (int j = 0; j < array.Length; j++)
 				{
 					KeyValuePair<ImageAttributes, float> keyValuePair = array[j];
-					graphics.DrawImage(self, new Rectangle(at.X + (int)Math.Round(keyValuePair.Value), at.Y + i, self.Width, num2), 0, i, self.Width, num2, GraphicsUnit.Pixel, keyValuePair.Key);
+					graphics.DrawImage(self, new Rectangle(destX + (int)Math.Round(keyValuePair.Value), destY, destW, destH), 0, i, self.Width, num2, GraphicsUnit.Pixel, keyValuePair.Key);
 				}
 			}
 		}

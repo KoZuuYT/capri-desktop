@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-31 — Raios no estilo do anime
+- Teleporte e pulos: o feixe reto virou um raio em zigue-zague (rosa/laranja com núcleo branco) com ramificações que mudam a cada quadro.
+- Transformação em raio: no começo e no fim ela fica disforme, esticando para cima, afinando e ondulando como chama.
+- Faíscas: arcos elétricos, espinhos laranja saindo do chão e blocos de glitch rosa/ciano ao chegar, sair, ser agarrada, arremessada, quicar nas bordas e cair com força; rastro de faíscas no voo e ao balançar rápido; estalinhos nos pés ao andar.
+- Sons novos: estalo de raio (trovão curto) ao sumir/aparecer, crepitar elétrico no arremesso, na queda e no pulo, e faísca baixinha ao agarrar.
+
 ## 2026-10-31 — Física ao arrastar
 - Ao segurar a Capri, ela balança como pêndulo: pende para o lado contrário do movimento, passa um pouco do ponto e volta ao centro quando o mouse para.
 - Soltar com o mouse em movimento rápido arremessa ela: voa com a velocidade do mouse (inclusive para cima), gira com o voo, quica nas bordas da tela e cai num lugar para sentar.

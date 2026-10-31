@@ -577,6 +577,10 @@ internal sealed class Companion : Form
 
 	private readonly Shatter shatter = new Shatter();
 
+	private readonly Crackle crackle = new Crackle();
+
+	private double zapAt;
+
 	private readonly Takeover takeover = new Takeover();
 
 	private readonly TaskPanel taskPanel = new TaskPanel();
@@ -3727,6 +3731,7 @@ internal sealed class Companion : Form
 			flyVX = 0.0;
 			dragLast = anchor;
 			dragStep = clock.Elapsed.TotalSeconds;
+			Zap(0.25, ground: false, Cue.Spark);
 			Play(dangle);
 			frames.Start();
 			RefreshIcons();
@@ -5573,6 +5578,11 @@ internal sealed class Companion : Form
 		else
 		{
 			anchor.X += Math.Sign(value) * num2;
+			if (Zappy && random.NextDouble() < num * 3.0)
+			{
+				Rectangle feet = ZapBody();
+				crackle.Fizz(new Point(feet.Left + feet.Width / 2, feet.Bottom), (float)preferences.Size / 240f);
+			}
 			leanAngle = leanAngle * 0.85 + (double)Math.Sign(value) * 2.5 * 0.15;
 		}
 	}
@@ -5625,6 +5635,7 @@ internal sealed class Companion : Form
 		{
 			shatter.Play(new Bitmap(frame), anchor, Screen.FromPoint(new Point(anchor.X + Width / 2, anchor.Y + Height / 2)).Bounds, leave: true, preferences.Size);
 			veiled = true;
+			Zap(0.6, ground: seat != null, null);
 		}
 		Static(everywhere, everywhere ? Cue.Leave : Cue.Hop);
 		outro = then;
@@ -7184,6 +7195,36 @@ internal sealed class Companion : Form
 		}
 	}
 
+	private bool Zappy => !instant && !hidden && preferences.Motion && IsHandleCreated;
+
+	private Rectangle ZapBody()
+	{
+		return BodyOnScreen(anchor, (seat != null || riding || onPanel) ? PerchedBody : Body);
+	}
+
+	// her anime lightning bursting off her, with a crackle
+	private void Zap(double power, bool ground, Cue? sound)
+	{
+		if (Zappy)
+		{
+			crackle.Burst(ZapBody(), (float)preferences.Size / 240f, power, ground);
+			if (sound.HasValue)
+			{
+				Sfx.Play(sound.Value);
+			}
+		}
+	}
+
+	// little arcs trailing behind her while she flies or swings fast
+	private void ZapTrail(double now, double vx, double vy)
+	{
+		if (Zappy && now - zapAt >= 0.06)
+		{
+			zapAt = now;
+			crackle.Trail(ZapBody(), (float)preferences.Size / 240f, Math.Atan2(-vy, -vx));
+		}
+	}
+
 	// while held she hangs from the cursor like a pendulum: moving the hand pushes her body the other way,
 	// and she overshoots and settles back when the hand stops
 	private void Swing(double now)
@@ -7200,6 +7241,10 @@ internal sealed class Companion : Form
 		double target = Math.Max(-30.0, Math.Min(30.0, dragVX * 0.018));
 		swingSpeed += ((target - leanAngle) * 55.0 - swingSpeed * 3.2 + push) * dt;
 		leanAngle = Math.Max(-38.0, Math.Min(38.0, leanAngle + swingSpeed * dt));
+		if (dragVX * dragVX + dragVY * dragVY > 1100.0 * 1100.0)
+		{
+			ZapTrail(now, dragVX, dragVY);
+		}
 	}
 
 	// a fast release flings her: she flies with the hand's speed, bounces off the screen sides, then falls onto a ledge
@@ -7220,6 +7265,7 @@ internal sealed class Companion : Form
 		fallTo = null;
 		fallSpeed = dragVY * scale;
 		fallStep = clock.Elapsed.TotalSeconds;
+		Zap(speed / 3600.0, ground: false, Cue.Zap);
 		frames.Start();
 		return true;
 	}
@@ -7233,6 +7279,7 @@ internal sealed class Companion : Form
 		{
 			flyVX = -flyVX * 0.5;
 			swingSpeed += flyVX * 0.08;
+			Zap(0.35, ground: false, Cue.Spark);
 		}
 		anchor.X = kept.X;
 		if (Math.Abs(flyVX) < 20.0)
@@ -7243,10 +7290,12 @@ internal sealed class Companion : Form
 		double target = Math.Max(-35.0, Math.Min(35.0, flyVX * 0.015));
 		swingSpeed += ((target - leanAngle) * 40.0 - swingSpeed * 2.5) * dt;
 		leanAngle = Math.Max(-45.0, Math.Min(45.0, leanAngle + swingSpeed * dt));
+		ZapTrail(clock.Elapsed.TotalSeconds, flyVX, fallSpeed);
 	}
 
 	private void Land(Ledge ledge, bool arriving = false)
 	{
+		double impact = falling ? fallSpeed / (double)Math.Max(1, preferences.Size * 9) : 0.0;
 		SitUp(glitched: false);
 		fallTo = null;
 		walking = false;
@@ -7280,6 +7329,10 @@ internal sealed class Companion : Form
 		leanAngle = 0.0;
 		anchor = Seated(val, ledge.Y);
 		Play((arriving && preferences.Motion && !instant) ? perchArrive : perchGlitch);
+		if (!arriving && impact > 0.25)
+		{
+			Zap(impact, ground: true, (impact > 0.6) ? Cue.Zap : Cue.Spark);
+		}
 		SavePreferences();
 	}
 
@@ -13409,6 +13462,7 @@ internal sealed class Companion : Form
 		}
 		shatter.Play(bitmap, anchor, Screen.FromPoint(new Point(anchor.X + Width / 2, anchor.Y + Height / 2)).Bounds, leave: false, preferences.Size);
 		veilUntil = now + 0.42;
+		Zap(0.9, ground: clip == perchArrive, null);
 	}
 
 	private void Draw(Graphics graphics, Clip shown, int cell, int talk = -1, Bitmap tween = null)
@@ -13760,6 +13814,7 @@ internal sealed class Companion : Form
 		mainframe.Close();
 		tear.Close();
 		shatter.Close();
+		crackle.Close();
 		takeover.Close();
 		taskPanel.Close();
 		tray.Visible = false;

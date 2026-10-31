@@ -38,6 +38,7 @@ Código decompilado (C#, .NET 8 WinForms/WPF) do programa que traz a **Capri** (
 - 2026-10-31: detecção do carinho menos sensível (`petSwing` em `Stroke`: ida >= 30 px, viradas em até 700 ms, 6 viradas).
 - 2026-10-31: TalkPill posicionado ao lado do sprite (método que chama `pill.Place` em `Companion.cs`).
 - 2026-10-31: física do arrasto estilo shimeji (`Swing`/`Throw`/`Fly` em `Companion.cs`, perto de `Land`; usa `leanAngle` para o balanço e `flyVX` + `fallSpeed` no `Tumble` para o arremesso).
+- 2026-10-31: raios estilo anime (`Crackle.cs` = overlay de faíscas: arcos, espinhos, blocos; `Shatter.Beam` usa `Crackle.Bolt`; `Shatter.Sliced` com `warp` deforma o corpo na transformação; `Zap`/`ZapTrail` em `Companion.cs` perto de `Swing`; cues `Zap`/`Spark` e `Strike`/`Crackle` em `Sfx.cs`).
 
 ## Pedidos pendentes
 - (preencher)

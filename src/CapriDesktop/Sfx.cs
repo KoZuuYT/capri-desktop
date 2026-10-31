@@ -90,9 +90,11 @@ internal static class Sfx
 	{
 		return cue switch
 		{
-			Cue.Arrive => Sweep(0.42, 330.0, 990.0, 0.03, level), 
-			Cue.Leave => Sweep(0.36, 880.0, 250.0, 0.012, level), 
-			Cue.Hop => Sweep(0.16, 520.0, 1240.0, 0.008, level),
+			Cue.Arrive => Mix(Strike(level * 4 / 5, 3), Sweep(0.42, 330.0, 990.0, 0.03, level * 3 / 5), 1800),
+			Cue.Leave => Mix(Sweep(0.36, 880.0, 250.0, 0.012, level * 3 / 5), Strike(level * 4 / 5, 5), 4000),
+			Cue.Hop => Mix(Crackle(0.3, level * 3 / 4, 13), Sweep(0.16, 520.0, 1240.0, 0.008, level / 2), 0),
+			Cue.Zap => Crackle(0.32, level * 3 / 4, strokes.Next()),
+			Cue.Spark => Crackle(0.12, level / 3, strokes.Next()),
 			Cue.EyeOpen => Glitch(open: true, level * 3 / 4),
 			Cue.EyeClose => Glitch(open: false, level * 3 / 4),
 			Cue.PetStroke => Blip(0.07, 1300.0 + strokes.NextDouble() * 500.0, 1.25, level / 2),
@@ -113,6 +115,69 @@ internal static class Sfx
 		{
 			int value = (i < a.Length ? a[i] : 0) + (i >= at && i - at < b.Length ? b[i - at] : 0);
 			samples[i] = (short)Math.Max(-32768, Math.Min(32767, value));
+		}
+		return samples;
+	}
+
+	// electric crackle: sharp random snaps that thin out, over a buzzing 120 Hz hum with a jittery pitch, bit-crushed
+	private static short[] Crackle(double seconds, int level, int seed)
+	{
+		int count = (int)(seconds * 24000.0);
+		short[] samples = new short[count];
+		Random noise = new Random(seed);
+		double gain = 0.3 * (double)Math.Max(0, Math.Min(100, level)) / 100.0;
+		double phase = 0.0;
+		double snap = 0.0;
+		double last = 0.0;
+		double held = 0.0;
+		for (int i = 0; i < count; i++)
+		{
+			double p = (double)i / (double)count;
+			if (noise.NextDouble() < 0.004 * (1.0 - p) + 0.0006)
+			{
+				snap = 0.8 + noise.NextDouble() * 0.6;
+			}
+			snap *= 0.93;
+			double white = noise.NextDouble() * 2.0 - 1.0;
+			double bright = white - last;
+			last = white;
+			phase += Math.PI * 2.0 * (120.0 + noise.NextDouble() * 90.0) / 24000.0;
+			double hum = 0.5 * Math.Sign(Math.Sin(phase)) * Math.Pow(1.0 - p, 1.5);
+			double sample = bright * snap + hum * 0.45;
+			if (i % 3 == 0)
+			{
+				held = sample;
+			}
+			double envelope = Math.Min(1.0, (double)i / 40.0) * Math.Pow(1.0 - p, 0.8);
+			samples[i] = (short)(Math.Max(-1.0, Math.Min(1.0, held * envelope)) * gain * 32767.0);
+		}
+		return samples;
+	}
+
+	// a lightning strike: a white-hot crack, a falling electric buzz and a short low rumble
+	private static short[] Strike(int level, int seed)
+	{
+		double seconds = 0.7;
+		int count = (int)(seconds * 24000.0);
+		short[] samples = new short[count];
+		Random noise = new Random(seed);
+		double gain = 0.34 * (double)Math.Max(0, Math.Min(100, level)) / 100.0;
+		double phase = 0.0;
+		double low = 0.0;
+		double last = 0.0;
+		for (int i = 0; i < count; i++)
+		{
+			double t = (double)i / 24000.0;
+			double p = (double)i / (double)count;
+			double white = noise.NextDouble() * 2.0 - 1.0;
+			double crack = (white - last) * Math.Exp(-t / 0.035) * 1.2;
+			last = white;
+			low += (white - low) * 0.02;
+			double rumble = low * 4.0 * Math.Min(1.0, t / 0.03) * Math.Exp(-t / 0.22);
+			phase += Math.PI * 2.0 * (900.0 * Math.Pow(70.0 / 900.0, Math.Sqrt(p)) + noise.NextDouble() * 60.0) / 24000.0;
+			double buzz = Math.Sign(Math.Sin(phase)) * 0.35 * Math.Exp(-t / 0.18) * (noise.Next(9) == 0 ? 0.2 : 1.0);
+			double sample = crack + rumble + buzz;
+			samples[i] = (short)(Math.Max(-1.0, Math.Min(1.0, sample / 1.4)) * gain * 32767.0);
 		}
 		return samples;
 	}

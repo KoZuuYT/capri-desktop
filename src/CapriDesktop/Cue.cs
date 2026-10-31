@@ -11,5 +11,7 @@ internal enum Cue
 	PetStroke,
 	PetHappy,
 	PetPurr,
-	PetEnd
+	PetEnd,
+	Zap,
+	Spark
 }
