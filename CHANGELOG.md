@@ -2,6 +2,10 @@
 
 > A partir daqui, cada alteração é uma nova versão do mod (mostrada no Mainframe como "Modded vX.Y.Z").
 
+## v0.0.7 — Mainframe em 75%
+
+- Nova opção "75%" em Settings > Mainframe size, para o Mainframe caber em telas menores.
+
 ## v0.0.6 — Mainframe redimensionável
 
 - Nas configurações, dá para puxar a borda de baixo do Mainframe para deixar a janela mais baixa (ou mais alta). O resto vira rolagem, e o tamanho fica salvo.

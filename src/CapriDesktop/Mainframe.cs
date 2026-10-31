@@ -3381,9 +3381,9 @@ internal sealed class Mainframe : Form, IMessageFilter
 
 	private readonly Readout perchFpsName;
 
-	private static readonly int[] FrameSizes = new int[6] { 0, 100, 125, 150, 175, 200 };
+	private static readonly int[] FrameSizes = new int[7] { 0, 75, 100, 125, 150, 175, 200 };
 
-	private static readonly string[] FrameSizeNames = new string[6] { "Auto", "100%", "125%", "150%", "175%", "200%" };
+	private static readonly string[] FrameSizeNames = new string[7] { "Auto", "75%", "100%", "125%", "150%", "175%", "200%" };
 
 	private readonly Slider frameSize;
 
@@ -3831,7 +3831,7 @@ internal sealed class Mainframe : Form, IMessageFilter
 	internal string VoiceStatus => voiceNote.Text + " | " + voiceEntry.Box.Text + " | " + speechModels.Text + " | " + connect.Text;
 
 	// version of this personal mod: bumped on every change (see CHANGELOG.md)
-	internal const string ModVersion = "0.0.6";
+	internal const string ModVersion = "0.0.7";
 
 	internal Mainframe(Companion owner, Icon icon, string version)
 	{

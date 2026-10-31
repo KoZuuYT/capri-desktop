@@ -5789,7 +5789,7 @@ internal sealed class Companion : Form
 
 	internal void SetMainframeSize(int size)
 	{
-		preferences.MainframeSize = ((size > 0) ? Math.Max(100, Math.Min(200, size)) : 0);
+		preferences.MainframeSize = ((size > 0) ? Math.Max(75, Math.Min(200, size)) : 0);
 		SavePreferences();
 	}
 
