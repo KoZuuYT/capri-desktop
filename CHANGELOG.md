@@ -1,5 +1,10 @@
 # Changelog
 
+> A partir daqui, cada alteração é uma nova versão do mod (mostrada no Mainframe como "Modded vX.Y.Z").
+
+## v0.0.1 — Versão do mod no Mainframe
+- O Mainframe mostra "Modded v0.0.1" no lugar da versão original.
+
 ## Correção do nome
 - Quando o reconhecimento de voz escreve o nome dela errado ("capre", "cápria", "cabre", "kapri"...), o texto é corrigido para "Capri".
 

@@ -16,7 +16,7 @@ Código decompilado (C#, .NET 8 WinForms/WPF) do programa que traz a **Capri** (
 1. Editar em `src/CapriDesktop/*.cs`
 2. `dotnet build src/Capri.exe.csproj -c Release -o src/out` (o normal são milhares de avisos CA1416 e **0 erros**). **Sempre com `-o src/out`**: sem isso a saída vai para `src/bin/Debug/...` e o capri-test continua com o executável velho
 3. Copiar `src/out/*` para `capri-test\` e testar
-4. Atualizar `CHANGELOG.md` e a seção "Onde paramos" abaixo; commit + push
+4. Subir a versão do mod (`ModVersion` em `Mainframe.cs`, +1 no último número a cada alteração) e criar a seção `## vX.Y.Z` no `CHANGELOG.md`. Atualizar e a seção "Onde paramos" abaixo; commit + push
 
 ## Mapa dos sistemas (`src/CapriDesktop/`, 156 arquivos)
 - **Núcleo/UI:** `Companion.cs` (~15 mil linhas, quase tudo passa por ele), `Program`, `Overlay`, `SpeechBox`, `TalkPill`, `TypeBox`, `TaskPanel`, `Notice`, `PetHearts`
@@ -48,6 +48,7 @@ Código decompilado (C#, .NET 8 WinForms/WPF) do programa que traz a **Capri** (
 - 2026-10-31: falas das ordens corrigidas: `agent.Tell` (contextual_update) não faz a IA responder; agora `SayOne` usa `agent.Say` (user_message com nota de sistema) e renova `spoke`/`stirred` para a resposta não ser descartada. Fora da conversa gera a fala com `brain.Ask` (frase fixa só se o cérebro falhar/estiver offline).
 - 2026-10-31: falas das ordens sem atraso: na conversa `SayOne` volta a usar `agent.Tell` (enviado na hora, a IA responde junto com a resposta à fala do usuário; o `agent.Say` extra criava um segundo turno que chegava tarde ou se perdia). Fora da conversa mostra na hora uma fala que o cérebro já escreveu antes (`orderLines`, até 3 por ordem) e escreve a próxima em segundo plano; a frase fixa só aparece na primeira vez ou sem cérebro.
 - 2026-10-31: correção do nome na voz (`FixName`/`NameSlip` em `Companion.cs`, aplicada em `ChatHeard` e `Hear`): erros do reconhecimento como capre, cápria, cabre, kapri viram "Capri" antes de qualquer outra coisa (atalhos e IA). "caprese" e palavras comuns como cabra, capa, sobre não são trocadas.
+- 2026-10-31: **v0.0.1** — Mainframe mostra "Modded v" + `ModVersion` (`Mainframe.cs`). Daqui pra frente toda alteração sobe a versão.
 
 ## Pedidos pendentes
 - (preencher)

@@ -3796,6 +3796,9 @@ internal sealed class Mainframe : Form, IMessageFilter
 
 	internal string VoiceStatus => voiceNote.Text + " | " + voiceEntry.Box.Text + " | " + speechModels.Text + " | " + connect.Text;
 
+	// version of this personal mod: bumped on every change (see CHANGELOG.md)
+	internal const string ModVersion = "0.0.1";
+
 	internal Mainframe(Companion owner, Icon icon, string version)
 	{
 		capri = owner;
@@ -3813,7 +3816,7 @@ internal sealed class Mainframe : Form, IMessageFilter
 		ClientSize = new Size(380, 760 + KeyRow);
 		Font font = Look.Mono(8.5f, FontStyle.Regular, GraphicsUnit.Point);
 		Caption("MAINFRAME", 24, 15, Display(16f), Rose);
-		build = Caption("v" + version, 200, 20, font, Faint);
+		build = Caption("Modded v" + ModVersion, 200, 20, font, Faint);
 		build.AutoSize = false;
 		build.TextAlign = ContentAlignment.MiddleRight;
 		build.Bounds = new Rectangle(230, 20, 62, 22);
