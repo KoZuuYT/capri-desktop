@@ -2,6 +2,9 @@
 
 > A partir daqui, cada alteração é uma nova versão do mod (mostrada no Mainframe como "Modded vX.Y.Z").
 
+## v0.0.2 — Versão aparece inteira
+- Corrigido: o Mainframe mostrava só "Modded"; agora mostra o número da versão também.
+
 ## v0.0.1 — Versão do mod no Mainframe
 - O Mainframe mostra "Modded v0.0.1" no lugar da versão original.
 
