@@ -44,6 +44,7 @@ Código decompilado (C#, .NET 8 WinForms/WPF) do programa que traz a **Capri** (
 
 - 2026-10-31: atalhos por voz (`VoiceShortcut` e `RideByVoice` em `Companion.cs`, chamados no começo de `ChatHeard`): deita, fica quieta, se esconde, aparece, sobe no mouse (com raios, som e fala). Frases com "não" são ignoradas. O nome "Capri" não é exigido e os verbos aceitam erros comuns do reconhecimento (capre, kieta, aparesse, mause...).
 - 2026-10-31: "aparece" depois de "se esconde" por voz: ao se esconder por voz durante a conversa contínua ela não desliga mais o microfone (`hideKeepsEars` em `ShowHidden`), então ouve a ordem de voltar; enquanto escondida ignora outras falas.
+- 2026-10-31: balão some junto quando ela se esconde (`box.Hide()` em `ShowHidden`, `|| hidden` em `UpdateTalk`). Falas das ordens por voz: na conversa contínua `SayOne(what, ...)` manda um `agent.Tell` descrevendo o que ela fez e a IA responde com as próprias palavras; fora da conversa usa as frases fixas.
 
 ## Pedidos pendentes
 - (preencher)

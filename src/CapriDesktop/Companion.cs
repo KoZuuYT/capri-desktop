@@ -7540,6 +7540,7 @@ internal sealed class Companion : Form
 				Hide();
 				pill.Hide();
 				typer.Hide();
+				box.Hide();
 				if (!hideKeepsEars)
 				{
 					CloseTalk();
@@ -12412,12 +12413,12 @@ internal sealed class Companion : Form
 				{
 					StopRide();
 					Zap(0.8, ground: false, Cue.Zap);
-					SayOne("Tá bom, tô descendo.", "Fim da carona, choom.", "Ok, ok, desci.", "Valeu pela carona!");
+					SayOne("she hopped off their mouse cursor", "Tá bom, tô descendo.", "Fim da carona, choom.", "Ok, ok, desci.", "Valeu pela carona!");
 				}
 				else
 				{
 					Zap(0.25, ground: seat != null, Cue.Spark);
-					SayOne("Eu nem tô no seu mouse, choom.", "Já tô no chão.");
+					SayOne("they told her to get off the mouse, but she was not riding it", "Eu nem tô no seu mouse, choom.", "Já tô no chão.");
 				}
 			};
 		}
@@ -12432,17 +12433,17 @@ internal sealed class Companion : Form
 				if (lying)
 				{
 					Zap(0.25, ground: true, Cue.Spark);
-					SayOne("Já tô deitada, choom.", "Mais deitada que isso só dormindo.");
+					SayOne("they told her to lie down, but she is already lying down", "Já tô deitada, choom.", "Mais deitada que isso só dormindo.");
 				}
 				else if (seat == null || clip != perch || !LieDown())
 				{
 					Zap(0.3, ground: seat != null, Cue.Spark);
-					SayOne("Me põe em cima de uma janela que eu deito.", "Aqui não dá, choom. Me coloca numa janela.");
+					SayOne("they told her to lie down, but she can only lie down on top of a window and she is not on one", "Me põe em cima de uma janela que eu deito.", "Aqui não dá, choom. Me coloca numa janela.");
 				}
 				else
 				{
 					Zap(0.5, ground: true, Cue.Spark);
-					SayOne("Aah, que bom deitar um pouco.", "Hora do descanso.", "Vou ficar aqui de boa.", "Deitadinha, como você pediu.");
+					SayOne("she lay down to rest, as they asked", "Aah, que bom deitar um pouco.", "Hora do descanso.", "Vou ficar aqui de boa.", "Deitadinha, como você pediu.");
 				}
 			};
 		}
@@ -12454,12 +12455,12 @@ internal sealed class Companion : Form
 				{
 					ToggleShush();
 					Zap(0.4, ground: seat != null, Cue.Spark);
-					SayOne("Tá, fico quietinha.", "Shh... modo silencioso.", "Ok, não falo mais. Por enquanto.");
+					SayOne("she went quiet as they asked (she will stop chiming in on her own)", "Tá, fico quietinha.", "Shh... modo silencioso.", "Ok, não falo mais. Por enquanto.");
 				}
 				else
 				{
 					Zap(0.2, ground: seat != null, Cue.Spark);
-					SayOne("Já tô quietinha.", "Mais quieta que isso eu sumo.");
+					SayOne("they told her to be quiet, but she already is", "Já tô quietinha.", "Mais quieta que isso eu sumo.");
 				}
 			};
 		}
@@ -12469,7 +12470,7 @@ internal sealed class Companion : Form
 			{
 				if (!hidden)
 				{
-					SayOne("Fui!", "Me acha se puder.", "Sumindo...", "Até já, choom.");
+					SayOne("she is vanishing from the screen to hide, as they asked; say a quick goodbye", "Fui!", "Me acha se puder.", "Sumindo...", "Até já, choom.");
 					Zap(1.0, ground: seat != null, Cue.Zap);
 					hideKeepsEars = chatting;
 					BeginInvoke((Action)(() => SetHidden(value: true)));
@@ -12484,12 +12485,12 @@ internal sealed class Companion : Form
 				{
 					SetHidden(value: false);
 					Zap(1.0, ground: seat != null, Cue.Arrive);
-					SayOne("Voltei!", "Sentiu minha falta?", "Tô aqui, choom.", "Chamou?");
+					SayOne("she just reappeared on the screen after hiding, because they called her back", "Voltei!", "Sentiu minha falta?", "Tô aqui, choom.", "Chamou?");
 				}
 				else
 				{
 					Zap(0.3, ground: seat != null, Cue.Spark);
-					SayOne("Já tô aqui, choom.", "Eu nunca saí.");
+					SayOne("they called her to show up, but she was not hidden", "Já tô aqui, choom.", "Eu nunca saí.");
 				}
 			};
 		}
@@ -12502,8 +12503,15 @@ internal sealed class Companion : Form
 	}
 
 	// hops onto the cursor with a burst of lightning, a crackle and a line
-	private void SayOne(params string[] lines)
+	// in a voice chat her AI says it in its own words; otherwise one of the stock lines
+	private void SayOne(string what, params string[] lines)
 	{
+		Agent told = agent;
+		if (chatting && told != null)
+		{
+			told.Tell("Capri just obeyed a spoken order from the user: " + what + ". It is already done, so don't call a tool for it. React out loud in one short, fresh line of your own, in character and in the language they spoke.");
+			return;
+		}
 		Say(lines[random.Next(lines.Length)]);
 	}
 
@@ -12512,7 +12520,7 @@ internal sealed class Companion : Form
 		if (riding)
 		{
 			Zap(0.3, ground: false, Cue.Spark);
-			SayOne("Já tô no seu cursor, choom.", "Eu já tô aqui em cima.");
+			SayOne("they told her to ride the mouse, but she is already riding it", "Já tô no seu cursor, choom.", "Eu já tô aqui em cima.");
 			return;
 		}
 		if (hidden)
@@ -12522,6 +12530,11 @@ internal sealed class Companion : Form
 		Zap(0.8, ground: seat != null, Cue.Zap);
 		StartRide(quiet: true);
 		Zap(1.0, ground: false, Cue.Arrive);
+		if (chatting && agent != null)
+		{
+			SayOne("she jumped onto their mouse cursor and is riding it now", RideLines);
+			return;
+		}
 		Say(RideLines[random.Next(RideLines.Length)] + (hotkey ? (" (" + hopName + " pra eu descer)") : ""));
 	}
 
@@ -13284,7 +13297,7 @@ internal sealed class Companion : Form
 
 	private void UpdateTalk(double now)
 	{
-		if (talkState == TalkState.Off)
+		if (talkState == TalkState.Off || hidden)
 		{
 			if (box.Visible)
 			{
