@@ -2,6 +2,10 @@
 
 > A partir daqui, cada alteração é uma nova versão do mod (mostrada no Mainframe como "Modded vX.Y.Z").
 
+## v0.0.3 — Versão não cobre mais o botão
+
+- O texto da versão no Mainframe começava em cima do botão quadrado ao lado do título. Agora começa mais à direita e não cobre mais o botão.
+
 ## v0.0.2 — Versão aparece inteira
 - Corrigido: o Mainframe mostrava só "Modded"; agora mostra o número da versão também.
 

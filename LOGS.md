@@ -50,6 +50,7 @@ Código decompilado (C#, .NET 8 WinForms/WPF) do programa que traz a **Capri** (
 - 2026-10-31: correção do nome na voz (`FixName`/`NameSlip` em `Companion.cs`, aplicada em `ChatHeard` e `Hear`): erros do reconhecimento como capre, cápria, cabre, kapri viram "Capri" antes de qualquer outra coisa (atalhos e IA). "caprese" e palavras comuns como cabra, capa, sobre não são trocadas.
 - 2026-10-31: **v0.0.1** — Mainframe mostra "Modded v" + `ModVersion` (`Mainframe.cs`). Daqui pra frente toda alteração sobe a versão.
 - 2026-10-31: **v0.0.2** — rótulo `build` alargado (x=160, largura 132; também em `build.Left`), antes cortava o número.
+- 2026-10-31: **v0.0.3** — rótulo `build` movido para x=185, largura 107 (cobria o botão ao lado do título).
 
 ## Pedidos pendentes
 - (preencher)
