@@ -44,11 +44,11 @@ internal sealed class Crackle : Overlay
 	}
 
 	// her flat solid palette: one red, one green, no gradients
-	internal static readonly Color Hot = Color.FromArgb(240, 18, 40);
+	internal static readonly Color Hot = Color.FromArgb(247, 6, 63);
 
 	internal static readonly Color Ember = Hot;
 
-	internal static readonly Color Flame = Color.FromArgb(40, 255, 110);
+	internal static readonly Color Flame = Color.FromArgb(0, 217, 93);
 
 	internal static readonly Color Ice = Hot;
 
