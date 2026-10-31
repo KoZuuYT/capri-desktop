@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -448,6 +448,19 @@ internal sealed class Companion : Form
 	private bool hotkey;
 
 	private double leanAngle;
+
+	// grab physics: pendulum swing while held, throw velocity on release
+	private double swingSpeed;
+
+	private double dragVX;
+
+	private double dragVY;
+
+	private Point dragLast;
+
+	private double dragStep;
+
+	private double flyVX;
 
 	private Ledge seat;
 
@@ -2182,6 +2195,10 @@ internal sealed class Companion : Form
 		{
 			Tumble(totalSeconds);
 		}
+		else if (dragging)
+		{
+			Swing(totalSeconds);
+		}
 		else if (seat != null)
 		{
 			HoldSeat(totalSeconds);
@@ -3704,6 +3721,12 @@ internal sealed class Companion : Form
 			walking = false;
 			dropAfter = false;
 			leanAngle = 0.0;
+			swingSpeed = 0.0;
+			dragVX = 0.0;
+			dragVY = 0.0;
+			flyVX = 0.0;
+			dragLast = anchor;
+			dragStep = clock.Elapsed.TotalSeconds;
 			Play(dangle);
 			frames.Start();
 			RefreshIcons();
@@ -3942,8 +3965,9 @@ internal sealed class Companion : Form
 					{
 						SitHere();
 					}
-					else if (!Drop())
+					else if (!Throw() && !Drop())
 					{
+						leanAngle = 0.0;
 						SavePreferences();
 					}
 				}
@@ -7122,6 +7146,32 @@ internal sealed class Companion : Form
 			SavePreferences();
 			return;
 		}
+		if (flyVX != 0.0 || fallSpeed < 0.0)
+		{
+			Fly(num);
+			hip = Hip();
+			fallTo = fallSpeed < 0.0 ? null : Ledges.Below(Around(), hip, 0, int.MaxValue, 0, Headroom());
+			if (fallSpeed < 0.0)
+			{
+				fallSpeed += (double)(preferences.Size * 11) * num;
+				anchor.Y += (int)Math.Floor(fallSpeed * num);
+				Point kept = KeepOnScreen(anchor);
+				if (kept.Y > anchor.Y)
+				{
+					fallSpeed = 0.0;
+				}
+				anchor = kept;
+				return;
+			}
+			if (fallTo == null)
+			{
+				flyVX = 0.0;
+				leanAngle = 0.0;
+				falling = false;
+				SavePreferences();
+				return;
+			}
+		}
 		fallSpeed += (double)(preferences.Size * 11) * num;
 		int num2 = (int)Math.Ceiling(fallSpeed * num);
 		if (hip.Y + num2 >= fallTo.Y)
@@ -7134,11 +7184,73 @@ internal sealed class Companion : Form
 		}
 	}
 
+	// while held she hangs from the cursor like a pendulum: moving the hand pushes her body the other way,
+	// and she overshoots and settles back when the hand stops
+	private void Swing(double now)
+	{
+		double dt = Math.Max(0.005, Math.Min(0.05, now - dragStep));
+		dragStep = now;
+		double vx = (double)(anchor.X - dragLast.X) / dt;
+		double vy = (double)(anchor.Y - dragLast.Y) / dt;
+		dragLast = anchor;
+		double prevVX = dragVX;
+		dragVX = dragVX * 0.55 + vx * 0.45;
+		dragVY = dragVY * 0.55 + vy * 0.45;
+		double push = Math.Max(-4000.0, Math.Min(4000.0, (dragVX - prevVX) / dt)) * 0.012;
+		double target = Math.Max(-30.0, Math.Min(30.0, dragVX * 0.018));
+		swingSpeed += ((target - leanAngle) * 55.0 - swingSpeed * 3.2 + push) * dt;
+		leanAngle = Math.Max(-38.0, Math.Min(38.0, leanAngle + swingSpeed * dt));
+	}
+
+	// a fast release flings her: she flies with the hand's speed, bounces off the screen sides, then falls onto a ledge
+	private bool Throw()
+	{
+		double speed = Math.Sqrt(dragVX * dragVX + dragVY * dragVY);
+		if (preferences.NoSitting || onPanel || speed < 650.0)
+		{
+			return false;
+		}
+		double scale = Math.Min(1.0, 3600.0 / speed);
+		flyVX = dragVX * scale;
+		if (Math.Abs(flyVX) < 1.0)
+		{
+			flyVX = 1.0 * Math.Sign(dragVX + 0.5);
+		}
+		falling = true;
+		fallTo = null;
+		fallSpeed = dragVY * scale;
+		fallStep = clock.Elapsed.TotalSeconds;
+		frames.Start();
+		return true;
+	}
+
+	private void Fly(double dt)
+	{
+		flyVX *= Math.Pow(0.55, dt);
+		int nx = anchor.X + (int)Math.Round(flyVX * dt);
+		Point kept = KeepOnScreen(new Point(nx, anchor.Y));
+		if (kept.X != nx)
+		{
+			flyVX = -flyVX * 0.5;
+			swingSpeed += flyVX * 0.08;
+		}
+		anchor.X = kept.X;
+		if (Math.Abs(flyVX) < 20.0)
+		{
+			flyVX = 0.0;
+		}
+		// spin with the flight, then ease upright as it slows
+		double target = Math.Max(-35.0, Math.Min(35.0, flyVX * 0.015));
+		swingSpeed += ((target - leanAngle) * 40.0 - swingSpeed * 2.5) * dt;
+		leanAngle = Math.Max(-45.0, Math.Min(45.0, leanAngle + swingSpeed * dt));
+	}
+
 	private void Land(Ledge ledge, bool arriving = false)
 	{
 		SitUp(glitched: false);
 		fallTo = null;
 		walking = false;
+		flyVX = 0.0;
 		if (ledge.Window != IntPtr.Zero)
 		{
 			if (!Ledges.Showing(ledge.Window, out var bounds) || !Ledges.Seatable(ledge.Window, bounds))

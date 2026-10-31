@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-10-31 — Física ao arrastar
+- Ao segurar a Capri, ela balança como pêndulo: pende para o lado contrário do movimento, passa um pouco do ponto e volta ao centro quando o mouse para.
+- Soltar com o mouse em movimento rápido arremessa ela: voa com a velocidade do mouse (inclusive para cima), gira com o voo, quica nas bordas da tela e cai num lugar para sentar.
+
 ## 2026-10-31 — Botão TYPE/TALK ao lado dela
 - O botão TYPE/TALK agora aparece ao lado da Capri (à direita, ou à esquerda perto da borda da tela), e não mais em cima do sprite.
 
