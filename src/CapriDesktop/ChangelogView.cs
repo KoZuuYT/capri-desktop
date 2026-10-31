@@ -36,7 +36,7 @@ internal sealed class ChangelogView : Form
 
 	private readonly float s;
 
-	private readonly System.Windows.Forms.Timer frames = new System.Windows.Forms.Timer { Interval = 15 };
+	private readonly System.Windows.Forms.Timer frames = new System.Windows.Forms.Timer { Interval = 30 };
 
 	private readonly Stopwatch clock = Stopwatch.StartNew();
 
@@ -167,12 +167,14 @@ internal sealed class ChangelogView : Form
 		{
 			Opacity = Math.Min(1.0, t / 0.22);
 		}
-		scroll += (scrollTo - scroll) * 0.22f;
-		if (Math.Abs(scrollTo - scroll) < 0.5f)
+		bool gliding = Math.Abs(scrollTo - scroll) >= 0.5f;
+		scroll = gliding ? (scroll + (scrollTo - scroll) * 0.35f) : scrollTo;
+		// only repaint while something moves: the intro, a scroll, a close, or the slow NEW pulse
+		bool intro = t < 0.6 + entries.Count * 0.07;
+		if (intro || gliding || closing || (long)(t * 30.0) % 3 == 0)
 		{
-			scroll = scrollTo;
+			Invalidate();
 		}
-		Invalidate();
 	}
 
 	private static float Ease(double k)
@@ -291,6 +293,11 @@ internal sealed class ChangelogView : Form
 		return new RectangleF(ClientSize.Width - S(52), S(14), S(28), S(28));
 	}
 
+	protected override void OnPaintBackground(PaintEventArgs e)
+	{
+		e.Graphics.Clear(Neon.Ground);
+	}
+
 	protected override void OnMouseWheel(MouseEventArgs e)
 	{
 		base.OnMouseWheel(e);
@@ -322,6 +329,10 @@ internal sealed class ChangelogView : Form
 		if (hotNow && !closeHot)
 		{
 			Sfx.Play(Cue.Click);
+		}
+		if (over != hover || hotNow != closeHot)
+		{
+			Invalidate();
 		}
 		hover = over;
 		closeHot = hotNow;

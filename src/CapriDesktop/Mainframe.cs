@@ -3831,7 +3831,7 @@ internal sealed class Mainframe : Form, IMessageFilter
 	internal string VoiceStatus => voiceNote.Text + " | " + voiceEntry.Box.Text + " | " + speechModels.Text + " | " + connect.Text;
 
 	// version of this personal mod: bumped on every change (see CHANGELOG.md)
-	internal const string ModVersion = "0.0.9";
+	internal const string ModVersion = "0.0.10";
 
 	internal Mainframe(Companion owner, Icon icon, string version)
 	{
@@ -5344,23 +5344,52 @@ internal sealed class Mainframe : Form, IMessageFilter
 
 	private IntPtr wheelHooked;
 
+	// a global mouse hook makes every mouse move in Windows wait for this thread, so it is only on
+	// while the cursor is over the Mainframe and it is in front; a light timer turns it on and off
+	private System.Windows.Forms.Timer wheelWatch;
+
 	protected override void OnVisibleChanged(EventArgs e)
 	{
 		base.OnVisibleChanged(e);
-		if (Visible && wheelHooked == IntPtr.Zero)
+		if (wheelWatch == null)
+		{
+			wheelWatch = new System.Windows.Forms.Timer { Interval = 120 };
+			wheelWatch.Tick += (object param0, EventArgs param1) => WatchWheel();
+		}
+		wheelWatch.Enabled = Visible;
+		if (!Visible)
+		{
+			DropWheelHook();
+		}
+	}
+
+	private void WatchWheel()
+	{
+		bool want = Visible && WindowState != FormWindowState.Minimized && GetForegroundWindow() == Handle && Bounds.Contains(Cursor.Position);
+		if (want && wheelHooked == IntPtr.Zero)
 		{
 			wheelHook = CatchWheel;
 			wheelHooked = SetWindowsHookEx(14, wheelHook, GetModuleHandle(null), 0u);
 		}
+		else if (!want)
+		{
+			DropWheelHook();
+		}
 	}
 
-	protected override void OnHandleDestroyed(EventArgs e)
+	private void DropWheelHook()
 	{
 		if (wheelHooked != IntPtr.Zero)
 		{
 			UnhookWindowsHookEx(wheelHooked);
 			wheelHooked = IntPtr.Zero;
 		}
+	}
+
+	protected override void OnHandleDestroyed(EventArgs e)
+	{
+		wheelWatch?.Dispose();
+		DropWheelHook();
 		base.OnHandleDestroyed(e);
 	}
 
@@ -5369,7 +5398,11 @@ internal sealed class Mainframe : Form, IMessageFilter
 	private IntPtr CatchWheel(int code, IntPtr kind, IntPtr data)
 	{
 		int msg = kind.ToInt32();
-		if (code >= 0 && msg == 522 && Visible && WindowState != FormWindowState.Minimized && GetForegroundWindow() == Handle)
+		if (msg != 522)
+		{
+			return CallNextHookEx(wheelHooked, code, kind, data);
+		}
+		if (code >= 0 && Visible && WindowState != FormWindowState.Minimized && GetForegroundWindow() == Handle)
 		{
 			Point at = new Point(Marshal.ReadInt32(data), Marshal.ReadInt32(data, 4));
 			if (Bounds.Contains(at))

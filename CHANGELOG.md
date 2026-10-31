@@ -2,6 +2,11 @@
 
 > A partir daqui, cada alteração é uma nova versão do mod (mostrada no Mainframe como "Modded vX.Y.Z").
 
+## v0.0.10 — Sem travadas no Windows
+
+- A rodinha "presa" no Mainframe usava um gancho de mouse ligado o tempo todo, o que fazia o mouse do Windows inteiro engasgar quando a Capri estava ocupada. Agora o gancho só liga enquanto o cursor está em cima do Mainframe e ele está na frente.
+- O changelog redesenha menos vezes (só quando algo se mexe), gastando menos CPU.
+
 ## v0.0.9 — Resize e rodinha consertados, changelog novo
 
 - **Redimensionar de verdade**: a janela do Mainframe não tem moldura, então o Windows ignorava as bordas. Agora o próprio Mainframe cuida disso. Ao puxar qualquer borda ou canto, aparece uma **prévia neon animada** com o tamanho final (ex.: "90% · 700 tall"), com um estalo a cada 5% e um som ao soltar.
