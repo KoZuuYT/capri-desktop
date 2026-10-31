@@ -46,6 +46,7 @@ Código decompilado (C#, .NET 8 WinForms/WPF) do programa que traz a **Capri** (
 - 2026-10-31: "aparece" depois de "se esconde" por voz: ao se esconder por voz durante a conversa contínua ela não desliga mais o microfone (`hideKeepsEars` em `ShowHidden`), então ouve a ordem de voltar; enquanto escondida ignora outras falas.
 - 2026-10-31: balão some junto quando ela se esconde (`box.Hide()` em `ShowHidden`, `|| hidden` em `UpdateTalk`). Falas das ordens por voz: na conversa contínua `SayOne(what, ...)` manda um `agent.Tell` descrevendo o que ela fez e a IA responde com as próprias palavras; fora da conversa usa as frases fixas.
 - 2026-10-31: falas das ordens corrigidas: `agent.Tell` (contextual_update) não faz a IA responder; agora `SayOne` usa `agent.Say` (user_message com nota de sistema) e renova `spoke`/`stirred` para a resposta não ser descartada. Fora da conversa gera a fala com `brain.Ask` (frase fixa só se o cérebro falhar/estiver offline).
+- 2026-10-31: falas das ordens sem atraso: na conversa `SayOne` volta a usar `agent.Tell` (enviado na hora, a IA responde junto com a resposta à fala do usuário; o `agent.Say` extra criava um segundo turno que chegava tarde ou se perdia). Fora da conversa mostra na hora uma fala que o cérebro já escreveu antes (`orderLines`, até 3 por ordem) e escreve a próxima em segundo plano; a frase fixa só aparece na primeira vez ou sem cérebro.
 
 ## Pedidos pendentes
 - (preencher)

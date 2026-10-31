@@ -12502,48 +12502,62 @@ internal sealed class Companion : Form
 		return true;
 	}
 
-	// hops onto the cursor with a burst of lightning, a crackle and a line
-	// in a voice chat her AI says it in its own words; otherwise one of the stock lines
+	// in a voice chat her AI already answers what they said, so it only learns what she did, right away
+	// otherwise a line her brain wrote earlier shows at once, and the next one is written in the background
+	private readonly Dictionary<string, Queue<string>> orderLines = new Dictionary<string, Queue<string>>();
+
 	private void SayOne(string what, params string[] lines)
 	{
-		string ask = "(System note, not said by the user: Capri just obeyed a spoken order from the user: " + what + ". It is already done, so don't call a tool for it. React out loud in one short, fresh line of your own, in character and in the language they spoke.)";
 		Agent told = agent;
 		if (chatting && told != null)
 		{
-			// a user_message makes her answer; a contextual update alone never did
-			spoke = true;
-			stirred = Environment.TickCount;
-			dropping = false;
-			told.Say(ask);
+			told.Tell("Capri just obeyed the spoken order the user just gave: " + what + ". It is already done, so don't call a tool for it. Answer them with one short, fresh line of your own about it, in character and in their language.");
 			return;
 		}
-		string stock = lines[random.Next(lines.Length)];
+		string said = null;
+		lock (orderLines)
+		{
+			if (orderLines.TryGetValue(what, out var queue) && queue.Count > 0)
+			{
+				said = queue.Dequeue();
+			}
+		}
+		Remark("order", said ?? lines[random.Next(lines.Length)]);
 		Brain mind = brain;
 		if (mind == null || mind.Model == null)
 		{
-			Say(stock);
 			return;
 		}
+		string ask = "(System note: Capri just obeyed a spoken order from the user: " + what + ". Write one short, fresh line she says about it, in character and in Brazilian Portuguese. Only the line.)";
 		ThreadPool.QueueUserWorkItem((object param0) =>
 		{
-			string said = null;
+			string line = null;
 			try
 			{
-				said = Brain.Clean(mind.Ask(ask));
+				line = Brain.Clean(mind.Ask(ask));
 			}
 			catch (Exception)
 			{
 			}
-			Post(() =>
+			if (string.IsNullOrWhiteSpace(line) || line.Length > 160)
 			{
-				if (!hidden)
+				return;
+			}
+			lock (orderLines)
+			{
+				if (!orderLines.TryGetValue(what, out var queue))
 				{
-					Remark("order", string.IsNullOrWhiteSpace(said) ? stock : said);
+					queue = (orderLines[what] = new Queue<string>());
 				}
-			});
+				if (queue.Count < 3)
+				{
+					queue.Enqueue(line);
+				}
+			}
 		});
 	}
 
+	// hops onto the cursor with a burst of lightning, a crackle and a line
 	private void RideByVoice()
 	{
 		if (riding)
