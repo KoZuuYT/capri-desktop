@@ -1,6 +1,7 @@
 # Changelog
 
 ## Atalhos por voz
+- Corrigido: as falas das ordens agora aparecem. Na conversa por voz e fora dela, a Capri cria a própria fala sobre o que acabou de fazer.
 - Na conversa por voz, a Capri responde às ordens com falas próprias geradas pela IA (seguindo o que ela fez). O balão de fala some quando ela se esconde.
 - Corrigido: a Capri agora volta quando você diz "aparece" depois de mandar ela se esconder por voz.
 - Cada ordem tem raios/som e uma fala dela (falas variadas). Nova ordem: "desce do mouse".

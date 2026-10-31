@@ -12506,13 +12506,42 @@ internal sealed class Companion : Form
 	// in a voice chat her AI says it in its own words; otherwise one of the stock lines
 	private void SayOne(string what, params string[] lines)
 	{
+		string ask = "(System note, not said by the user: Capri just obeyed a spoken order from the user: " + what + ". It is already done, so don't call a tool for it. React out loud in one short, fresh line of your own, in character and in the language they spoke.)";
 		Agent told = agent;
 		if (chatting && told != null)
 		{
-			told.Tell("Capri just obeyed a spoken order from the user: " + what + ". It is already done, so don't call a tool for it. React out loud in one short, fresh line of your own, in character and in the language they spoke.");
+			// a user_message makes her answer; a contextual update alone never did
+			spoke = true;
+			stirred = Environment.TickCount;
+			dropping = false;
+			told.Say(ask);
 			return;
 		}
-		Say(lines[random.Next(lines.Length)]);
+		string stock = lines[random.Next(lines.Length)];
+		Brain mind = brain;
+		if (mind == null || mind.Model == null)
+		{
+			Say(stock);
+			return;
+		}
+		ThreadPool.QueueUserWorkItem((object param0) =>
+		{
+			string said = null;
+			try
+			{
+				said = Brain.Clean(mind.Ask(ask));
+			}
+			catch (Exception)
+			{
+			}
+			Post(() =>
+			{
+				if (!hidden)
+				{
+					Remark("order", string.IsNullOrWhiteSpace(said) ? stock : said);
+				}
+			});
+		});
 	}
 
 	private void RideByVoice()
