@@ -12393,7 +12393,24 @@ internal sealed class Companion : Form
 			return false;
 		}
 		Action action = null;
-		if (Regex.IsMatch(text, "\\b(s[ou]b[eai]r?|s[ou]bi|monta[r]?|mont[ae]|pula[r]?|pul[ae]|ride|rider|hop on)\\b.*\\b(m[ao]u?s[ei]?|mause|maus|mouses?|curs[oa]r?|cursos?|ponteiro|setinha|seta)\\b"))
+		if (Regex.IsMatch(text, "\\b(d[ei]s[cs]?[ae]r?|d[ei]ss?[ae]|sai[ar]?|sai[ar]? de cima|hop off|get off|get down|para de andar)\\b"))
+		{
+			action = () =>
+			{
+				if (riding)
+				{
+					StopRide();
+					Zap(0.8, ground: false, Cue.Zap);
+					SayOne("Tá bom, tô descendo.", "Fim da carona, choom.", "Ok, ok, desci.", "Valeu pela carona!");
+				}
+				else
+				{
+					Zap(0.25, ground: seat != null, Cue.Spark);
+					SayOne("Eu nem tô no seu mouse, choom.", "Já tô no chão.");
+				}
+			};
+		}
+		else if (Regex.IsMatch(text, "\\b(s[ou]b[eai]r?|s[ou]bi|monta[r]?|mont[ae]|pula[r]?|pul[ae]|ride|rider|hop on)\\b.*\\b(m[ao]u?s[ei]?|mause|maus|mouses?|curs[oa]r?|cursos?|ponteiro|setinha|seta)\\b"))
 		{
 			action = RideByVoice;
 		}
@@ -12403,11 +12420,18 @@ internal sealed class Companion : Form
 			{
 				if (lying)
 				{
-					Say("Já tô deitada, choom.");
+					Zap(0.25, ground: true, Cue.Spark);
+					SayOne("Já tô deitada, choom.", "Mais deitada que isso só dormindo.");
 				}
 				else if (seat == null || clip != perch || !LieDown())
 				{
-					Say("Me põe em cima de uma janela que eu deito.");
+					Zap(0.3, ground: seat != null, Cue.Spark);
+					SayOne("Me põe em cima de uma janela que eu deito.", "Aqui não dá, choom. Me coloca numa janela.");
+				}
+				else
+				{
+					Zap(0.5, ground: true, Cue.Spark);
+					SayOne("Aah, que bom deitar um pouco.", "Hora do descanso.", "Vou ficar aqui de boa.", "Deitadinha, como você pediu.");
 				}
 			};
 		}
@@ -12418,10 +12442,13 @@ internal sealed class Companion : Form
 				if (!shushed)
 				{
 					ToggleShush();
+					Zap(0.4, ground: seat != null, Cue.Spark);
+					SayOne("Tá, fico quietinha.", "Shh... modo silencioso.", "Ok, não falo mais. Por enquanto.");
 				}
 				else
 				{
-					Say("Já tô quietinha.");
+					Zap(0.2, ground: seat != null, Cue.Spark);
+					SayOne("Já tô quietinha.", "Mais quieta que isso eu sumo.");
 				}
 			};
 		}
@@ -12431,7 +12458,9 @@ internal sealed class Companion : Form
 			{
 				if (!hidden)
 				{
-					SetHidden(value: true);
+					SayOne("Fui!", "Me acha se puder.", "Sumindo...", "Até já, choom.");
+					Zap(1.0, ground: seat != null, Cue.Zap);
+					BeginInvoke((Action)(() => SetHidden(value: true)));
 				}
 			};
 		}
@@ -12442,10 +12471,13 @@ internal sealed class Companion : Form
 				if (hidden)
 				{
 					SetHidden(value: false);
+					Zap(1.0, ground: seat != null, Cue.Arrive);
+					SayOne("Voltei!", "Sentiu minha falta?", "Tô aqui, choom.", "Chamou?");
 				}
 				else
 				{
-					Say("Já tô aqui, choom.");
+					Zap(0.3, ground: seat != null, Cue.Spark);
+					SayOne("Já tô aqui, choom.", "Eu nunca saí.");
 				}
 			};
 		}
@@ -12458,11 +12490,17 @@ internal sealed class Companion : Form
 	}
 
 	// hops onto the cursor with a burst of lightning, a crackle and a line
+	private void SayOne(params string[] lines)
+	{
+		Say(lines[random.Next(lines.Length)]);
+	}
+
 	private void RideByVoice()
 	{
 		if (riding)
 		{
-			Say("Já tô no seu cursor, choom.");
+			Zap(0.3, ground: false, Cue.Spark);
+			SayOne("Já tô no seu cursor, choom.", "Eu já tô aqui em cima.");
 			return;
 		}
 		if (hidden)
