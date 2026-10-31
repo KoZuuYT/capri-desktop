@@ -60,6 +60,15 @@ internal sealed class Preferences
 	public bool PcAlerts = true;
 
 	[DataMember]
+	public bool Broadcast;
+
+	[DataMember]
+	public string BroadcastTo;
+
+	[DataMember]
+	public bool BroadcastMic = true;
+
+	[DataMember]
 	public int Pets;
 
 	[DataMember]
@@ -409,6 +418,7 @@ internal sealed class Preferences
 		PetFeel = 1;
 		BlockUpdates = true;
 		PcAlerts = true;
+		BroadcastMic = true;
 		VoiceSpeed = 100;
 		HdRobot = 0;
 		LayerPitch1 = 2.0;

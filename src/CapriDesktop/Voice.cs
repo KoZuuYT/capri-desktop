@@ -564,6 +564,8 @@ internal sealed class Voice
 	{
 		wav = Louder(wav);
 		Stop();
+		VoiceCast.Clear();
+		VoiceCast.Feed(wav);
 		player = new SoundPlayer(new MemoryStream(wav));
 		player.Play();
 	}

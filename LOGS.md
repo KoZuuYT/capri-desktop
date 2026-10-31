@@ -67,3 +67,5 @@ Código decompilado (C#, .NET 8 WinForms/WPF) do programa que traz a **Capri** (
 - Aviso MSB3245 sobre "System.Core" no build é inofensivo.
 - Captura de tela comum (`CopyFromScreen`) não mostra janelas layered como o EyePopup; use BitBlt com `CAPTUREBLT` (0x40000000) para verificar.
 - O `Updater` pode baixar a versão oficial por cima do mod. Desde a v0.0.5 isso fica bloqueado pela preferência `BlockUpdates`, que vem ligada.
+
+- 2026-10-31: **v0.0.12** — `build` label em (196,102) fonte 7.5 + `more.BringToFront()` (Settings sumia sob o label). Transmissão de Voz: `VoiceCast.cs` (waveOut no dispositivo escolhido; alimentado em `Speaker.Play`/`Voice.Play`, limpo em `Clear`/`Play`; passa o mic via waveIn 48k). Prefs `Broadcast`, `BroadcastTo`, `BroadcastMic`; seção BROADCAST (y 1158) e página agora com 1300 de altura; comando de voz em `VoiceShortcut` → `BroadcastByVoice`.

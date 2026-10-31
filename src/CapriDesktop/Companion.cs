@@ -1598,6 +1598,10 @@ internal sealed class Companion : Form
 		Security.SetHey = SetHeyCapri;
 		Security.Changed = SecurityChanged;
 		ears.Chosen = preferences.Mic;
+		if (!smoke)
+		{
+			ApplyBroadcast();
+		}
 		kokoro.Style = LocalVoice.Find(preferences.VoiceStyle);
 		Brain.Language = ((Brain.LanguageCode(preferences.Language) == "en") ? null : preferences.Language);
 		PointEars();
@@ -9500,6 +9504,7 @@ internal sealed class Companion : Form
 		preferences.Mic = (string.IsNullOrEmpty(id) ? null : id);
 		ears.Chosen = preferences.Mic;
 		SavePreferences();
+		ApplyBroadcast();
 		mainframe.ShowMic(MicName(preferences.Mic));
 		micHeard = (micWarned = false);
 		micQuietFrom = -1.0;
@@ -12493,7 +12498,12 @@ internal sealed class Companion : Form
 			return false;
 		}
 		Action action = null;
-		if (Regex.IsMatch(text, "\\b(d[ei]s?[cs]?[ae]r?|d[ei]ce|d[ei]ss?[ae]|sai[ar]?|sai[ar]? de cima|hop off|get off|get down|para de andar)\\b"))
+		if (Regex.IsMatch(text, "\\b(transmit\\w*|transmiss\\w*|broadcast\\w*)\\b"))
+		{
+			bool off = Regex.IsMatch(text, "\\b(par[ae]r? (de|a|com)|desliga\\w*|desativ\\w*|encerr\\w*|termin\\w*|cort[ae]\\w*|chega de|stop\\w*|turn off|off)\\b");
+			action = () => BroadcastByVoice(!off);
+		}
+		else if (Regex.IsMatch(text, "\\b(d[ei]s?[cs]?[ae]r?|d[ei]ce|d[ei]ss?[ae]|sai[ar]?|sai[ar]? de cima|hop off|get off|get down|para de andar)\\b"))
 		{
 			action = () =>
 			{
@@ -12713,6 +12723,88 @@ internal sealed class Companion : Form
 	{
 		preferences.BlockUpdates = !preferences.BlockUpdates;
 		SavePreferences();
+	}
+
+	internal bool BroadcastOn => preferences.Broadcast;
+
+	internal bool BroadcastMicOn => preferences.BroadcastMic;
+
+	internal string BroadcastTo => preferences.BroadcastTo;
+
+	// the mod: voice broadcast, her voice also goes into the device picked (a virtual cable shows up as a mic in other apps)
+	internal bool SetBroadcast(bool on)
+	{
+		if (on && VoiceCast.Index(preferences.BroadcastTo) < 0)
+		{
+			string guess = VoiceCast.Guess();
+			if (guess != null)
+			{
+				preferences.BroadcastTo = guess;
+			}
+		}
+		bool ready = VoiceCast.Index(preferences.BroadcastTo) >= 0;
+		preferences.Broadcast = on;
+		SavePreferences();
+		ApplyBroadcast();
+		return !on || ready;
+	}
+
+	internal void ToggleBroadcastMic()
+	{
+		preferences.BroadcastMic = !preferences.BroadcastMic;
+		SavePreferences();
+		ApplyBroadcast();
+	}
+
+	internal void SetBroadcastTo(string id)
+	{
+		preferences.BroadcastTo = id;
+		SavePreferences();
+		ApplyBroadcast();
+	}
+
+	private void ApplyBroadcast()
+	{
+		VoiceCast.Apply(preferences.Broadcast, preferences.BroadcastTo, preferences.BroadcastMic, preferences.Mic);
+	}
+
+	private void BroadcastByVoice(bool on)
+	{
+		if (on == preferences.Broadcast && (!on || VoiceCast.Index(preferences.BroadcastTo) >= 0))
+		{
+			Zap(0.2, ground: seat != null, Cue.Spark);
+			if (on)
+			{
+				SayOne("they asked her to broadcast her voice into their mic, but she already is", "Já tô no seu microfone, choom.", "Já tô transmitindo.");
+			}
+			else
+			{
+				SayOne("they asked her to stop broadcasting into their mic, but it was already off", "A transmissão já tá desligada.", "Já saí do seu microfone.");
+			}
+			return;
+		}
+		if (on && !SetBroadcast(on: true))
+		{
+			SetBroadcast(on: false);
+			mainframe.Sync();
+			Zap(0.3, ground: seat != null, Cue.Spark);
+			SayOne("they asked her to broadcast her voice into their mic, but there is no virtual audio cable on the PC (like VB-Audio Virtual Cable) and none is picked under BROADCAST in the Mainframe, so she can't yet", "Não achei um cabo de áudio virtual, choom. Instala o VB-Audio Virtual Cable ou escolhe um no Mainframe.", "Preciso de um cabo virtual pra entrar no seu microfone. Escolhe um nas configurações.");
+			return;
+		}
+		if (!on)
+		{
+			SetBroadcast(on: false);
+		}
+		mainframe.Sync();
+		Zap(0.5, ground: seat != null, on ? Cue.Zap : Cue.Spark);
+		if (on)
+		{
+			SayOne("she started broadcasting her voice into their microphone, so others in calls and recordings hear her now, until they ask her to stop", "Pronto, tô no seu microfone.", "Transmissão ligada. Agora todo mundo me ouve, choom.", "No ar!");
+		}
+		else
+		{
+			SayOne("she stopped broadcasting her voice into their microphone, as they asked", "Transmissão desligada.", "Saí do seu microfone, choom.", "Fora do ar.");
+		}
 	}
 
 	internal void TogglePcAlerts()

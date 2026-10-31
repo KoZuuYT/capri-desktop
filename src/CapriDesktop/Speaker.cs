@@ -188,6 +188,7 @@ internal sealed class Speaker : IDisposable
 			if (!Plain)
 			{
 				samples = Voice.Louder(samples);
+				VoiceCast.Feed(samples, rate);
 			}
 			if (modern != null)
 			{
@@ -233,6 +234,10 @@ internal sealed class Speaker : IDisposable
 		if (modern != null)
 		{
 			modern.Clear();
+		}
+		if (!Plain && !silent)
+		{
+			VoiceCast.Clear();
 		}
 		Sweep();
 		shapes.Clear();

@@ -2,6 +2,13 @@
 
 > A partir daqui, cada alteração é uma nova versão do mod (mostrada no Mainframe como "Modded vX.Y.Z").
 
+## v0.0.12 — Transmissão de Voz
+
+- O botão **Settings** do Mainframe voltou (o texto da versão estava por cima dele).
+- Nova seção **BROADCAST** nas configurações: a voz da Capri também toca dentro de um dispositivo que você escolhe, como um cabo de áudio virtual (VB-Audio Virtual Cable). Assim ela entra no "microfone" do Discord, OBS, gravadores etc.
+- Dá para escolher em qual dispositivo ela fala ("Into: ..."), e o "Send my mic too" manda a sua voz junto, misturada com a dela.
+- Por voz: "Capri, transmite sua voz no meu microfone" liga, e "Capri, para de transmitir" desliga. Fica ligado até você pedir para desligar.
+
 ## v0.0.11 — Versão de volta no título
 
 - O canto do Mainframe volta a mostrar "Modded v0.0.11" inteiro (o texto não cabia e cortava a versão).
