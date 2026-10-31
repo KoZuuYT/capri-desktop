@@ -2,6 +2,17 @@
 
 > A partir daqui, cada alteração é uma nova versão do mod (mostrada no Mainframe como "Modded vX.Y.Z").
 
+## v0.0.5 — Ajudantes, estatísticas e proteção do mod
+
+- **Bloquear atualizações oficiais** (ligado por padrão): o app não baixa mais a versão oficial por cima do mod.
+- **Perfis**: botões Calm (sem olhos, sem ronronar, sem alertas), Normal e Chaos (tudo no máximo).
+- **Testar agora**: botões Zap (raio), Pet (carinho) e Time (fala a hora).
+- **Estatísticas**: carinhos, ronronadas, arremessos, dias juntos e lembretes pendentes.
+- **Lembretes por voz**: "Capri, me lembra de beber água em 30 minutos" (ou "daqui a 10 minutos me lembra de..."). Aceita segundos, minutos e horas. Os lembretes ficam na memória e somem se a Capri for fechada.
+- **Pomodoro**: 25/5 ou 50/10 minutos; ela avisa o fim do foco e da pausa com raios.
+- **Fala a hora**: de hora em hora ou a cada meia hora (não fala se estiver escondida ou quieta).
+- **Alertas do PC**: avisa quando a CPU fica acima de 90% por 30 segundos (no máximo a cada 15 min) e quando a bateria cai para 20% fora da tomada.
+
 ## v0.0.4 — Novas opções no Mainframe
 
 - O botão Settings ficou mais estreito e mais à esquerda, e o texto da versão não cobre mais ele.

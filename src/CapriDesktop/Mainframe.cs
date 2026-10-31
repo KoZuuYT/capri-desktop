@@ -2871,7 +2871,7 @@ internal sealed class Mainframe : Form, IMessageFilter
 
 	private const int SetupHeight = 118;
 
-	private const int PageTall = 960;
+	private const int PageTall = 1160;
 
 	private const int Column = 380;
 
@@ -3012,6 +3012,24 @@ internal sealed class Mainframe : Form, IMessageFilter
 	private Toggle pettingOn;
 
 	private Slider purr;
+
+	private static readonly string[] PomoNames = new string[3] { "Off", "25 / 5", "50 / 10" };
+
+	private static readonly string[] ChimeNames = new string[3] { "Off", "Hourly", "Half-hourly" };
+
+	private Toggle blockUpdates;
+
+	private Toggle pcAlerts;
+
+	private Slider pomo;
+
+	private Readout pomoName;
+
+	private Slider chime;
+
+	private Readout chimeName;
+
+	private readonly Label[] stats = new Label[4];
 
 	private Readout purrName;
 
@@ -3281,7 +3299,7 @@ internal sealed class Mainframe : Form, IMessageFilter
 
 	private readonly Dictionary<Control, int> tops = new Dictionary<Control, int>();
 
-	private int pageView = 960;
+	private int pageView = 1160;
 
 	private int pageScroll;
 
@@ -3502,15 +3520,15 @@ internal sealed class Mainframe : Form, IMessageFilter
 			{
 				return ClientRectangle;
 			}
-			return new Rectangle(0, -Scaled(pageScroll), ClientSize.Width, Math.Max(ClientSize.Height, Scaled(960)));
+			return new Rectangle(0, -Scaled(pageScroll), ClientSize.Width, Math.Max(ClientSize.Height, Scaled(1160)));
 		}
 	}
 
-	internal string ScrollStatus => ((paged && pageView < 960) ? (pageView + " tall") : "whole") + " | " + ((topRim.Visible && bottomRim.Visible) ? "rims" : "-");
+	internal string ScrollStatus => ((paged && pageView < 1160) ? (pageView + " tall") : "whole") + " | " + ((topRim.Visible && bottomRim.Visible) ? "rims" : "-");
 
 	internal int Scrolled => pageScroll;
 
-	internal int ScrollMost => Math.Max(0, 960 - pageView);
+	internal int ScrollMost => Math.Max(0, 1160 - pageView);
 
 	internal int BackTop => more.Top;
 
@@ -3813,7 +3831,7 @@ internal sealed class Mainframe : Form, IMessageFilter
 	internal string VoiceStatus => voiceNote.Text + " | " + voiceEntry.Box.Text + " | " + speechModels.Text + " | " + connect.Text;
 
 	// version of this personal mod: bumped on every change (see CHANGELOG.md)
-	internal const string ModVersion = "0.0.4";
+	internal const string ModVersion = "0.0.5";
 
 	internal Mainframe(Companion owner, Icon icon, string version)
 	{
@@ -4639,6 +4657,77 @@ internal sealed class Mainframe : Form, IMessageFilter
 				capri.SetPetFeel(petFeel.Value);
 			}
 		};
+		blockUpdates = Switch("Block official updates", 0, 958, (object param0, EventArgs param1) =>
+		{
+			if (!syncing)
+			{
+				capri.ToggleBlockUpdates();
+			}
+		});
+		blockUpdates.AccessibleName = "Block official updates so they don't install over this mod";
+		Named("Profile", 0, 986);
+		Make("Calm", 184, 989, 54, 20, (object param0, EventArgs param1) =>
+		{
+			capri.UseProfile(0);
+		}).AccessibleName = "Calm profile: no eyes, no purring, no alerts";
+		Make("Normal", 243, 989, 54, 20, (object param0, EventArgs param1) =>
+		{
+			capri.UseProfile(1);
+		}).AccessibleName = "Normal profile: the usual settings";
+		Make("Chaos", 302, 989, 54, 20, (object param0, EventArgs param1) =>
+		{
+			capri.UseProfile(2);
+		}).AccessibleName = "Chaos profile: everything at full";
+		Named("Test now", 0, 1014);
+		Make("Zap", 184, 1017, 54, 20, (object param0, EventArgs param1) =>
+		{
+			capri.TestZap();
+		}).AccessibleName = "Make her lightning strike now";
+		Make("Pet", 243, 1017, 54, 20, (object param0, EventArgs param1) =>
+		{
+			capri.TestPet();
+			ShowStats();
+		}).AccessibleName = "Pet her now";
+		Make("Time", 302, 1017, 54, 20, (object param0, EventArgs param1) =>
+		{
+			capri.TestTime();
+		}).AccessibleName = "Make her say the time now";
+		Section("STATS >", 0, 1050);
+		for (int row = 0; row < stats.Length; row++)
+		{
+			stats[row] = Caption("", 28, 1074 + row * 20, Font, Faint);
+		}
+		Section("HELPERS >", 380, 958);
+		pomo = Setting("Pomodoro", PomoNames, 380, 982, "Pomodoro: focus and break timer");
+		pomoName = new Readout(pomo);
+		pomo.Changed += (object param0, EventArgs param1) =>
+		{
+			if (!syncing)
+			{
+				pomoName.Text = PomoNames[pomo.Value];
+				capri.SetPomodoro(pomo.Value);
+			}
+		};
+		chime = Setting("Say the time", ChimeNames, 380, 1010, "How often she says the time out loud");
+		chimeName = new Readout(chime);
+		chime.Changed += (object param0, EventArgs param1) =>
+		{
+			if (!syncing)
+			{
+				chimeName.Text = ChimeNames[chime.Value];
+				capri.SetChime(chime.Value);
+			}
+		};
+		pcAlerts = Switch("PC alerts (CPU, battery)", 380, 1038, (object param0, EventArgs param1) =>
+		{
+			if (!syncing)
+			{
+				capri.TogglePcAlerts();
+			}
+		});
+		pcAlerts.AccessibleName = "PC alerts: she warns when the CPU stays maxed out or the battery runs low";
+		Caption("Reminders: say \"Capri, me lembra de", 408, 1074, Font, Faint);
+		Caption("beber água em 30 minutos\"", 408, 1094, Font, Faint);
 		Section("EYES >", 380, 790);
 		Make("Peek now", 600, 787, 136, 20, (object param0, EventArgs param1) =>
 		{
@@ -4803,6 +4892,10 @@ internal sealed class Mainframe : Form, IMessageFilter
 			CancelKeys();
 		}
 		paged = on;
+		if (on)
+		{
+			ShowStats();
+		}
 		more.Text = (on ? "Back" : "Settings");
 		more.Invalidate();
 		Place();
@@ -4862,7 +4955,7 @@ internal sealed class Mainframe : Form, IMessageFilter
 
 	private void Reveal(Control control)
 	{
-		if (paged && pageView < 960 && Control.MouseButtons == MouseButtons.None)
+		if (paged && pageView < 1160 && Control.MouseButtons == MouseButtons.None)
 		{
 			float num = Unit();
 			int num2 = Scaled(8);
@@ -4880,7 +4973,7 @@ internal sealed class Mainframe : Form, IMessageFilter
 
 	private void ScrollPage(int to)
 	{
-		int num = (paged ? Math.Max(0, Math.Min(960 - pageView, to)) : 0);
+		int num = (paged ? Math.Max(0, Math.Min(1160 - pageView, to)) : 0);
 		if (num == pageScroll)
 		{
 			return;
@@ -4912,13 +5005,13 @@ internal sealed class Mainframe : Form, IMessageFilter
 	private int Fit()
 	{
 		int val = ((ShortScreen > 0) ? ShortScreen : ((int)((float)Screen.FromControl(this).WorkingArea.Height / Unit())));
-		return Math.Max(144, Math.Min(960, val));
+		return Math.Max(144, Math.Min(1160, val));
 	}
 
 	protected override void OnMouseWheel(MouseEventArgs e)
 	{
 		base.OnMouseWheel(e);
-		if (paged && pageView < 960)
+		if (paged && pageView < 1160)
 		{
 			wheel += e.Delta;
 			int num = wheel / 120;
@@ -5104,11 +5197,11 @@ internal sealed class Mainframe : Form, IMessageFilter
 		Edging(graphics, this, num);
 		if (paged)
 		{
-			if (pageView < 960)
+			if (pageView < 1160)
 			{
 				float num2 = (float)Height - 36f * num;
 				float num3 = num2 * (float)pageView / 860f;
-				float num4 = 18f * num + (num2 - num3) * (float)pageScroll / (float)(960 - pageView);
+				float num4 = 18f * num + (num2 - num3) * (float)pageScroll / (float)(1160 - pageView);
 				using (Brush brush = new SolidBrush(Dash))
 				{
 					graphics.FillRectangle(brush, (float)Width - 8f * num, 18f * num, 2f * num, num2);
@@ -5324,7 +5417,7 @@ internal sealed class Mainframe : Form, IMessageFilter
 		}
 		ClientSize = new Size(Scaled(paged ? 760 : 380), Scaled(paged ? pageView : (642 + num2 + num3 - num4)));
 		ScrollPage(pageScroll);
-		bool flag2 = paged && pageView < 960;
+		bool flag2 = paged && pageView < 1160;
 		Rim rim = topRim;
 		bool visible2 = (bottomRim.Visible = flag2);
 		rim.Visible = visible2;
@@ -5474,6 +5567,13 @@ internal sealed class Mainframe : Form, IMessageFilter
 		purrName.Text = PurrNames[purr.Value];
 		petFeel.Value = capri.PetFeel;
 		petFeelName.Text = PetFeelNames[petFeel.Value];
+		blockUpdates.Checked = capri.BlockUpdatesOn;
+		pcAlerts.Checked = capri.PcAlertsOn;
+		pomo.Value = capri.Pomodoro;
+		pomoName.Text = PomoNames[pomo.Value];
+		chime.Value = capri.Chime;
+		chimeName.Text = ChimeNames[chime.Value];
+		ShowStats();
 		eyesOn.Checked = capri.EyesOn;
 		eyePace.Value = Math.Clamp(capri.EyePace, 0, EyePaceNames.Length - 1);
 		eyePaceName.Text = EyePaceNames[eyePace.Value];
@@ -5482,6 +5582,15 @@ internal sealed class Mainframe : Form, IMessageFilter
 		eyeMost.Value = Math.Clamp(capri.EyeMost, 0, EyeMostNames.Length - 1);
 		eyeMostName.Text = EyeMostNames[eyeMost.Value];
 		syncing = false;
+	}
+
+	private void ShowStats()
+	{
+		string[] lines = capri.Stats;
+		for (int i = 0; i < stats.Length; i++)
+		{
+			stats[i].Text = lines[i];
+		}
 	}
 
 	private void ShowChangelog()

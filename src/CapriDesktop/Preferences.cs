@@ -48,6 +48,30 @@ internal sealed class Preferences
 	public int PetFeel = 1;
 
 	[DataMember]
+	public bool BlockUpdates = true;
+
+	[DataMember]
+	public int Pomodoro;
+
+	[DataMember]
+	public int Chime;
+
+	[DataMember]
+	public bool PcAlerts = true;
+
+	[DataMember]
+	public int Pets;
+
+	[DataMember]
+	public int Purrs;
+
+	[DataMember]
+	public int Throws;
+
+	[DataMember]
+	public long FirstMet;
+
+	[DataMember]
 	public long UpdateCheckedAt;
 
 	[DataMember]
@@ -380,6 +404,8 @@ internal sealed class Preferences
 		Petting = true;
 		PurrChance = 1;
 		PetFeel = 1;
+		BlockUpdates = true;
+		PcAlerts = true;
 		VoiceSpeed = 100;
 		HdRobot = 0;
 		LayerPitch1 = 2.0;

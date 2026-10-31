@@ -2043,7 +2043,8 @@ internal sealed class Companion : Form
 			CheckWake(clock.Elapsed.TotalSeconds);
 			CheckSlow(clock.Elapsed.TotalSeconds);
 			UpdatePill(clock.Elapsed.TotalSeconds);
-			if (!testing && UpdateDue(preferences.UpdateCheckedAt, DateTime.UtcNow.Ticks, clock.Elapsed.TotalSeconds, updateStarted))
+			CheckHelpers();
+			if (!testing && !preferences.BlockUpdates && UpdateDue(preferences.UpdateCheckedAt, DateTime.UtcNow.Ticks, clock.Elapsed.TotalSeconds, updateStarted))
 			{
 				CheckForUpdates(asked: false);
 			}
@@ -2629,6 +2630,15 @@ internal sealed class Companion : Form
 	{
 		if (updating || installing)
 		{
+			return;
+		}
+		// the mod: an official update would install over the modded build
+		if (preferences.BlockUpdates && !testing)
+		{
+			if (asked)
+			{
+				mainframe.UpdateNote("Updates are blocked by the mod (MOD > Block official updates).", problem: false);
+			}
 			return;
 		}
 		updating = true;
@@ -3818,6 +3828,12 @@ internal sealed class Companion : Form
 	{
 		EndWalk();
 		petPurr = random.NextDouble() < PurrChances[PurrChance];
+		preferences.Pets++;
+		if (petPurr)
+		{
+			preferences.Purrs++;
+		}
+		SavePreferences();
 		ShowPetHearts();
 		Sfx.Play(petPurr ? Cue.PetPurr : Cue.PetHappy);
 		if (lying)
@@ -7269,6 +7285,8 @@ internal sealed class Companion : Form
 		fallSpeed = dragVY * scale;
 		fallStep = clock.Elapsed.TotalSeconds;
 		Zap(speed / 3600.0, ground: false, Cue.Zap);
+		preferences.Throws++;
+		SavePreferences();
 		frames.Start();
 		return true;
 	}
@@ -12452,6 +12470,10 @@ internal sealed class Companion : Form
 		{
 			return false;
 		}
+		if (ReminderByVoice(said))
+		{
+			return true;
+		}
 		string text = new string((said ?? "").Normalize(NormalizationForm.FormD).Where((char c) => CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark).ToArray()).ToLowerInvariant();
 		if (text.Length > 80 || Regex.IsMatch(text, "\\b(nao|never|don'?t|dont)\\b"))
 		{
@@ -12608,6 +12630,340 @@ internal sealed class Companion : Form
 				}
 			}
 		});
+	}
+
+	// mod helpers: spoken reminders, pomodoro, the time out loud, PC alerts, test buttons and profiles
+	private static readonly int[,] Pomodoros = { { 0, 0 }, { 25, 5 }, { 50, 10 } };
+
+	private const string ReminderAmount = "(\\d+|um|uma|dois|duas|tr[eê]s|quatro|cinco|dez|quinze|vinte|trinta|quarenta|meia)";
+
+	private const string ReminderUnit = "(segundos?|seg|minutos?|min|horas?|h)";
+
+	private readonly List<KeyValuePair<DateTime, string>> reminders = new List<KeyValuePair<DateTime, string>>();
+
+	private DateTime pomoEnd = DateTime.MaxValue;
+
+	private bool pomoBreak;
+
+	private int chimeSaid = -1;
+
+	private DateTime nextHelperTick;
+
+	private long[] cpuLast;
+
+	private int cpuHot;
+
+	private DateTime cpuToldAt = DateTime.MinValue;
+
+	private bool batteryTold;
+
+	internal bool BlockUpdatesOn => preferences.BlockUpdates;
+
+	internal bool PcAlertsOn => preferences.PcAlerts;
+
+	internal int Pomodoro => Math.Clamp(preferences.Pomodoro, 0, 2);
+
+	internal int Chime => Math.Clamp(preferences.Chime, 0, 2);
+
+	internal int ReminderCount
+	{
+		get
+		{
+			lock (reminders)
+			{
+				return reminders.Count;
+			}
+		}
+	}
+
+	internal string[] Stats
+	{
+		get
+		{
+			if (preferences.FirstMet == 0)
+			{
+				preferences.FirstMet = DateTime.UtcNow.Ticks;
+				SavePreferences();
+			}
+			int days = (int)(DateTime.UtcNow - new DateTime(preferences.FirstMet, DateTimeKind.Utc)).TotalDays;
+			return new string[4]
+			{
+				"Pets: " + preferences.Pets + "   Purrs: " + preferences.Purrs,
+				"Throws: " + preferences.Throws,
+				"Together for " + days + ((days == 1) ? " day" : " days"),
+				"Reminders waiting: " + ReminderCount
+			};
+		}
+	}
+
+	internal void ToggleBlockUpdates()
+	{
+		preferences.BlockUpdates = !preferences.BlockUpdates;
+		SavePreferences();
+	}
+
+	internal void TogglePcAlerts()
+	{
+		preferences.PcAlerts = !preferences.PcAlerts;
+		cpuHot = 0;
+		batteryTold = false;
+		SavePreferences();
+	}
+
+	internal void SetChime(int chime)
+	{
+		preferences.Chime = Math.Clamp(chime, 0, 2);
+		chimeSaid = DateTime.Now.Hour * 2 + DateTime.Now.Minute / 30;
+		SavePreferences();
+	}
+
+	internal void SetPomodoro(int pomodoro)
+	{
+		preferences.Pomodoro = Math.Clamp(pomodoro, 0, 2);
+		SavePreferences();
+		if (preferences.Pomodoro == 0)
+		{
+			pomoEnd = DateTime.MaxValue;
+			return;
+		}
+		pomoBreak = false;
+		pomoEnd = DateTime.Now.AddMinutes(Pomodoros[preferences.Pomodoro, 0]);
+		Zap(0.5, ground: seat != null, Cue.Spark);
+		Remark("pomodoro", "Foco de " + Pomodoros[preferences.Pomodoro, 0] + " minutos começando. Bora, choom.");
+	}
+
+	// Calm, Normal, Chaos
+	internal void UseProfile(int which)
+	{
+		which = Math.Clamp(which, 0, 2);
+		preferences.EyePopups = which != 0;
+		preferences.EyePace = new int[3] { 0, 1, 3 }[which];
+		preferences.EyeMost = new int[3] { 0, 2, 4 }[which];
+		preferences.PurrChance = new int[3] { 0, 1, 3 }[which];
+		preferences.PetFeel = new int[3] { 1, 1, 2 }[which];
+		preferences.PcAlerts = which != 0;
+		if (which == 0)
+		{
+			preferences.Chime = 0;
+		}
+		nextEyePopup = -1.0;
+		SavePreferences();
+		mainframe.Sync();
+		Zap(new double[3] { 0.2, 0.5, 1.0 }[which], ground: seat != null, (which == 2) ? Cue.Zap : Cue.Spark);
+	}
+
+	internal void TestZap()
+	{
+		Zap(1.0, ground: seat != null, Cue.Zap);
+	}
+
+	internal void TestPet()
+	{
+		if (!hidden)
+		{
+			Petted();
+		}
+	}
+
+	internal void TestTime()
+	{
+		SayTime(DateTime.Now);
+	}
+
+	private void SayTime(DateTime now)
+	{
+		string hour = (now.Hour == 0) ? "meia-noite" : ((now.Hour == 12) ? "meio-dia" : ((now.Hour == 1 || now.Hour == 13) ? "uma hora" : (now.Hour + " horas")));
+		string said = (now.Minute == 0) ? ("São " + hour + " em ponto.") : ((now.Minute == 30) ? ("São " + hour + " e meia.") : ("São " + now.ToString("HH:mm") + "."));
+		if (now.Hour == 0 || now.Hour == 12 || now.Hour == 1 || now.Hour == 13)
+		{
+			said = said.Replace("São ", "É ");
+		}
+		Zap(0.3, ground: seat != null, Cue.Spark);
+		Remark("time", said);
+	}
+
+	private static int SpokenNumber(string word)
+	{
+		if (int.TryParse(word, out var n))
+		{
+			return n;
+		}
+		switch (word.Replace("ê", "e"))
+		{
+		case "um":
+		case "uma":
+			return 1;
+		case "dois":
+		case "duas":
+			return 2;
+		case "tres":
+			return 3;
+		case "quatro":
+			return 4;
+		case "cinco":
+			return 5;
+		case "dez":
+			return 10;
+		case "quinze":
+			return 15;
+		case "vinte":
+			return 20;
+		case "trinta":
+		case "meia":
+			return 30;
+		case "quarenta":
+			return 40;
+		default:
+			return 0;
+		}
+	}
+
+	// "me lembra de beber água em 30 minutos" or "daqui a 10 minutos me lembra de tirar o bolo"
+	private bool ReminderByVoice(string said)
+	{
+		string text = (said ?? "").ToLowerInvariant().Trim().TrimEnd('.', '!', '?');
+		if (text.Length > 200 || !Regex.IsMatch(text, "\\blembr"))
+		{
+			return false;
+		}
+		Match m = Regex.Match(text, "lembr\\w*(?:-me)?\\s+(?:de\\s+|que\\s+|pra\\s+|para\\s+)?(.+?)\\s+(?:em|daqui a|daqui)\\s+" + ReminderAmount + "\\s*" + ReminderUnit + "\\b");
+		string task = null;
+		string amount = null;
+		string unit = null;
+		if (m.Success)
+		{
+			task = m.Groups[1].Value;
+			amount = m.Groups[2].Value;
+			unit = m.Groups[3].Value;
+		}
+		else
+		{
+			m = Regex.Match(text, "(?:em|daqui a|daqui)\\s+" + ReminderAmount + "\\s*" + ReminderUnit + "\\b,?\\s+(?:me\\s+)?lembr\\w*(?:-me)?\\s+(?:de\\s+|que\\s+|pra\\s+|para\\s+)?(.+)");
+			if (!m.Success)
+			{
+				return false;
+			}
+			amount = m.Groups[1].Value;
+			unit = m.Groups[2].Value;
+			task = m.Groups[3].Value;
+		}
+		int n = SpokenNumber(amount);
+		if (amount == "meia")
+		{
+			n = 30;
+			unit = "min";
+		}
+		if (n <= 0 || string.IsNullOrWhiteSpace(task))
+		{
+			return false;
+		}
+		TimeSpan wait = unit.StartsWith("s") ? TimeSpan.FromSeconds(n) : (unit.StartsWith("h") ? TimeSpan.FromHours(n) : TimeSpan.FromMinutes(n));
+		task = Regex.Replace(task, "^(capri,?\\s+)", "").Trim();
+		lock (reminders)
+		{
+			reminders.Add(new KeyValuePair<DateTime, string>(DateTime.Now + wait, task));
+		}
+		string when = unit.StartsWith("s") ? (n + " segundos") : (unit.StartsWith("h") ? (n + ((n == 1) ? " hora" : " horas")) : (n + ((n == 1) ? " minuto" : " minutos")));
+		if (!IsHandleCreated)
+		{
+			return true;
+		}
+		BeginInvoke((Action)(() =>
+		{
+			Zap(0.4, ground: seat != null, Cue.Spark);
+			SayOne("she set a reminder to tell them to '" + task + "' in " + when, "Fechado, te lembro em " + when + ".", "Anotado. Daqui " + when + " eu te chamo.");
+		}));
+		return true;
+	}
+
+	// runs on the signal timer, at most once a second
+	private void CheckHelpers()
+	{
+		DateTime now = DateTime.Now;
+		if (testing || quitting || now < nextHelperTick)
+		{
+			return;
+		}
+		nextHelperTick = now.AddSeconds(1.0);
+		string due = null;
+		lock (reminders)
+		{
+			int i = reminders.FindIndex((KeyValuePair<DateTime, string> r) => r.Key <= now);
+			if (i >= 0)
+			{
+				due = reminders[i].Value;
+				reminders.RemoveAt(i);
+			}
+		}
+		if (due != null)
+		{
+			Zap(1.0, ground: seat != null, Cue.Arrive);
+			Remark("reminder", "Ei, choom! Tá na hora: " + due + ".");
+			return;
+		}
+		if (Pomodoro > 0 && now >= pomoEnd)
+		{
+			pomoBreak = !pomoBreak;
+			pomoEnd = now.AddMinutes(Pomodoros[Pomodoro, pomoBreak ? 1 : 0]);
+			Zap(pomoBreak ? 1.0 : 0.5, ground: seat != null, pomoBreak ? Cue.Zap : Cue.Spark);
+			Remark("pomodoro", pomoBreak ? ("Pausa! " + Pomodoros[Pomodoro, 1] + " minutos pra respirar.") : ("Fim da pausa. Mais " + Pomodoros[Pomodoro, 0] + " minutos de foco."));
+			return;
+		}
+		int half = now.Hour * 2 + now.Minute / 30;
+		if (chimeSaid < 0)
+		{
+			chimeSaid = half;
+		}
+		if (Chime > 0 && half != chimeSaid && (now.Minute == 0 || (Chime == 2 && now.Minute == 30)))
+		{
+			chimeSaid = half;
+			if (!hidden && !Hushed)
+			{
+				SayTime(now);
+				return;
+			}
+		}
+		if (now.Second % 5 == 0 && preferences.PcAlerts)
+		{
+			CheckPc(now);
+		}
+	}
+
+	[System.Runtime.InteropServices.DllImport("kernel32.dll")]
+	private static extern bool GetSystemTimes(out long idle, out long kernel, out long user);
+
+	private void CheckPc(DateTime now)
+	{
+		if (GetSystemTimes(out var idle, out var kernel, out var user))
+		{
+			long[] last = cpuLast;
+			cpuLast = new long[3] { idle, kernel, user };
+			if (last != null)
+			{
+				long total = kernel - last[1] + (user - last[2]);
+				double busy = (total > 0) ? (1.0 - (double)(idle - last[0]) / (double)total) : 0.0;
+				cpuHot = (busy > 0.9) ? (cpuHot + 1) : 0;
+				if (cpuHot >= 6 && now - cpuToldAt > TimeSpan.FromMinutes(15.0) && !hidden && !Hushed)
+				{
+					cpuHot = 0;
+					cpuToldAt = now;
+					Zap(0.6, ground: seat != null, Cue.Spark);
+					Remark("pc", new string[3] { "Seu PC tá fervendo, choom. CPU no talo faz um tempão.", "Tá sentindo esse calor? A CPU tá quase derretendo.", "Ei, alguma coisa tá comendo toda a sua CPU." }[random.Next(3)]);
+					return;
+				}
+			}
+		}
+		PowerStatus power = SystemInformation.PowerStatus;
+		if (power.BatteryChargeStatus.HasFlag(BatteryChargeStatus.NoSystemBattery) || power.PowerLineStatus == PowerLineStatus.Online)
+		{
+			batteryTold = false;
+		}
+		else if (!batteryTold && power.BatteryLifePercent <= 0.2f)
+		{
+			batteryTold = true;
+			Zap(0.6, ground: seat != null, Cue.Spark);
+			Remark("battery", "Bateria em " + (int)Math.Round(power.BatteryLifePercent * 100f) + "%. Liga o carregador, choom.");
+		}
 	}
 
 	// hops onto the cursor with a burst of lightning, a crackle and a line
