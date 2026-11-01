@@ -2,6 +2,15 @@
 
 > A partir daqui, cada alteração é uma nova versão do mod (mostrada no Mainframe como "Modded vX.Y.Z").
 
+## v0.0.25 — Instalador K.mod cyberpunk
+
+- **Menu com o nome do mod:** o topo do menu do botão direito agora mostra "CAPRI / K.mod" em vez de "CAPRI / 0.7.7".
+- **Instalador novo (`Capri-Mod-Setup-0.0.25.exe`)** com a cara do Mainframe: janela neon sem borda, ícone com a cabeça da Capri, fundo com estrelas e chão neon andando, scanlines, glitches, e liga/desliga como um monitor antigo.
+- **5 etapas:** BOOT (terminal que digita sozinho), MODS (lista do que mudou em relação à Capri original, com filtros NOVO/MELHOR/CORRIGIDO), CONFIG, INSTALL (porcentagem grande, barra em blocos, log e fluxo de dados) e ONLINE (resumo com faíscas).
+- **Sons:** bipes ao passar o mouse, cliques, interruptores, digitação, acorde ao terminar e alarme se der erro. Dá para desligar no botão "SOM".
+- **Opções detalhadas:** atalho na Área de Trabalho, atalho no Menu Iniciar, ligar junto com o Windows, abrir no final; e as configurações iniciais dela (idioma, tamanho, volume dos sons, modo travessura, olhos, carinho, atalhos por voz, sempre por cima). Passando o mouse em cada opção aparece o que ela faz.
+- Se ela já estiver instalada, as configurações e memórias atuais são mantidas, a não ser que você ligue "Trocar minhas configurações" (aí é guardada uma cópia de segurança).
+
 ## v0.0.24 — Enxame de olhos sincronizado e com olhos vermelhos
 
 - **Sons no tempo certo:** na travessura "Enxame de olhos", os sons não ficam mais numa fila, um esperando o outro acabar. Agora cada olho faz o som exatamente quando abre e quando fecha.

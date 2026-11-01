@@ -7,13 +7,13 @@
     <UseWindowsForms>true</UseWindowsForms>
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
-    <ApplicationIcon>..\..\src\app.ico</ApplicationIcon>
+    <ApplicationIcon>Assets\setup.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AssemblyName>Capri-Mod-Setup</AssemblyName>
     <RootNamespace>CapriSetup</RootNamespace>
     <DebugType>none</DebugType>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
-    <Product>Capri (mod)</Product>
+    <Product>Capri K.mod</Product>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Uninstaller)' == 'true'">
     <AssemblyName>Uninstall</AssemblyName>
@@ -21,6 +21,8 @@
     <IntermediateOutputPath>obj\uninstall\</IntermediateOutputPath>
   </PropertyGroup>
   <ItemGroup Condition="'$(Uninstaller)' != 'true'">
+    <Reference Include="System.Web.Extensions" />
+    <EmbeddedResource Include="Assets\head.png" LogicalName="head.png" />
     <EmbeddedResource Include="..\app\Capri.exe" LogicalName="Capri.exe" />
     <EmbeddedResource Include="..\uninstall\Uninstall.exe" LogicalName="Uninstall.exe" />
   </ItemGroup>

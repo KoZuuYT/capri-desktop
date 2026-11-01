@@ -1735,7 +1735,7 @@ internal sealed class Companion : Form
 		menu.BackColor = Mainframe.MenuLook.Panel;
 		menu.Font = Neon.Type(10f);
 		menu.ShowImageMargin = false;
-		ToolStripMenuItem value = new ToolStripMenuItem("CAPRI  /  " + Assembly.GetExecutingAssembly().GetName().Version.ToString(3))
+		ToolStripMenuItem value = new ToolStripMenuItem("CAPRI  /  K.mod")
 		{
 			Enabled = false,
 			Font = Neon.Display(12f),
@@ -16834,7 +16834,7 @@ internal sealed class Companion : Form
 						{
 							array4[num32] = menu.Items[num32].Text;
 						}
-						if (string.Join(",", array4) != "CAPRI  /  " + Assembly.GetExecutingAssembly().GetName().Version.ToString(3) + ",,Open Capri Mainframe,Hide Capri,Size,Move,Help,,Quit Capri")
+						if (string.Join(",", array4) != "CAPRI  /  K.mod,,Open Capri Mainframe,Hide Capri,Size,Move,Help,,Quit Capri")
 						{
 							throw new Exception("The right-click menu is not the short one: " + string.Join(",", array4));
 						}
