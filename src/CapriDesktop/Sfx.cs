@@ -128,6 +128,20 @@ internal static class Sfx
 			Cue.Boing => Boing(level * 3 / 4),
 			Cue.Rumble => Rumble(1.2, level * 3 / 4, strokes.Next()),
 			Cue.Spray => Spray(level * 3 / 4, strokes.Next()),
+			Cue.Notify => Mix(Notes(level * 3 / 5, 0.09, 1600, 1046.5, 1568.0), Sweep(0.18, 1400.0, 2400.0, 0.004, level / 6), 3000),
+			Cue.Trophy => Mix(Notes(level * 3 / 4, 0.16, 2000, 523.25, 659.25, 783.99, 1046.5, 1318.5), Crackle(0.35, level / 4, strokes.Next()), 9000),
+			Cue.Chomp => Mix(Mix(Bite(level), Bite(level * 3 / 4), 3400), Blip(0.12, 700.0, 1.6, level / 3), 8200),
+			Cue.Pop => Mix(Blip(0.08, 760.0, 2.4, level * 3 / 4), Crackle(0.07, level / 3, strokes.Next()), 0),
+			Cue.RedPop => Mix(Mix(Blip(0.1, 520.0, 3.2, level * 3 / 4), Blip(0.1, 1040.0, 1.6, level / 2), 1200), Crackle(0.14, level / 2, strokes.Next()), 0),
+			Cue.Miss => Blip(0.14, 320.0, 0.55, level / 3),
+			Cue.Count => Blip(0.11, 880.0, 1.0, level * 3 / 5),
+			Cue.Go => Mix(Blip(0.3, 1760.0, 1.0, level * 3 / 5), Sweep(0.3, 600.0, 1800.0, 0.01, level / 4), 0),
+			Cue.BootUp => Mix(Mix(Sweep(0.7, 70.0, 520.0, 0.08, level / 2), Notes(level / 3, 0.05, 1500, 1200.0, 1800.0, 1500.0, 2400.0), 6000), Crackle(0.2, level / 5, strokes.Next()), 0),
+			Cue.Beep => Blip(0.035, 2000.0 + strokes.Next(400), 1.0, level / 4),
+			Cue.Yawn => Mix(Sweep(0.5, 420.0, 640.0, 0.12, level / 3), Sweep(0.7, 600.0, 230.0, 0.05, level / 3), 9000),
+			Cue.Peek => Mix(Blip(0.06, 1300.0, 1.5, level / 3), Blip(0.06, 1700.0, 1.3, level / 4), 1500),
+			Cue.Found => Mix(Mix(Chime(level * 3 / 4), Sweep(0.35, 500.0, 1600.0, 0.01, level / 3), 0), Giggle(level * 3 / 5), 7000),
+			Cue.Dismiss => Sweep(0.14, 1300.0, 480.0, 0.004, level / 3),
 			_ => Sweep(0.05, 1600.0, 1350.0, 0.003, level * 3 / 4),
 		};
 	}
@@ -456,6 +470,35 @@ internal static class Sfx
 				rattle = Math.Sin(Math.PI * 2.0 * 2600.0 * c) * Math.Exp(-c / 0.006) * 0.8;
 			}
 			samples[i] = (short)(Math.Max(-1.0, Math.Min(1.0, hiss + rattle)) * gain * 32767.0);
+		}
+		return samples;
+	}
+
+	// a quick run of square-ish notes, one every `gap` samples
+	private static short[] Notes(int level, double each, int gap, params double[] freqs)
+	{
+		short[] samples = new short[0];
+		for (int i = 0; i < freqs.Length; i++)
+		{
+			samples = Mix(samples, Blip(each, freqs[i], 1.01, level), i * gap);
+		}
+		return samples;
+	}
+
+	// one bite: a low thump with a crunchy noise burst on top
+	private static short[] Bite(int level)
+	{
+		int count = (int)(0.13 * 24000.0);
+		short[] samples = new short[count];
+		double gain = 0.3 * (double)Math.Max(0, Math.Min(100, level)) / 100.0;
+		double phase = 0.0;
+		for (int i = 0; i < count; i++)
+		{
+			double t = (double)i / 24000.0;
+			phase += Math.PI * 2.0 * (180.0 - 900.0 * t) / 24000.0;
+			double thump = Math.Sin(phase) * Math.Exp(-t * 30.0);
+			double crunch = (strokes.NextDouble() * 2.0 - 1.0) * Math.Exp(-t * 45.0) * ((i / 90) % 2 == 0 ? 1.0 : 0.35);
+			samples[i] = (short)(Math.Max(-1.0, Math.Min(1.0, thump * 0.8 + crunch * 0.6)) * gain * 32767.0);
 		}
 		return samples;
 	}

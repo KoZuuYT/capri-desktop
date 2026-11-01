@@ -20,5 +20,19 @@ internal enum Cue
 	Alarm,
 	Boing,
 	Rumble,
-	Spray
+	Spray,
+	Notify,
+	Trophy,
+	Chomp,
+	Pop,
+	RedPop,
+	Miss,
+	Count,
+	Go,
+	BootUp,
+	Beep,
+	Yawn,
+	Peek,
+	Found,
+	Dismiss
 }

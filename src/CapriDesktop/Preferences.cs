@@ -118,6 +118,52 @@ internal sealed class Preferences
 	[DataMember]
 	public bool Mischief;
 
+	// mod: fun stuff (mood of the day, night sleep, Mainframe boot, games, file snacks, achievements)
+	[DataMember]
+	public int Mood;
+
+	[DataMember]
+	public int MoodDay;
+
+	[DataMember]
+	public int MoodTold;
+
+	[DataMember]
+	public int MoodsSeen;
+
+	[DataMember]
+	public bool NightSleep = true;
+
+	[DataMember]
+	public int NightTold;
+
+	[DataMember]
+	public bool BootScreen = true;
+
+	[DataMember]
+	public int Snacks;
+
+	[DataMember]
+	public int EyeBest;
+
+	[DataMember]
+	public int EyeGames;
+
+	[DataMember]
+	public int Found;
+
+	[DataMember]
+	public int HideGames;
+
+	[DataMember]
+	public int Pranks;
+
+	[DataMember]
+	public int Owl;
+
+	[DataMember]
+	public string Trophies;
+
 	[DataMember]
 	public bool NvidiaGlm;
 
@@ -473,5 +519,7 @@ internal sealed class Preferences
 		MainframeSize = 0;
 		CheckIns = true;
 		CaughtUp = true;
+		NightSleep = true;
+		BootScreen = true;
 	}
 }

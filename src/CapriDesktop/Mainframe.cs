@@ -3075,6 +3075,19 @@ internal sealed class Mainframe : Form, IMessageFilter
 
 	private Toggle eyesOn;
 
+	// mod: fun pack controls
+	private Toggle nightSleep;
+
+	private Toggle bootOn;
+
+	private Label moodName;
+
+	private readonly Label[] funStats = new Label[2];
+
+	private Label trophyCount;
+
+	private FormWindowState lastState = FormWindowState.Normal;
+
 	private Slider eyePace;
 
 	private Readout eyePaceName;
@@ -3865,7 +3878,7 @@ internal sealed class Mainframe : Form, IMessageFilter
 	internal string VoiceStatus => voiceNote.Text + " | " + voiceEntry.Box.Text + " | " + speechModels.Text + " | " + connect.Text;
 
 	// version of this personal mod: bumped on every change (see CHANGELOG.md)
-	internal const string ModVersion = "0.0.25";
+	internal const string ModVersion = "0.0.26";
 
 	internal Mainframe(Companion owner, Icon icon, string version)
 	{
@@ -4866,6 +4879,45 @@ internal sealed class Mainframe : Form, IMessageFilter
 				capri.SetEyeMost(eyeMost.Value);
 			}
 		};
+		Section("FUN >", 380, 1130);
+		Named("Mood today", 380, 1154);
+		moodName = Caption("", 564, 1157, Font, Neon.Rose);
+		Named("Games", 380, 1182);
+		Make("Eye hunt", 564, 1185, 84, 20, (object param0, EventArgs param1) =>
+		{
+			capri.PlayEyeHunt();
+		}).AccessibleName = "Play Pega o olho: click her eyes before they close";
+		Make("Hide & seek", 652, 1185, 84, 20, (object param0, EventArgs param1) =>
+		{
+			capri.PlayHideSeek();
+		}).AccessibleName = "Play hide-and-seek: she hides behind an edge of the screen";
+		nightSleep = Switch("Sleep at night", 380, 1210, (object param0, EventArgs param1) =>
+		{
+			if (!syncing)
+			{
+				capri.ToggleNightSleep();
+			}
+		});
+		nightSleep.AccessibleName = "Sleep at night: after midnight she falls asleep when you leave the PC alone";
+		bootOn = Switch("Mainframe boot animation", 380, 1238, (object param0, EventArgs param1) =>
+		{
+			if (!syncing)
+			{
+				capri.ToggleBootScreen();
+			}
+		});
+		bootOn.AccessibleName = "Mainframe boot animation: this window boots like an old terminal when it opens";
+		Caption("Drag files onto her to feed her (they stay put)", 408, 1268, Font, Faint);
+		for (int row = 0; row < funStats.Length; row++)
+		{
+			funStats[row] = Caption("", 408, 1290 + row * 20, Font, Faint);
+		}
+		Section("ACHIEVEMENTS >", 380, 1344);
+		Make("View all", 600, 1341, 136, 20, (object param0, EventArgs param1) =>
+		{
+			capri.ShowTrophies(this, Unit());
+		}).AccessibleName = "See every achievement and how close you are";
+		trophyCount = Caption("", 408, 1370, Font, Faint);
 		for (int num10 = count2; num10 < Controls.Count; num10++)
 		{
 			Control control = Controls[num10];
@@ -5446,6 +5498,10 @@ internal sealed class Mainframe : Form, IMessageFilter
 	protected override void OnVisibleChanged(EventArgs e)
 	{
 		base.OnVisibleChanged(e);
+		if (Visible && IsHandleCreated)
+		{
+			BeginInvoke((Action)Boot);
+		}
 		if (wheelWatch == null)
 		{
 			wheelWatch = new System.Windows.Forms.Timer { Interval = 120 };
@@ -5597,6 +5653,11 @@ internal sealed class Mainframe : Form, IMessageFilter
 		base.OnSizeChanged(e);
 		Shape();
 		Invalidate(invalidateChildren: true);
+		if (lastState == FormWindowState.Minimized && WindowState != FormWindowState.Minimized && IsHandleCreated)
+		{
+			BeginInvoke((Action)Boot);
+		}
+		lastState = WindowState;
 	}
 
 	protected override void OnPaint(PaintEventArgs e)
@@ -6001,7 +6062,30 @@ internal sealed class Mainframe : Form, IMessageFilter
 		eyeSizeName.Text = EyeSizeNames[eyeSize.Value];
 		eyeMost.Value = Math.Clamp(capri.EyeMost, 0, EyeMostNames.Length - 1);
 		eyeMostName.Text = EyeMostNames[eyeMost.Value];
+		nightSleep.Checked = capri.NightSleepOn;
+		bootOn.Checked = capri.BootScreenOn;
+		ShowFun();
 		syncing = false;
+	}
+
+	private void ShowFun()
+	{
+		moodName.Text = capri.MoodName;
+		string[] lines = capri.FunStats;
+		for (int i = 0; i < funStats.Length; i++)
+		{
+			funStats[i].Text = lines[i];
+		}
+		trophyCount.Text = capri.TrophyCount + " / " + Trophy.All.Length + " unlocked";
+	}
+
+	// mod: the terminal boot animation over this window
+	private void Boot()
+	{
+		if (capri.BootScreenOn && Visible && WindowState != FormWindowState.Minimized && !IsDisposed)
+		{
+			BootScreen.Play(this, ModVersion, capri.MoodName, capri.CharmPercent);
+		}
 	}
 
 	private void ShowStats()
@@ -6011,6 +6095,7 @@ internal sealed class Mainframe : Form, IMessageFilter
 		{
 			stats[i].Text = lines[i];
 		}
+		ShowFun();
 	}
 
 	private void ShowChangelog()

@@ -2,6 +2,20 @@
 
 > A partir daqui, cada alteração é uma nova versão do mod (mostrada no Mainframe como "Modded vX.Y.Z").
 
+## v0.0.26 — Pacote de diversão
+
+- **Dar arquivos pra ela comer:** arraste qualquer arquivo ou pasta até a Capri. Aparece um anel neon com "nhac?", o ícone do arquivo voa girando até a boca dela, vira farelo de pixel com um "NHAC!" e um som de mordida, e ela comenta o "sabor" (foto, texto, música, programa, zip...). **Nada é apagado nem movido:** só o ícone é usado na animação. Os primeiros lanches de cada 10 minutos aumentam o carinho.
+- **Minijogo "Pega o olho":** a tela escurece numa arena neon, contagem 3-2-1-JÁ, e por 30 segundos os olhos dela abrem pela tela. Olho verde vale 1, olho vermelho (mais rápido) vale 3, e 5 acertos seguidos aumentam o combo (até x3). Placar com tempo, pontos, combo e recorde, explosão de pixels a cada acerto e contagem dos pontos no final, com "NOVO RECORDE!".
+- **Humor do dia:** todo dia ela acorda Sonolenta, Elétrica, Carente ou Rabugenta. Ela avisa com um cartão e uma fala, e o humor muda o jeito dela conversar e agir (boceja, solta faísca, pede carinho ou resmunga; carinho vale mais quando ela está carente e menos quando está rabugenta; mais travessuras quando está elétrica).
+- **Sono à noite:** depois da meia-noite, se você largar o PC por 2 minutos (1 minuto se ela estiver sonolenta), ela boceja e dorme, com "Z"s de pixel subindo. Um clique acorda ela (e ela resmunga). Se você ficar acordado até tarde, uma vez por noite ela manda você dormir.
+- **Conquistas:** 18 conquistas (carinhos, ronronadas, arremessos, dias juntos, carinho, lanches, recordes, esconde-esconde, travessuras, ficar acordado às 3 da manhã, ver todos os humores). Ao desbloquear aparece um cartão dourado com fanfarra e corações. Janela própria com troféus de pixel e barra de progresso de cada uma.
+- **Esconde-esconde:** ela pede pra você contar, some e se esconde atrás de uma borda da tela, só com o topo da cabeça aparecendo. De vez em quando ela espia, e quando o cursor chega perto ela se abaixa e dá uma risadinha. Ache e clique nela! Depois de 25 s aparece uma dica, e se você não achar em 75 s ela ganha.
+- **Entrada e saída em pixels:** quando ela aparece ou some, o corpo dela se desfaz (ou se monta) em blocos de pixel cada vez maiores, com scanlines e uma linha brilhante passando por ela; os estilhaços viraram quadradinhos de pixel.
+- **Balão de fala estilo terminal:** o balão ganhou uma barra de título "capri@k.mod:~$ tty0" com status ao vivo (RX, PROC... enquanto pensa, TX piscando enquanto fala) e de vez em quando dá um glitch de sinal enquanto ela fala.
+- **Avisos neon iguais pra tudo:** lembretes, Pomodoro, CPU, bateria, conquistas, jogos, humor e modo noite agora usam o mesmo cartão neon no canto da tela: entra com glitch, monta um ícone de pixel, digita o título, tem barra de tempo em blocos e fecha como TV antiga. Passar o mouse segura o aviso; um clique fecha.
+- **Boot do Mainframe:** ao abrir o Mainframe, ele liga como um monitor antigo, um "K.MOD BIOS" digita as verificações (com seu carinho e o humor do dia), uma barra enche, e a tela se desfaz em blocos revelando o painel. Com sons de boot. Dá pra desligar.
+- **No Mainframe:** seções novas **FUN** (humor do dia, botões dos jogos, sono à noite, animação de boot, recorde e lanches) e **ACHIEVEMENTS** (contador e botão para ver todas). No menu do botão direito: submenu **Diversão** com os jogos, as conquistas e o humor do dia.
+
 ## v0.0.25 — Instalador K.mod cyberpunk
 
 - **Menu com o nome do mod:** o topo do menu do botão direito agora mostra "CAPRI / K.mod" em vez de "CAPRI / 0.7.7".

@@ -32,7 +32,7 @@ using Windows.Media.Transcoding;
 
 namespace CapriDesktop;
 
-internal sealed class Companion : Form
+internal sealed partial class Companion : Form
 {
 	private const float PerchShiftX = -13f / 192f;
 
@@ -584,6 +584,8 @@ internal sealed class Companion : Form
 	private ToolStripMenuItem charmItem;
 
 	private ToolStripMenuItem mischiefItem;
+
+	private ToolStripMenuItem moodItem;
 
 	private double nextCharm = -1.0;
 
@@ -1718,6 +1720,8 @@ internal sealed class Companion : Form
 		preferences.WanderPace = Math.Max(0, Math.Min(3, preferences.WanderPace));
 		preferences.PopPace = Math.Max(0, Math.Min(2, preferences.PopPace));
 		StartCharm();
+		// mod: files dropped on her get "eaten" (Companion.Fun.cs)
+		AllowDrop = !testing;
 		clip = idle;
 		nextGlitch = 30.0 + random.NextDouble() * 30.0;
 		Text = "Capri";
@@ -1874,9 +1878,30 @@ internal sealed class Companion : Form
 		}
 		pranks.DropDownItems.Add(pickPrank);
 		menu.Items.Add(pranks);
+		moodItem = new ToolStripMenuItem
+		{
+			Enabled = false
+		};
+		ToolStripMenuItem fun = new ToolStripMenuItem("Diversão");
+		fun.DropDownItems.Add(new ToolStripMenuItem("Pega o olho (minijogo)", null, (object param0, EventArgs param1) =>
+		{
+			PlayEyeHunt();
+		}));
+		fun.DropDownItems.Add(new ToolStripMenuItem("Esconde-esconde", null, (object param0, EventArgs param1) =>
+		{
+			PlayHideSeek();
+		}));
+		fun.DropDownItems.Add(new ToolStripMenuItem("Conquistas", null, (object param0, EventArgs param1) =>
+		{
+			ShowTrophies(null, DeviceDpi / 96f);
+		}));
+		fun.DropDownItems.Add(new ToolStripSeparator());
+		fun.DropDownItems.Add(moodItem);
+		menu.Items.Add(fun);
 		menu.Opening += (object param0, CancelEventArgs param1) =>
 		{
 			charmItem.Text = CharmText();
+			moodItem.Text = "Humor do dia: " + MoodName;
 			sitHereItem.Text = ((seat != null && seat.Free) ? "Stand up" : "Sit here");
 			hangHereItem.Text = (hanging ? "Let go" : "Hang here");
 			lieItem.Text = (lying ? "Sit up" : "Lie down");
@@ -1914,7 +1939,7 @@ internal sealed class Companion : Form
 			InstallUpdate();
 		});
 		menu.Items.Add(helpItem);
-		ToolStripMenuItem[] array = new ToolStripMenuItem[5] { toolStripMenuItem, toolStripMenuItem2, pranks, pickPrank, helpItem };
+		ToolStripMenuItem[] array = new ToolStripMenuItem[6] { toolStripMenuItem, toolStripMenuItem2, pranks, pickPrank, fun, helpItem };
 		foreach (ToolStripMenuItem toolStripMenuItem3 in array)
 		{
 			ToolStripDropDownMenu toolStripDropDownMenu = (ToolStripDropDownMenu)toolStripMenuItem3.DropDown;
@@ -1923,7 +1948,7 @@ internal sealed class Companion : Form
 			toolStripDropDownMenu.BackColor = menu.BackColor;
 			toolStripDropDownMenu.Font = menu.Font;
 			toolStripDropDownMenu.ShowImageMargin = false;
-			toolStripDropDownMenu.ShowCheckMargin = toolStripMenuItem3 != helpItem && toolStripMenuItem3 != pickPrank;
+			toolStripDropDownMenu.ShowCheckMargin = toolStripMenuItem3 != helpItem && toolStripMenuItem3 != pickPrank && toolStripMenuItem3 != fun;
 		}
 		menu.Items.Add(new ToolStripSeparator());
 		menu.Items.Add(new ToolStripMenuItem("Quit Capri", null, (object param0, EventArgs param1) =>
@@ -2077,7 +2102,7 @@ internal sealed class Companion : Form
 			{
 				Settled();
 			}
-			if (!testing)
+			if (!testing && !FunBusy)
 			{
 				CheckEyePopup(clock.Elapsed.TotalSeconds);
 			}
@@ -2100,6 +2125,10 @@ internal sealed class Companion : Form
 			if (!testing)
 			{
 				CheckMischief(clock.Elapsed.TotalSeconds, Native.IdleMilliseconds());
+			}
+			if (!testing)
+			{
+				CheckFun(clock.Elapsed.TotalSeconds, Native.IdleMilliseconds());
 			}
 			if (!testing)
 			{
@@ -3942,7 +3971,7 @@ internal sealed class Companion : Form
 		EndWalk();
 		petPurr = random.NextDouble() < PurrChances[PurrChance];
 		preferences.Pets++;
-		Fond(0.5);
+		Fond(PetCharm);
 		if (petPurr)
 		{
 			preferences.Purrs++;
@@ -4479,7 +4508,8 @@ internal sealed class Companion : Form
 		}
 		preferences.Charm = Math.Clamp(double.IsNaN(preferences.Charm) ? 0.0 : preferences.Charm, 0.0, 100.0);
 		preferences.CharmSeen = now.Ticks;
-		Brain.Fondness = (testing ? "" : Brain.Fond(preferences.Charm));
+		RollMood();
+		Brain.Fondness = (testing ? "" : FondText());
 	}
 
 	private static int CharmLevel(double charm)
@@ -4507,7 +4537,7 @@ internal sealed class Companion : Form
 		{
 			return;
 		}
-		Brain.Fondness = Brain.Fond(preferences.Charm);
+		Brain.Fondness = FondText();
 		int level2 = CharmLevel(preferences.Charm);
 		if (level2 > level)
 		{
@@ -4566,12 +4596,12 @@ internal sealed class Companion : Form
 		}
 		else if (!(now < nextMischief))
 		{
-			if (hidden || quiet > 60000 || dragging || pressed || chatting || typer.Visible || menu.Visible || speech != null || talkState != TalkState.Off || outro != null || working != null || FullScreen())
+			if (hidden || quiet > 60000 || dragging || pressed || chatting || typer.Visible || menu.Visible || speech != null || talkState != TalkState.Off || outro != null || working != null || FunBusy || Asleep || FullScreen())
 			{
 				nextMischief = now + 30.0;
 				return;
 			}
-			nextMischief = now + 300.0 + random.NextDouble() * 420.0;
+			nextMischief = now + (300.0 + random.NextDouble() * 420.0) * MoodPace;
 			Prank();
 		}
 	}
@@ -4589,6 +4619,7 @@ internal sealed class Companion : Form
 			}
 		}
 		lastMischief = pick;
+		preferences.Pranks++;
 		Rectangle screen = Screen.FromPoint(Cursor.Position).Bounds;
 		Rectangle work = Screen.FromPoint(Cursor.Position).WorkingArea;
 		Point her = new Point(Left + Width / 2, Top + Height / 2);
@@ -4685,7 +4716,7 @@ internal sealed class Companion : Form
 		{
 			EndPopIn(leave: true);
 		}
-		if (!preferences.CheckIns || Hushed)
+		if (!preferences.CheckIns || Hushed || FunBusy)
 		{
 			nextPopIn = -1.0;
 			return;
@@ -13413,6 +13444,7 @@ internal sealed class Companion : Form
 		pomoBreak = false;
 		pomoEnd = DateTime.Now.AddMinutes(Pomodoros[preferences.Pomodoro, 0]);
 		Zap(0.5, ground: seat != null, Cue.Spark);
+		Notify(ToastKind.Focus, "Foco iniciado", Pomodoros[preferences.Pomodoro, 0] + " minutos de foco, depois " + Pomodoros[preferences.Pomodoro, 1] + " de pausa.", 8.0);
 		Remark("pomodoro", "Foco de " + Pomodoros[preferences.Pomodoro, 0] + " minutos começando. Bora, choom.");
 	}
 
@@ -13582,6 +13614,7 @@ internal sealed class Companion : Form
 		if (due != null)
 		{
 			Zap(1.0, ground: seat != null, Cue.Arrive);
+			Notify(ToastKind.Reminder, "Lembrete", due, 12.0);
 			Remark("reminder", "Ei, choom! Tá na hora: " + due + ".");
 			return;
 		}
@@ -13590,6 +13623,7 @@ internal sealed class Companion : Form
 			pomoBreak = !pomoBreak;
 			pomoEnd = now.AddMinutes(Pomodoros[Pomodoro, pomoBreak ? 1 : 0]);
 			Zap(pomoBreak ? 1.0 : 0.5, ground: seat != null, pomoBreak ? Cue.Zap : Cue.Spark);
+			Notify(ToastKind.Focus, pomoBreak ? "Pausa" : "Hora do foco", pomoBreak ? ("Levanta, alonga, bebe água: " + Pomodoros[Pomodoro, 1] + " minutos de pausa.") : ("Mais " + Pomodoros[Pomodoro, 0] + " minutos de foco. Bora!"), 9.0);
 			Remark("pomodoro", pomoBreak ? ("Pausa! " + Pomodoros[Pomodoro, 1] + " minutos pra respirar.") : ("Fim da pausa. Mais " + Pomodoros[Pomodoro, 0] + " minutos de foco."));
 			return;
 		}
@@ -13632,6 +13666,7 @@ internal sealed class Companion : Form
 					cpuHot = 0;
 					cpuToldAt = now;
 					Zap(0.6, ground: seat != null, Cue.Spark);
+					Notify(ToastKind.Pc, "CPU no talo", "O processador está acima de 90% faz um tempo. Algum programa pode estar travado.", 9.0);
 					Remark("pc", new string[3] { "Seu PC tá fervendo, choom. CPU no talo faz um tempão.", "Tá sentindo esse calor? A CPU tá quase derretendo.", "Ei, alguma coisa tá comendo toda a sua CPU." }[random.Next(3)]);
 					return;
 				}
@@ -13646,6 +13681,7 @@ internal sealed class Companion : Form
 		{
 			batteryTold = true;
 			Zap(0.6, ground: seat != null, Cue.Spark);
+			Notify(ToastKind.Battery, "Bateria baixa", "Restam " + (int)Math.Round(power.BatteryLifePercent * 100f) + "%. Liga o carregador.", 10.0);
 			Remark("battery", "Bateria em " + (int)Math.Round(power.BatteryLifePercent * 100f) + "%. Liga o carregador, choom.");
 		}
 	}
@@ -15121,6 +15157,7 @@ internal sealed class Companion : Form
 		mainframe.Close();
 		tear.Close();
 		mischief.Dispose();
+		CloseFun();
 		shatter.Close();
 		crackle.Close();
 		takeover.Close();

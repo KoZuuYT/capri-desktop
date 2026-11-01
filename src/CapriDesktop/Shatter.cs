@@ -222,9 +222,18 @@ internal sealed class Shatter : Overlay
 			if (num3 > 0.01)
 			{
 				double warp = (leave ? Smooth(t / 0.34) : 1.0 - Smooth((t - 0.26) / 0.2));
-				Sliced(graphics, self, at, num3, glitch, scale, pick, warp, t);
+				// mod: she breaks down into ever bigger pixels on the way out and resolves from them on the way in
+				double coarse = (leave ? Smooth(t / 0.3) : 1.0 - Smooth((t - 0.3) / 0.16));
+				int block = Math.Max(1, (int)Math.Round(1.0 + coarse * 13.0 * (double)scale));
+				using Bitmap blocky = Pixelate(self, block);
+				InterpolationMode smooth = graphics.InterpolationMode;
+				graphics.InterpolationMode = InterpolationMode.NearestNeighbor;
+				graphics.PixelOffsetMode = PixelOffsetMode.Half;
+				Sliced(graphics, blocky ?? self, at, num3, glitch * (0.4 + 0.6 * (1.0 - coarse)), scale, pick, warp * 0.6, t);
+				graphics.PixelOffsetMode = PixelOffsetMode.Default;
+				graphics.InterpolationMode = smooth;
+				Scan(graphics, self.Size, at, num3, t, leave, scale);
 			}
-			PointF[] array = new PointF[4];
 			foreach (Shard shard in shards)
 			{
 				float num6;
@@ -260,22 +269,20 @@ internal sealed class Shatter : Overlay
 				}
 				if (!((double)num9 <= 0.01) && !(num8 <= 0.5f))
 				{
-					double num13 = (double)shard.Angle + (double)shard.Spin * t;
-					float num14 = (float)Math.Cos(num13);
-					float num15 = (float)Math.Sin(num13);
-					float num16 = num8 * 0.5f;
-					float num17 = (float)at.X + num6;
-					float num18 = (float)at.Y + num7;
-					ref PointF reference = ref array[0];
-					reference = new PointF(num17 + num8 * num15, num18 - num8 * num14);
-					ref PointF reference2 = ref array[1];
-					reference2 = new PointF(num17 + num16 * num14, num18 + num16 * num15);
-					ref PointF reference3 = ref array[2];
-					reference3 = new PointF(num17 - num8 * num15, num18 + num8 * num14);
-					ref PointF reference4 = ref array[3];
-					reference4 = new PointF(num17 - num16 * num14, num18 - num16 * num15);
-					using Brush brush = new SolidBrush(Color.FromArgb((int)(255f * num9), shard.Colour));
-					graphics.FillPolygon(brush, array);
+					// mod: square pixels snapped to a grid instead of spinning shards
+					float grid = Math.Max(2f, 3f * scale);
+					float side = Math.Max(grid, (float)Math.Round(num8 * 0.8f / grid) * grid);
+					float px = (float)Math.Round(((float)at.X + num6 - side / 2f) / grid) * grid;
+					float py = (float)Math.Round(((float)at.Y + num7 - side / 2f) / grid) * grid;
+					using (Brush block = new SolidBrush(Color.FromArgb((int)(255f * num9), shard.Colour)))
+					{
+						graphics.FillRectangle(block, px, py, side, side);
+					}
+					if (side >= 4f * scale)
+					{
+						using Brush lit = new SolidBrush(Color.FromArgb((int)(150f * num9), Color.White));
+						graphics.FillRectangle(lit, px, py, side / 3f, side / 3f);
+					}
 				}
 			}
 			if (!leave)
@@ -379,6 +386,54 @@ internal sealed class Shatter : Overlay
 			using Brush brush = new SolidBrush(Color.FromArgb((int)(210.0 * shown), array2[pick.Next(array2.Length)]));
 			graphics.FillRectangle(brush, num7, num5, num6, Math.Max(2, (int)((float)(1 + pick.Next(3)) * scale)));
 		}
+	}
+
+	// her picture in blocks of `block` pixels (null when the blocks are a single pixel)
+	private static Bitmap Pixelate(Bitmap self, int block)
+	{
+		if (block <= 1)
+		{
+			return null;
+		}
+		int w = Math.Max(1, self.Width / block);
+		int h = Math.Max(1, self.Height / block);
+		using Bitmap small = new Bitmap(w, h, PixelFormat.Format32bppPArgb);
+		using (Graphics graphics = Graphics.FromImage(small))
+		{
+			graphics.InterpolationMode = InterpolationMode.HighQualityBilinear;
+			graphics.DrawImage(self, 0, 0, w, h);
+		}
+		Bitmap big = new Bitmap(self.Width, self.Height, PixelFormat.Format32bppPArgb);
+		using (Graphics graphics2 = Graphics.FromImage(big))
+		{
+			graphics2.InterpolationMode = InterpolationMode.NearestNeighbor;
+			graphics2.PixelOffsetMode = PixelOffsetMode.Half;
+			graphics2.DrawImage(small, new Rectangle(0, 0, w * block, h * block));
+		}
+		return big;
+	}
+
+	// CRT scanlines over her body plus one bright line that sweeps up (leaving) or down (arriving)
+	private static void Scan(Graphics graphics, Size size, Point at, double shown, double t, bool leave, float scale)
+	{
+		int alpha = (int)(70.0 * shown);
+		if (alpha <= 2)
+		{
+			return;
+		}
+		using (Pen dark = new Pen(Color.FromArgb(alpha, 0, 0, 0), Math.Max(1f, scale)))
+		{
+			for (float y = at.Y; y < at.Y + size.Height; y += Math.Max(2f, 3f * scale))
+			{
+				graphics.DrawLine(dark, at.X, y, at.X + size.Width, y);
+			}
+		}
+		double k = leave ? Smooth(t / 0.4) : Smooth((t - 0.2) / 0.3);
+		float line = leave ? (float)(at.Y + size.Height * (1.0 - k)) : (float)(at.Y + size.Height * k);
+		using Brush glow = new SolidBrush(Color.FromArgb((int)(120.0 * shown), Mint));
+		graphics.FillRectangle(glow, at.X + size.Width * 0.15f, line - 3f * scale, size.Width * 0.7f, 6f * scale);
+		using Brush core = new SolidBrush(Color.FromArgb((int)(230.0 * shown), Color.White));
+		graphics.FillRectangle(core, at.X + size.Width * 0.2f, line - scale, size.Width * 0.6f, 2f * scale);
 	}
 
 	private static ImageAttributes Tint(Color colour, double alpha)

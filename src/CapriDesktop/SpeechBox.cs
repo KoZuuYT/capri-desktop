@@ -104,6 +104,11 @@ internal sealed class SpeechBox : Overlay
 		{
 			num = (float)Math.Min(1.0, (now - Leaving) / 0.25 + 0.3);
 		}
+		// mod: a short signal hiccup every few seconds while she talks, like a terminal on a bad line
+		if (num == 0f && State == TalkState.Talking && random.NextDouble() < 0.006)
+		{
+			num = 0.3f;
+		}
 		bool flag = ((State != TalkState.Thinking && State != TalkState.Talking) ? ((int)(now * 2.0) % 2 == 0) : (State == TalkState.Talking || (int)(now * 2.5) % 2 == 0));
 		int num2 = ((State != TalkState.Thinking && Reply != null) ? Math.Min(Reply.Length, Math.Max(0, Revealed)) : 0);
 		if (num != 0f || !clean || !Visible || Image == null || flag != lastCursor || State != lastState || !(Heard == lastHeard) || !(Prompt == lastPrompt) || !(Reply == lastReply) || num2 != lastRevealed || s != lastScale || !(head == lastHead) || !(feet == lastFeet) || !(area == lastArea))
@@ -145,7 +150,9 @@ internal sealed class SpeechBox : Overlay
 		List<string> list = Look.Wrap("CAPRI: " + (Reply ?? ""), num6);
 		int num7 = ((!string.IsNullOrEmpty(Prompt)) ? 1 : 0);
 		float num8 = 24f * s + (float)num6 * num + 14f * s;
-		float num9 = 13f * s + num2 * (float)(num7 + list.Count) + 10f * s;
+		// mod: a terminal title bar on top of the text
+		float bar = 20f * s;
+		float num9 = 13f * s + bar + num2 * (float)(num7 + list.Count) + 10f * s;
 		int num10 = (int)Math.Ceiling(num8 + num3 * 2f);
 		int num11 = (int)Math.Ceiling(num4 + num9 + num5 + 4f * s);
 		bool flag = head.Y - num11 < area.Top;
@@ -187,10 +194,11 @@ internal sealed class SpeechBox : Overlay
 			}
 			using (Brush brush2 = new SolidBrush(Look.Red))
 			{
-				graphics.FillRectangle(brush2, box.Left + 10f * s, box.Top + 13f * s, 3f * s, box.Height - 26f * s);
+				graphics.FillRectangle(brush2, box.Left + 10f * s, box.Top + 13f * s + bar, 3f * s, box.Height - 26f * s - bar);
 			}
+			TitleBar(graphics, box, s, bar);
 			float num15 = box.Left + 24f * s;
-			float num16 = box.Top + 12f * s;
+			float num16 = box.Top + 12f * s + bar;
 			if (num7 > 0)
 			{
 				string text2 = Prompt + (Heard ?? "");
@@ -245,6 +253,60 @@ internal sealed class SpeechBox : Overlay
 			}
 		}
 		return bitmap;
+	}
+
+	// "capri@k.mod:~$" on the left, a live status and three window squares on the right, and a rule under it
+	private void TitleBar(Graphics graphics, RectangleF box, float s, float bar)
+	{
+		using Font font = Look.Mono(10f * s, FontStyle.Bold, GraphicsUnit.Pixel);
+		float y = box.Top + 7f * s;
+		using (Brush rose = new SolidBrush(Look.Red))
+		{
+			graphics.DrawString("capri@k.mod", font, rose, box.Left + 22f * s, y, StringFormat.GenericTypographic);
+		}
+		float at = box.Left + 22f * s + graphics.MeasureString("capri@k.mod", font, PointF.Empty, StringFormat.GenericTypographic).Width;
+		using (Brush dim = new SolidBrush(Look.Dim))
+		{
+			graphics.DrawString(":~$ tty0", font, dim, at, y, StringFormat.GenericTypographic);
+		}
+		bool blink = (Environment.TickCount / 400) % 2 == 0;
+		string status;
+		Color tone;
+		switch (State)
+		{
+		case TalkState.Thinking:
+			status = blink ? "PROC..." : "PROC.  ";
+			tone = Look.Cyan;
+			break;
+		case TalkState.Talking:
+			status = "TX";
+			tone = Look.Red;
+			break;
+		default:
+			status = "RX";
+			tone = Look.Dim;
+			break;
+		}
+		float right = box.Right - 12f * s;
+		for (int i = 0; i < 3; i++)
+		{
+			Color square = (i == 0) ? Look.Cyan : ((i == 1) ? Look.Red : Look.Dim);
+			using Brush brush = new SolidBrush(Color.FromArgb(200, square));
+			graphics.FillRectangle(brush, right - (i + 1) * 9f * s, y + 2f * s, 6f * s, 6f * s);
+		}
+		float statusWidth = graphics.MeasureString(status, font, PointF.Empty, StringFormat.GenericTypographic).Width;
+		float statusX = right - 30f * s - statusWidth;
+		if (State == TalkState.Talking && blink)
+		{
+			using Brush dot = new SolidBrush(tone);
+			graphics.FillEllipse(dot, statusX - 9f * s, y + 2f * s, 6f * s, 6f * s);
+		}
+		using (Brush brush2 = new SolidBrush(tone))
+		{
+			graphics.DrawString(status, font, brush2, statusX, y, StringFormat.GenericTypographic);
+		}
+		using Pen rule = new Pen(Color.FromArgb(80, Look.Cyan), Math.Max(1f, s));
+		graphics.DrawLine(rule, box.Left + 10f * s, box.Top + bar + 4f * s, box.Right - 10f * s, box.Top + bar + 4f * s);
 	}
 
 	private Bitmap Glitch(Bitmap clean, float amount, float s)
