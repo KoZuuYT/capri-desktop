@@ -2,6 +2,15 @@
 
 > A partir daqui, cada alteração é uma nova versão do mod (mostrada no Mainframe como "Modded vX.Y.Z").
 
+## v0.0.29 — Stats novos: nível, XP e comentários dela
+
+- **Nível e XP:** tudo que você faz com ela vale XP (carinho, arremesso, arquivo comido, partidas, esconde-esconde, dias juntos, conquistas...). O XP é calculado com os números que ela já guardava, então tudo que você fez antes já conta. A cada nível vem um título novo: Visitante, Colega, Cúmplice, Dupla dinâmica, Inseparáveis, Alma gêmea e Lenda do Mainframe.
+- **Janela de stats nova:** um anel de nível em pixels que se enche, barra de XP em blocos com brilho correndo, 12 quadrinhos com ícones em pixel pra cada número, e as conquistas na mesma janela. Ao abrir, os números contam do zero com tique-tique.
+- **Atualiza na hora:** com a janela aberta, fazer carinho, arremessar ou dar um arquivo faz o número pular, aparecer "+XP" subindo e a barra encher. Subiu de nível? Confete, onda de luz e "SUBIU DE NÍVEL!". A seção STATS das configurações também atualiza na hora.
+- **Ela comenta:** um balão com a carinha dela comenta seus números (e ela fala em voz alta quando está livre). Clique no balão pra outro comentário, ou num quadrinho pra ela falar daquele número. O humor do dia muda o jeito dela falar.
+- **Subir de nível:** em qualquer lugar, ela comemora com som novo, aviso, coraçõezinhos, faísca e um comentário. Ela também comenta quando você ganha uma conquista.
+- Abre pelo botão "Open stats" nas configurações, pelo "View all" das conquistas ou pelo menu dela (Stats e conquistas).
+
 ## v0.0.28 — Comer arquivos mais fácil e animado
 
 - **Rede invisível:** antes ela só percebia o arquivo arrastado bem em cima dos pixels do corpo dela. Agora, enquanto você arrasta algo perto dela, aparece uma rede invisível bem maior em volta, então dá pra soltar o arquivo perto dela que ela pega.

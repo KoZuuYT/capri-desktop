@@ -3878,7 +3878,7 @@ internal sealed class Mainframe : Form, IMessageFilter
 	internal string VoiceStatus => voiceNote.Text + " | " + voiceEntry.Box.Text + " | " + speechModels.Text + " | " + connect.Text;
 
 	// version of this personal mod: bumped on every change (see CHANGELOG.md)
-	internal const string ModVersion = "0.0.28";
+	internal const string ModVersion = "0.0.29";
 
 	internal Mainframe(Companion owner, Icon icon, string version)
 	{
@@ -4741,6 +4741,10 @@ internal sealed class Mainframe : Form, IMessageFilter
 			capri.TestTime();
 		}).AccessibleName = "Make her say the time now";
 		Section("STATS >", 0, 1050);
+		Make("Open stats", 220, 1047, 136, 20, (object param0, EventArgs param1) =>
+		{
+			capri.ShowStatsView(this, Unit(), trophies: false);
+		}).AccessibleName = "Open her stats: level, XP, every counter and achievement, with her comments";
 		for (int row = 0; row < stats.Length; row++)
 		{
 			stats[row] = Caption("", 28, 1074 + row * 20, Font, Faint);
@@ -4915,7 +4919,7 @@ internal sealed class Mainframe : Form, IMessageFilter
 		Section("ACHIEVEMENTS >", 380, 1344);
 		Make("View all", 600, 1341, 136, 20, (object param0, EventArgs param1) =>
 		{
-			capri.ShowTrophies(this, Unit());
+			capri.ShowStatsView(this, Unit(), trophies: true);
 		}).AccessibleName = "See every achievement and how close you are";
 		trophyCount = Caption("", 408, 1370, Font, Faint);
 		for (int num10 = count2; num10 < Controls.Count; num10++)
@@ -6085,6 +6089,15 @@ internal sealed class Mainframe : Form, IMessageFilter
 		if (capri.BootScreenOn && Visible && WindowState != FormWindowState.Minimized && !IsDisposed)
 		{
 			BootScreen.Play(this, ModVersion, capri.MoodName, capri.CharmPercent);
+		}
+	}
+
+	// mod: called the moment any of her counters changes, so this page never shows old numbers
+	internal void RefreshStats()
+	{
+		if (paged && Visible && !IsDisposed)
+		{
+			ShowStats();
 		}
 	}
 

@@ -47,6 +47,7 @@ internal sealed class Mod
 		new Mod(New, "Humor do dia e sono à noite", "Todo dia ela acorda Sonolenta, Elétrica, Carente ou Rabugenta; depois da meia-noite ela dorme se você largar o PC."),
 		new Mod(New, "Conquistas", "18 conquistas com troféus de pixel, cartão dourado ao desbloquear e janela com o progresso de cada uma."),
 		new Mod(New, "Avisos neon e boot do Mainframe", "Lembretes, Pomodoro, CPU, bateria e conquistas no mesmo cartão neon; o Mainframe liga como um terminal antigo."),
+		new Mod(Better, "Stats com nível e XP", "Janela de stats nova com nível, XP, títulos, números animados que atualizam na hora, conquistas juntas e comentários dela sobre seus números."),
 		new Mod(Better, "Comer arquivos mais fácil", "Uma rede invisível em volta dela pega arquivos soltos perto, com animação de sucção e sons que mudam conforme o arquivo se aproxima."),
 		new Mod(Better, "Sons no tempo certo", "Os efeitos sonoros se misturam ao vivo, então no minijogo e no enxame de olhos eles tocam junto com o que aparece na tela."),
 		new Mod(Better, "Entrada e saída em pixels", "Ela aparece e some se desfazendo em blocos de pixel com scanlines."),

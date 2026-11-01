@@ -164,6 +164,10 @@ internal sealed class Preferences
 	[DataMember]
 	public string Trophies;
 
+	// mod: the last level she congratulated you on (0 until the first check, so old saves don't get a burst of them)
+	[DataMember]
+	public int LevelSeen;
+
 	[DataMember]
 	public bool NvidiaGlm;
 

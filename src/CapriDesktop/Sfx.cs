@@ -155,6 +155,9 @@ internal static class Sfx
 			Cue.Dismiss => Sweep(0.14, 1300.0, 480.0, 0.004, level / 3),
 			Cue.Hungry => Mix(Sweep(0.2, 480.0, 1150.0, 0.01, level / 3), Mix(Blip(0.06, 1400.0, 1.3, level / 3), Blip(0.07, 1800.0, 1.3, level / 3), 1700), 3200),
 			Cue.Slurp => Mix(Whoosh(0.32, level * 3 / 4, strokes.Next()), Sweep(0.28, 1500.0, 260.0, 0.005, level / 3), 0),
+			Cue.XpGain => Mix(Blip(0.06, 1568.0, 1.2, level / 3), Blip(0.09, 2093.0, 1.1, level / 3), 1300),
+			Cue.LevelUp => Mix(Mix(Notes(level * 3 / 4, 0.1, 1300, 523.25, 659.25, 783.99, 1046.5, 1567.98), Sweep(0.55, 300.0, 2400.0, 0.02, level / 4), 0), Crackle(0.4, level / 4, strokes.Next()), 7800),
+			Cue.Tally => Blip(0.025, 2200.0 + strokes.Next(500), 1.0, level / 6),
 			_ => Sweep(0.05, 1600.0, 1350.0, 0.003, level * 3 / 4),
 		};
 	}

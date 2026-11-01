@@ -80,6 +80,16 @@ internal sealed partial class Companion
 
 	private readonly List<DateTime> snackTimes = new List<DateTime>();
 
+	private int statsSeen;
+
+	private string lastStatsLine;
+
+	private static readonly string[] LevelUps = new string[4] { "Subi de nível com você! Nível {0}!", "Nível {0}! A gente tá ficando bom nisso, choom.", "Nível {0}. Tô começando a me acostumar com você.", "Ding! Nível {0}. Continua assim." };
+
+	private static readonly string[] TitleUps = new string[2] { "Nível {0}! Agora você é {1} pra mim, choom.", "Nível {0}... {1}. Não deixa subir à cabeça." };
+
+	private static readonly string[] TrophyLines = new string[4] { "Conquista nova: {0}! Eu sabia.", "{0}! Mandou bem, choom.", "Olha só, {0}. Tô orgulhosa.", "{0}. Mais uma pra coleção." };
+
 	private static int Today => (int)(DateTime.Now.Date.Ticks / TimeSpan.TicksPerDay);
 
 	private int MoodNow => Math.Clamp(preferences.Mood, 0, 3);
@@ -177,6 +187,7 @@ internal sealed partial class Companion
 	// once a second from the main loop
 	private void CheckFun(double now, long quiet)
 	{
+		CheckStats();
 		if (now < nextFun)
 		{
 			return;
@@ -210,10 +221,14 @@ internal sealed partial class Companion
 		{
 			Trophy trophy = trophyQueue.Dequeue();
 			nextTrophyToast = now + 2.4;
-			Notify(ToastKind.Trophy, "Conquista desbloqueada", trophy.Name + ": " + trophy.Text, 8.0);
+			Notify(ToastKind.Trophy, "Conquista desbloqueada", trophy.Name + ": " + trophy.Text + " (+150 XP)", 8.0);
 			if (!hidden)
 			{
 				ShowPetHearts();
+			}
+			if (AtEase && !Asleep)
+			{
+				Remark("trophy", string.Format(TrophyLines[random.Next(TrophyLines.Length)], trophy.Name));
 			}
 		}
 		CheckNight(now, quiet);
@@ -347,10 +362,145 @@ internal sealed partial class Companion
 		}
 	}
 
-	internal void ShowTrophies(IWin32Window owner, float scale)
+	internal void ShowStatsView(IWin32Window owner, float scale, bool trophies)
 	{
 		CheckTrophies();
-		TrophyView.Open(owner, preferences, tray.Icon, scale);
+		StatsView.Open(owner, preferences, tray.Icon, scale, StatsComment, SayStats, trophies);
+	}
+
+	// every frame: the moment a counter moves, the settings page follows and a level up is celebrated
+	private void CheckStats()
+	{
+		int sig = Progress.Signature(preferences);
+		if (sig == statsSeen)
+		{
+			return;
+		}
+		statsSeen = sig;
+		mainframe.RefreshStats();
+		Level level = Progress.Of(preferences);
+		if (preferences.LevelSeen <= 0 || level.Number < preferences.LevelSeen)
+		{
+			preferences.LevelSeen = level.Number;
+			SavePreferences();
+			return;
+		}
+		if (level.Number == preferences.LevelSeen)
+		{
+			return;
+		}
+		bool newTitle = Progress.TitleAt(level.Number) != Progress.TitleAt(preferences.LevelSeen);
+		preferences.LevelSeen = level.Number;
+		SavePreferences();
+		Sfx.Play(Cue.LevelUp);
+		Notify(ToastKind.Game, "Subiu de nível!", "Nível " + level.Number + " · " + level.Title + (newTitle ? ". Título novo!" : ". Faltam " + level.Need + " XP pro próximo."), 8.0);
+		if (!hidden)
+		{
+			ShowPetHearts();
+			Zap(0.6, ground: seat != null, Cue.Spark);
+		}
+		if (AtEase && !Asleep)
+		{
+			Remark("level", newTitle ? string.Format(TitleUps[random.Next(TitleUps.Length)], level.Number, level.Title) : string.Format(LevelUps[random.Next(LevelUps.Length)], level.Number));
+		}
+	}
+
+	// she says it out loud when she's free to; the stats window shows it in its bubble either way
+	private void SayStats(string line)
+	{
+		if (!hidden && AtEase && !Asleep)
+		{
+			Remark("stats", line);
+		}
+	}
+
+	// what she has to say about your numbers: about one of them (a tile's index in Progress.All), or any (-1)
+	internal string StatsComment(int which)
+	{
+		Preferences p = preferences;
+		Level level = Progress.Of(p);
+		int got = Trophy.Count(p);
+		List<string>[] about = new List<string>[Progress.All.Length];
+		for (int i = 0; i < about.Length; i++)
+		{
+			about[i] = new List<string>();
+			int v = Progress.All[i].Value(p);
+			switch (i)
+			{
+			case 0:
+				about[i].Add(v == 0 ? "Zero carinhos? Minha cabeça tá bem aqui, choom." : (v < 50 ? v + " carinhos até agora. Tô contando, viu?" : v + " carinhos. Você não larga de mim, hein?"));
+				break;
+			case 1:
+				about[i].Add(v == 0 ? "Ainda não me fez ronronar. Capricha no carinho." : "Ronronei " + v + " vezes. Não conta pra ninguém.");
+				break;
+			case 2:
+				about[i].Add(v == 0 ? "Você nunca me arremessou. Que educação." : (v > p.Pets ? "Você me arremessou mais do que fez carinho. Anotado, choom." : v + " arremessos. Minha cabeça ainda tá girando."));
+				break;
+			case 3:
+				about[i].Add(v == 0 ? "Nunca me deu um arquivo pra comer. Tô com fome!" : v + " arquivos comidos. Bytes deliciosos.");
+				break;
+			case 4:
+				about[i].Add(v == 0 ? "Você nunca pontuou no Pega o olho. Medo?" : (v < 20 ? "Seu recorde no Pega o olho é " + v + ". Dá pra melhorar, hein." : "Recorde de " + v + " no Pega o olho? Olhos rápidos, choom."));
+				break;
+			case 5:
+				about[i].Add(v == 0 ? "Nenhuma partida ainda. Bora jogar?" : v + " partidas comigo. Mais uma?");
+				break;
+			case 6:
+				about[i].Add(v == 0 ? "Você nunca me achou no esconde-esconde. Sou boa nisso." : "Me achou " + v + " vezes. Da próxima eu me escondo melhor.");
+				break;
+			case 7:
+				about[i].Add(v == 0 ? "Ainda não te zoei. Ainda." : "Já te zoei " + v + " vezes. E vou continuar.");
+				break;
+			case 8:
+				about[i].Add(v == 0 ? "A gente acabou de se conhecer. Prazer, choom." : v + (v == 1 ? " dia" : " dias") + " juntos. Passa rápido quando é com você.");
+				break;
+			case 9:
+				about[i].Add(v < 30 ? "Carinho em " + v + "%. Ainda tô de olho em você." : (v < 80 ? "Carinho em " + v + "%. Tô começando a gostar de você." : "Carinho em " + v + "%. Não me larga, tá?"));
+				break;
+			case 10:
+				about[i].Add(v == 0 ? "Nunca ficou comigo às 3 da manhã. Juízo, né?" : v + " madrugadas comigo. Vai dormir, coruja.");
+				break;
+			case 11:
+				about[i].Add(got >= Trophy.All.Length ? "Todas as conquistas! Você é uma lenda, choom." : got + " de " + Trophy.All.Length + " conquistas. Faltam " + (Trophy.All.Length - got) + ", bora?");
+				break;
+			}
+		}
+		List<string> pool = new List<string>();
+		if (which >= 0 && which < about.Length)
+		{
+			pool.AddRange(about[which]);
+		}
+		else
+		{
+			foreach (List<string> each in about)
+			{
+				pool.AddRange(each);
+			}
+			pool.Add("Nível " + level.Number + "! Pra mim você é " + level.Title + ".");
+			if (level.Need - level.Into <= level.Need / 4)
+			{
+				pool.Add("Faltam só " + (level.Need - level.Into) + " XP pro nível " + (level.Number + 1) + "! Me faz um carinho que ajuda.");
+				pool.Add("Tá quase subindo de nível, choom. Não para agora.");
+			}
+			(int Level, string Name)? next = Progress.NextTitle(level.Number);
+			if (next.HasValue)
+			{
+				pool.Add("No nível " + next.Value.Level + " você vira " + next.Value.Name + ". Capricha.");
+			}
+			if (pool.Count > 1)
+			{
+				pool.Remove(lastStatsLine);
+			}
+		}
+		string line = pool[random.Next(pool.Count)];
+		lastStatsLine = line;
+		return MoodNow switch
+		{
+			0 => "*bocejo* " + line,
+			1 => "Bzzt! " + line,
+			3 => "Hmpf. " + line,
+			_ => line
+		};
 	}
 
 	internal void ToggleNightSleep()

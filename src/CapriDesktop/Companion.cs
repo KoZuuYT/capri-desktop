@@ -1895,9 +1895,9 @@ internal sealed partial class Companion : Form
 		{
 			PlayHideSeek();
 		}));
-		fun.DropDownItems.Add(new ToolStripMenuItem("Conquistas", null, (object param0, EventArgs param1) =>
+		fun.DropDownItems.Add(new ToolStripMenuItem("Stats e conquistas", null, (object param0, EventArgs param1) =>
 		{
-			ShowTrophies(null, DeviceDpi / 96f);
+			ShowStatsView(null, DeviceDpi / 96f, trophies: false);
 		}));
 		fun.DropDownItems.Add(new ToolStripSeparator());
 		fun.DropDownItems.Add(moodItem);
@@ -13062,12 +13062,13 @@ internal sealed partial class Companion : Form
 				SavePreferences();
 			}
 			int days = (int)(DateTime.UtcNow - new DateTime(preferences.FirstMet, DateTimeKind.Utc)).TotalDays;
+			Level level = Progress.Of(preferences);
 			return new string[4]
 			{
-				"Pets: " + preferences.Pets + "   Purrs: " + preferences.Purrs,
-				"Throws: " + preferences.Throws,
-				"Together for " + days + ((days == 1) ? " day" : " days"),
-				"Reminders waiting: " + ReminderCount
+				"Level " + level.Number + " · " + level.Title + "   (" + level.Xp + " XP)",
+				"XP " + level.Into + " / " + level.Need + " to level " + (level.Number + 1),
+				"Pets: " + preferences.Pets + "   Purrs: " + preferences.Purrs + "   Throws: " + preferences.Throws,
+				"Together for " + days + ((days == 1) ? " day" : " days") + "   Reminders waiting: " + ReminderCount
 			};
 		}
 	}

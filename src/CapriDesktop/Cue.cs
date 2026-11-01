@@ -36,5 +36,8 @@ internal enum Cue
 	Found,
 	Dismiss,
 	Hungry,
-	Slurp
+	Slurp,
+	XpGain,
+	LevelUp,
+	Tally
 }
