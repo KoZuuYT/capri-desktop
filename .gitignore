@@ -9,3 +9,6 @@ installer/out/
 installer/Setup/obj/
 installer/Setup/bin/
 installer/*.exe
+installer/*.sh
+installer/linux-stage/
+installer/linux-payload.tar.gz

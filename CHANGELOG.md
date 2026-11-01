@@ -2,6 +2,13 @@
 
 > A partir daqui, cada alteração é uma nova versão do mod (mostrada no Mainframe como "Modded vX.Y.Z").
 
+## v0.0.19 — Capri no Linux (Fedora) pelo Wine
+
+- Novo instalador para Linux (`Capri-Mod-Linux-0.0.19.sh`): ele instala o Wine e o que mais faltar, prepara tudo, coloca a Capri no menu de aplicativos e faz ela abrir junto com o computador.
+- No Linux, ela ouve os amigos da call pelo som do sistema (o mesmo lugar onde o Discord toca).
+- No Linux, ela mesma abre os arquivos que baixa, e as partes que só existem no Windows (controle de música do Windows, reconhecimento de fala do Windows) ficam desligadas em vez de travar.
+- Para remover no Linux: `bash ~/.local/share/capri-mod/uninstall.sh` (dá para escolher se apaga também as memórias e os modelos).
+
 ## v0.0.18 — Instalador para usar a Capri modificada em outro computador
 
 - Agora existe um instalador (`Capri-Mod-Setup-0.0.18.exe`) que leva a Capri modificada para outro PC, sem precisar instalar o .NET lá.
