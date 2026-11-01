@@ -101,12 +101,19 @@ internal static class Tunes
 
 	private static GlobalSystemMediaTransportControlsSessionManager Manager()
 	{
-		if (manager == null)
+		// the mod: Wine has no Windows media sessions
+		if (manager == null && !Native.Wine)
 		{
-			Task<GlobalSystemMediaTransportControlsSessionManager> task = GlobalSystemMediaTransportControlsSessionManager.RequestAsync().AsTask<GlobalSystemMediaTransportControlsSessionManager>();
-			if (task.Wait(5000))
+			try
 			{
-				manager = task.Result;
+				Task<GlobalSystemMediaTransportControlsSessionManager> task = GlobalSystemMediaTransportControlsSessionManager.RequestAsync().AsTask<GlobalSystemMediaTransportControlsSessionManager>();
+				if (task.Wait(5000))
+				{
+					manager = task.Result;
+				}
+			}
+			catch (Exception)
+			{
 			}
 		}
 		return manager;

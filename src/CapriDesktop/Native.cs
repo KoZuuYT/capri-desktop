@@ -54,6 +54,36 @@ internal static class Native
 
 	internal static bool? FakedGaming;
 
+	// the mod: on Linux she runs under Wine, which has no Windows extras (media sessions, Windows speech, tar.exe)
+	// and hears what plays through the Linux sound server instead
+	private static bool? wine;
+
+	internal static bool Wine
+	{
+		get
+		{
+			if (!wine.HasValue)
+			{
+				try
+				{
+					IntPtr ntdll = GetModuleHandle("ntdll.dll");
+					wine = ntdll != IntPtr.Zero && GetProcAddress(ntdll, "wine_get_version") != IntPtr.Zero;
+				}
+				catch (Exception)
+				{
+					wine = false;
+				}
+			}
+			return wine.Value;
+		}
+	}
+
+	[DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
+	private static extern IntPtr GetModuleHandle(string name);
+
+	[DllImport("kernel32.dll", CharSet = CharSet.Ansi)]
+	private static extern IntPtr GetProcAddress(IntPtr module, string name);
+
 	[DllImport("user32.dll")]
 	private static extern bool GetLastInputInfo(ref InputInfo info);
 

@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Formats.Tar;
+using System.IO.Compression;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -215,7 +217,8 @@ internal sealed class LocalEars : IDisposable
 		string text = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "tar.exe");
 		if (!File.Exists(text))
 		{
-			throw new IOException("Windows is missing tar.exe, which unpacks her ears.");
+			ManagedUntar(tarball, into);
+			return;
 		}
 		if (SystemBzip && Tar(text, "-xjf \"" + tarball + "\" -C \"" + into + "\"") == null)
 		{
@@ -254,6 +257,58 @@ internal sealed class LocalEars : IDisposable
 			if (File.Exists(text2))
 			{
 				File.Delete(text2);
+			}
+		}
+	}
+
+	// the mod: Wine has no tar.exe, so there she unpacks .tar, .tar.gz and .tar.bz2 herself
+	internal static void ManagedUntar(string tarball, string into)
+	{
+		byte[] head = new byte[3];
+		using (FileStream fileStream = new FileStream(tarball, FileMode.Open, FileAccess.Read, FileShare.Read, 1048576))
+		{
+			int read = fileStream.Read(head, 0, 3);
+			fileStream.Position = 0L;
+			if (read < 3 || head[0] != 66 || head[1] != 90 || head[2] != 104)
+			{
+				Stream stream = (read >= 2 && head[0] == 31 && head[1] == 139) ? new GZipStream(fileStream, CompressionMode.Decompress) : fileStream;
+				try
+				{
+					TarFile.ExtractToDirectory(stream, into, overwriteFiles: true);
+				}
+				catch (Exception ex) when (!(ex is IOException))
+				{
+					throw new IOException("Couldn't unpack " + Path.GetFileName(tarball) + ": " + ex.Message);
+				}
+				return;
+			}
+		}
+		string plain = tarball + ".tar";
+		try
+		{
+			using (FileStream from = new FileStream(tarball, FileMode.Open, FileAccess.Read, FileShare.Read, 1048576))
+			{
+				using FileStream to = new FileStream(plain, FileMode.Create, FileAccess.Write, FileShare.None, 1048576);
+				try
+				{
+					Bunzip.Copy(from, to);
+				}
+				catch (IOException)
+				{
+					throw;
+				}
+				catch (Exception)
+				{
+					throw new IOException("The download " + Path.GetFileName(tarball) + " is damaged.");
+				}
+			}
+			TarFile.ExtractToDirectory(plain, into, overwriteFiles: true);
+		}
+		finally
+		{
+			if (File.Exists(plain))
+			{
+				File.Delete(plain);
 			}
 		}
 	}

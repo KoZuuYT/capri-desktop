@@ -6615,7 +6615,7 @@ internal sealed class Companion : Form
 		//IL_0073: Invalid comparison between Unknown and I4
 		//IL_0095: Unknown result type (might be due to invalid IL or missing references)
 		//IL_009b: Invalid comparison between Unknown and I4
-		if (mediaMissing)
+		if (mediaMissing || Native.Wine)
 		{
 			return false;
 		}

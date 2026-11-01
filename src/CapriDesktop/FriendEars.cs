@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
 
@@ -32,6 +34,9 @@ internal sealed class FriendEars : IDisposable
 
 	private int cut;
 
+	// each Start gets its own number, so a Linux tap left reading after Stop knows to quit
+	private volatile int generation;
+
 	internal bool On => running;
 
 	internal event Action<short[]> Said;
@@ -46,6 +51,7 @@ internal sealed class FriendEars : IDisposable
 		device = id;
 		Problem = null;
 		running = true;
+		generation++;
 		worker = new Thread(Pump);
 		worker.IsBackground = true;
 		worker.Name = "Capri friend ears";
@@ -77,6 +83,10 @@ internal sealed class FriendEars : IDisposable
 		IntPtr format = IntPtr.Zero;
 		try
 		{
+			if (Native.Wine && TapLinux(generation))
+			{
+				return;
+			}
 			devices = (ISoundDevices)new SoundDevices();
 			if ((string.IsNullOrEmpty(device) || devices.GetDevice(device, out found) != 0 || found == null) && (devices.GetDefaultAudioEndpoint(0, 0, out found) != 0 || found == null))
 			{
@@ -166,6 +176,101 @@ internal sealed class FriendEars : IDisposable
 				}
 			}
 		}
+	}
+
+	// the mod, on Linux: Wine can't tap a speaker, so she reads the sound server's monitor of the default output
+	// (where Discord plays) through parec or pw-record, which already give 16 kHz mono 16-bit
+	private bool TapLinux(int run)
+	{
+		string[][] tools = new string[2][]
+		{
+			new string[2] { "Z:\\usr\\bin\\parec", "--device=@DEFAULT_MONITOR@ --format=s16le --rate=16000 --channels=1 --raw --latency-msec=50" },
+			new string[2] { "Z:\\usr\\bin\\pw-record", "--rate 16000 --channels 1 --format s16 -P {stream.capture.sink=true} -" }
+		};
+		foreach (string[] tool in tools)
+		{
+			if (!File.Exists(tool[0]))
+			{
+				continue;
+			}
+			Stream from;
+			Process process = new Process();
+			try
+			{
+				process.StartInfo = new ProcessStartInfo(tool[0], tool[1])
+				{
+					UseShellExecute = false,
+					CreateNoWindow = true,
+					RedirectStandardOutput = true
+				};
+				// Wine starts Linux programs without a process handle, so Start may say false while the pipe works
+				process.Start();
+				from = process.StandardOutput.BaseStream;
+			}
+			catch (Exception ex)
+			{
+				Brain.Log("friend ears", -1L, "can't start " + Path.GetFileName(tool[0]) + ": " + ex.Message);
+				continue;
+			}
+			bool heard = false;
+			try
+			{
+				byte[] bytes = new byte[Chunk * 2];
+				Line line = new Line();
+				reportAt = Environment.TickCount64 + 30000;
+				while (running && generation == run)
+				{
+					int filled = 0;
+					while (filled < bytes.Length)
+					{
+						int read = from.Read(bytes, filled, bytes.Length - filled);
+						if (read <= 0)
+						{
+							break;
+						}
+						filled += read;
+					}
+					if (filled < bytes.Length)
+					{
+						break;
+					}
+					if (!heard)
+					{
+						heard = true;
+						Brain.Log("friend ears", -1L, "listening through " + Path.GetFileName(tool[0]) + " (Linux sound server)");
+					}
+					short[] chunk = new short[Chunk];
+					Buffer.BlockCopy(bytes, 0, chunk, 0, bytes.Length);
+					Take(line, chunk);
+				}
+			}
+			catch (Exception ex2)
+			{
+				Brain.Log("friend ears", -1L, Path.GetFileName(tool[0]) + " stopped: " + ex2.Message);
+			}
+			finally
+			{
+				// closing the pipe makes the Linux tool quit on its next write
+				try
+				{
+					from.Dispose();
+					process.Dispose();
+				}
+				catch (Exception)
+				{
+				}
+			}
+			if (heard)
+			{
+				if (running && generation == run)
+				{
+					Problem = "The Linux sound server stopped sending sound.";
+				}
+				return true;
+			}
+		}
+		Brain.Log("friend ears", -1L, "no Linux sound tap (install pulseaudio-utils); trying the Windows way");
+		return false;
 	}
 
 	private void Listen(ISoundCapture capture, int rate, int channels, int bits, bool isFloat)

@@ -151,6 +151,17 @@ internal static class ModelFile
 			{
 				ZipFile.ExtractToDirectory(archive, text3);
 			}
+			else if (!File.Exists(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "tar.exe")))
+			{
+				try
+				{
+					LocalEars.ManagedUntar(archive, text3);
+				}
+				catch (IOException ex)
+				{
+					throw new VoiceException(ex.Message);
+				}
+			}
 			else
 			{
 				ProcessStartInfo processStartInfo = new ProcessStartInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "tar.exe"), "-xf \"" + archive + "\" -C \"" + text3 + "\"");
