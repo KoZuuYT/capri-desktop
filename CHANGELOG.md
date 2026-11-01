@@ -2,6 +2,11 @@
 
 > A partir daqui, cada alteração é uma nova versão do mod (mostrada no Mainframe como "Modded vX.Y.Z").
 
+## v0.0.27 — Correções no Pega o olho e sons no tempo certo
+
+- **Pega o olho:** clicar fora de um olho fazia a camada escura do jogo passar na frente dos olhos, deixando a tela mais escura e os olhos impossíveis de clicar. Agora os olhos, o placar e os avisos voltam pra frente a cada quadro, e o fundo da arena ficou mais claro.
+- **Sons no tempo certo:** os efeitos sonoros tocavam um depois do outro numa fila, então no minijogo e no enxame de olhos da travessura eles atrasavam e saíam fora de sincronia. Agora cada som começa na hora e se mistura com os que ainda estão tocando (mixer ao vivo, atraso de ~60 ms).
+
 ## v0.0.26 — Pacote de diversão
 
 - **Dar arquivos pra ela comer:** arraste qualquer arquivo ou pasta até a Capri. Aparece um anel neon com "nhac?", o ícone do arquivo voa girando até a boca dela, vira farelo de pixel com um "NHAC!" e um som de mordida, e ela comenta o "sabor" (foto, texto, música, programa, zip...). **Nada é apagado nem movido:** só o ícone é usado na animação. Os primeiros lanches de cada 10 minutos aumentam o carinho.

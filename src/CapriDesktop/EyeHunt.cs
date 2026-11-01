@@ -163,7 +163,11 @@ internal sealed class EyeHunt : IDisposable
 		label = Look.Mono(10f * s, FontStyle.Bold, GraphicsUnit.Pixel);
 		digits = Neon.Display(30f * s, GraphicsUnit.Pixel);
 		arena = new Pad("Capri eye hunt arena");
-		arena.Pressed = (Point at) => Missed(soft: false);
+		arena.Pressed = (Point at) =>
+		{
+			Missed(soft: false);
+			Restack();
+		};
 		arena.Present(ArenaFrame(), work.Location);
 		hud = new Pad("Capri eye hunt score");
 		hud.Cursor = Cursors.Hand;
@@ -184,7 +188,7 @@ internal sealed class EyeHunt : IDisposable
 	{
 		Bitmap bitmap = new Bitmap(work.Width, work.Height, PixelFormat.Format32bppPArgb);
 		using Graphics g = Graphics.FromImage(bitmap);
-		using (Brush dim = new SolidBrush(Color.FromArgb(120, 6, 4, 12)))
+		using (Brush dim = new SolidBrush(Color.FromArgb(70, 6, 4, 12)))
 		{
 			g.FillRectangle(dim, 0, 0, work.Width, work.Height);
 		}
@@ -239,9 +243,31 @@ internal sealed class EyeHunt : IDisposable
 		}
 		DrawHud(t, play);
 		DrawBanner(t, play);
+		Restack();
 		if (endAt >= 0.0 && t - endAt > 3.2)
 		{
 			Finish();
+		}
+	}
+
+	// a click on the dim arena lifts it above everything else of hers, which buried the eyes under it and made them
+	// unclickable; so every frame the eyes, the HUD and the banner are put back on top of it
+	private void Restack()
+	{
+		foreach (Eye eye in eyes)
+		{
+			Raise(eye.Layer);
+		}
+		Raise(hud);
+		Raise(banner);
+	}
+
+	private static void Raise(Form layer)
+	{
+		if (!layer.IsDisposed && layer.Visible)
+		{
+			// HWND_TOPMOST, without moving, sizing or activating
+			Native.SetWindowPos(layer.Handle, new IntPtr(-1), 0, 0, 0, 0, 19);
 		}
 	}
 

@@ -829,6 +829,10 @@ internal sealed partial class Companion : Form
 
 	private readonly Speaker effects;
 
+	private SfxMixer mixer;
+
+	private bool mixerTried;
+
 	private readonly Speaker typist;
 
 	private readonly System.Windows.Forms.Timer chatTail;
@@ -6045,6 +6049,20 @@ internal sealed partial class Companion : Form
 		if (IsDisposed)
 		{
 			return;
+		}
+		// mod: effects go through a live mixer so quick bursts of them play on time instead of queueing up
+		if (!testing)
+		{
+			if (!mixerTried)
+			{
+				mixerTried = true;
+				mixer = SfxMixer.Open(24000);
+			}
+			if (mixer != null && mixer.Alive)
+			{
+				mixer.Play(sound);
+				return;
+			}
 		}
 		try
 		{
@@ -15143,6 +15161,7 @@ internal sealed partial class Companion : Form
 		typeKey = (hideKey = (quietKey = false));
 		speaker.Close();
 		effects.Close();
+		mixer?.Dispose();
 		typist.Close();
 		voice.Stop();
 		engine.Cancel = true;
