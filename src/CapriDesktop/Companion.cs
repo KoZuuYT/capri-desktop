@@ -1846,10 +1846,11 @@ internal sealed class Companion : Form
 		});
 		toolStripMenuItem2.DropDownItems.Add(screenItem);
 		menu.Items.Add(toolStripMenuItem2);
-		charmItem = new ToolStripMenuItem(CharmText())
+		charmItem = new ToolStripMenuItem
 		{
 			Enabled = false
 		};
+		charmItem.Text = CharmText();
 		menu.Items.Add(charmItem);
 		ToolStripMenuItem pranks = new ToolStripMenuItem("Travessuras");
 		mischiefItem = new ToolStripMenuItem("Modo travessura", null, (object param0, EventArgs param1) =>
@@ -1913,7 +1914,7 @@ internal sealed class Companion : Form
 			InstallUpdate();
 		});
 		menu.Items.Add(helpItem);
-		ToolStripMenuItem[] array = new ToolStripMenuItem[3] { toolStripMenuItem, toolStripMenuItem2, helpItem };
+		ToolStripMenuItem[] array = new ToolStripMenuItem[5] { toolStripMenuItem, toolStripMenuItem2, pranks, pickPrank, helpItem };
 		foreach (ToolStripMenuItem toolStripMenuItem3 in array)
 		{
 			ToolStripDropDownMenu toolStripDropDownMenu = (ToolStripDropDownMenu)toolStripMenuItem3.DropDown;
@@ -1922,7 +1923,7 @@ internal sealed class Companion : Form
 			toolStripDropDownMenu.BackColor = menu.BackColor;
 			toolStripDropDownMenu.Font = menu.Font;
 			toolStripDropDownMenu.ShowImageMargin = false;
-			toolStripDropDownMenu.ShowCheckMargin = toolStripMenuItem3 != helpItem;
+			toolStripDropDownMenu.ShowCheckMargin = toolStripMenuItem3 != helpItem && toolStripMenuItem3 != pickPrank;
 		}
 		menu.Items.Add(new ToolStripSeparator());
 		menu.Items.Add(new ToolStripMenuItem("Quit Capri", null, (object param0, EventArgs param1) =>
@@ -4489,7 +4490,12 @@ internal sealed class Companion : Form
 	private string CharmText()
 	{
 		int level = CharmLevel(preferences.Charm);
-		return "Carinho: " + (int)preferences.Charm + "%  " + new string('#', level + 1) + new string('-', 4 - level) + "  " + Brain.CharmNames[level];
+		string text = "Carinho: " + (int)preferences.Charm + "%";
+		if (charmItem != null)
+		{
+			charmItem.Tag = text.Length;
+		}
+		return text + "  " + Brain.CharmNames[level];
 	}
 
 	private void Fond(double points)

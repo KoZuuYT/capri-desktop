@@ -2,6 +2,11 @@
 
 > A partir daqui, cada alteração é uma nova versão do mod (mostrada no Mainframe como "Modded vX.Y.Z").
 
+## v0.0.23 — Menu de travessuras em branco e carinho mais limpo
+
+- Os textos do menu **Travessuras** (e da lista "Escolher travessura") estavam aparecendo em preto. Agora ficam brancos como o resto do menu.
+- O medidor de carinho no menu ficou mais limpo: sai a barrinha "#----" e fica só "Carinho: 5%" seguido do nível (ex.: "Desconfiada") um pouco menor, em rosa.
+
 ## v0.0.22 — Travessuras turbinadas
 
 - **Mais efeitos e sons:** cada travessura agora tem um som próprio (estalo de tela quebrando, "vush", sirene, mola, tremor, lata de spray) e a Capri reage a todas: aparecem chifrinhos neon na cabeça dela, um "hehe" pulando e faíscas, com uma risadinha.

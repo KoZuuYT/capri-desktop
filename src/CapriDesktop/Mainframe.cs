@@ -791,6 +791,18 @@ internal sealed class Mainframe : Form, IMessageFilter
 			{
 				foreColor = Faint;
 			}
+			if (item.Tag is int at && at > 0 && at < e.Text.Length)
+			{
+				string head = e.Text.Substring(0, at);
+				string tail = e.Text.Substring(at);
+				Rectangle box = e.TextRectangle;
+				TextFormatFlags flags = e.TextFormat | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine;
+				TextRenderer.DrawText(e.Graphics, head, e.TextFont, box, Ink, flags);
+				int width = TextRenderer.MeasureText(e.Graphics, head, e.TextFont, Size.Empty, flags).Width;
+				using Font small = new Font(e.TextFont.FontFamily, e.TextFont.Size * 0.8f, e.TextFont.Style, e.TextFont.Unit);
+				TextRenderer.DrawText(e.Graphics, tail, small, new Rectangle(box.Left + width, box.Top, Math.Max(0, box.Width - width), box.Height), Rose, flags);
+				return;
+			}
 			TextRenderer.DrawText(e.Graphics, e.Text, e.TextFont, e.TextRectangle, foreColor, e.TextFormat);
 		}
 
@@ -3853,7 +3865,7 @@ internal sealed class Mainframe : Form, IMessageFilter
 	internal string VoiceStatus => voiceNote.Text + " | " + voiceEntry.Box.Text + " | " + speechModels.Text + " | " + connect.Text;
 
 	// version of this personal mod: bumped on every change (see CHANGELOG.md)
-	internal const string ModVersion = "0.0.22";
+	internal const string ModVersion = "0.0.23";
 
 	internal Mainframe(Companion owner, Icon icon, string version)
 	{
