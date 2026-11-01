@@ -3,7 +3,7 @@
 > Leia este arquivo antes de qualquer coisa em uma sessão nova.
 
 ## O que é
-Código decompilado (C#, .NET 8 WinForms/WPF) do programa que traz a **Capri** (Cyberpunk Edgerunners 2) para o desktop. Os termos do programa permitem modificações para **uso pessoal**, por isso o repositório é **privado** e nunca deve ser público nem redistribuído.
+Código decompilado (C#, .NET 8 WinForms/WPF) do programa que traz a **Capri** (Cyberpunk Edgerunners 2) para o desktop. Os desenvolvedores têm um termo de redistribuição para modding, então o repositório é **público** (desde 2026-11-01) e os instaladores ficam na página de Releases.
 
 - Versão base do app: **0.7.7** (`src/Properties/AssemblyInfo.cs`)
 - Pasta geral: `D:\usuario alternativo\Documents\Capri Desktop\`
