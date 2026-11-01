@@ -12892,14 +12892,18 @@ internal sealed class Companion : Form
 		ThreadPool.QueueUserWorkItem((object param0) =>
 		{
 			string text;
+			Stopwatch took = Stopwatch.StartNew();
+			string seconds = (samples.Length / 16000.0).ToString("0.0") + " s of call";
 			try
 			{
 				text = Hearing.Text(samples);
 			}
-			catch (Exception)
+			catch (Exception ex)
 			{
+				Brain.Log("friend ears", took.ElapsedMilliseconds, seconds + ", hearing failed: " + ex.Message);
 				return;
 			}
+			Brain.Log("friend ears", took.ElapsedMilliseconds, seconds + ", " + (string.IsNullOrEmpty(text) ? "no words" : ("heard " + text.Split(' ').Length + " words")));
 			if (!string.IsNullOrEmpty(text))
 			{
 				Post(() =>
@@ -12944,6 +12948,36 @@ internal sealed class Companion : Form
 		return true;
 	}
 
+	private string WhyBusy()
+	{
+		List<string> why = new List<string>();
+		if (talkState == TalkState.Thinking)
+		{
+			why.Add("she was thinking");
+		}
+		if (transcribing)
+		{
+			why.Add("your mic was being transcribed");
+		}
+		if (speaker.Busy || Voice.Playing)
+		{
+			why.Add("she was speaking");
+		}
+		if (Environment.TickCount64 - Interlocked.Read(ref micLoudAt) < 1500)
+		{
+			why.Add("your mic was loud");
+		}
+		if (working != null)
+		{
+			why.Add("she was doing a task");
+		}
+		if (meeting.Asking || Security.Holding != null)
+		{
+			why.Add("she was waiting on you");
+		}
+		return (why.Count == 0) ? "nothing" : string.Join(", ", why);
+	}
+
 	private void FriendTurn()
 	{
 		string text = friendWaiting;
@@ -12953,6 +12987,10 @@ internal sealed class Companion : Form
 		}
 		if (!preferences.FriendsHear || !preferences.FriendsReply || Environment.TickCount64 - friendWaitAt > 10000)
 		{
+			if (Environment.TickCount64 - friendWaitAt > 10000)
+			{
+				Brain.Log("friend ears", -1L, "a friend's line waited 10 s and was dropped: " + WhyBusy());
+			}
 			friendWaiting = null;
 		}
 		else if (!YoursFirst())

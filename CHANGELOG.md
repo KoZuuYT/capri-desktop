@@ -2,6 +2,10 @@
 
 > A partir daqui, cada alteração é uma nova versão do mod (mostrada no Mainframe como "Modded vX.Y.Z").
 
+## v0.0.15 — Diário da escuta dos amigos
+
+- A Capri agora anota no `errors.txt` o que acontece com o som da call: o volume que chega, cada fala enviada para transcrição, quantas palavras ela entendeu, e por que uma fala ficou sem resposta. Serve para achar onde a fala dos amigos se perde.
+
 ## v0.0.14 — Capri ouve melhor os amigos
 
 - Ela reconhece o nome dela mesmo quando a call distorce ("Cabre", "Kapri", "Cabri", "Capre"...).

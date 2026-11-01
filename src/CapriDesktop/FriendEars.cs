@@ -23,6 +23,15 @@ internal sealed class FriendEars : IDisposable
 
 	private string device;
 
+	// what she heard lately, written to errors.txt every 30 s so a silent call can be traced
+	private long reportAt;
+
+	private double loudest;
+
+	private int sent;
+
+	private int cut;
+
 	internal bool On => running;
 
 	internal event Action<short[]> Said;
@@ -117,6 +126,8 @@ internal sealed class FriendEars : IDisposable
 				Problem = "Can't listen to that speaker.";
 				return;
 			}
+			Brain.Log("friend ears", -1L, "listening: " + channels + " ch, " + rate + " Hz, " + (isFloat ? "float" : (bits + "-bit")));
+			reportAt = Environment.TickCount64 + 30000;
 			Listen(capture, rate, channels, bits, isFloat);
 		}
 		catch (Exception ex)
@@ -125,6 +136,10 @@ internal sealed class FriendEars : IDisposable
 		}
 		finally
 		{
+			if (Problem != null)
+			{
+				Brain.Log("friend ears", -1L, Problem);
+			}
 			running = false;
 			try
 			{
@@ -261,6 +276,18 @@ internal sealed class FriendEars : IDisposable
 
 	private void Take(Line line, short[] chunk)
 	{
+		double level = Speaker.Loudness(chunk, 0, chunk.Length);
+		loudest = Math.Max(loudest, level);
+		if (Environment.TickCount64 >= reportAt)
+		{
+			reportAt = Environment.TickCount64 + 30000;
+			if (loudest >= 0.002 || sent > 0 || cut > 0)
+			{
+				Brain.Log("friend ears", -1L, "last 30 s: loudest " + loudest.ToString("0.000") + " (talk starts at " + Loud.ToString("0.000") + "), " + sent + " lines sent, " + cut + " cut while she talked");
+			}
+			loudest = 0.0;
+			sent = cut = 0;
+		}
 		Func<bool> hold = Hold;
 		bool held;
 		try
@@ -273,14 +300,18 @@ internal sealed class FriendEars : IDisposable
 		}
 		if (held)
 		{
-			// she or you are talking: drop it, so her own voice and yours never count as a friend
+			// she's talking: drop it, so her own voice never counts as a friend
+			if (line.Talking && line.Voiced >= 5)
+			{
+				cut++;
+			}
 			line.Parts.Clear();
 			line.Before.Clear();
 			line.Talking = false;
 			line.LoudRun = line.Quiet = line.Voiced = 0;
 			return;
 		}
-		bool loud = Speaker.Loudness(chunk, 0, chunk.Length) >= Loud;
+		bool loud = level >= Loud;
 		if (!line.Talking)
 		{
 			line.Before.Add(chunk);
@@ -327,6 +358,7 @@ internal sealed class FriendEars : IDisposable
 		{
 			Array.Copy(parts[i], 0, samples, i * Chunk, Chunk);
 		}
+		sent++;
 		try
 		{
 			Said?.Invoke(samples);
