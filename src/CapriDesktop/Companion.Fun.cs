@@ -56,7 +56,9 @@ internal sealed partial class Companion
 
 	private bool hideSeekPending;
 
-	private Snack.Hungry hungry;
+	private Snack.Catcher catcher;
+
+	private bool feeding;
 
 	private Snack.Snooze snooze;
 
@@ -180,6 +182,7 @@ internal sealed partial class Companion
 			return;
 		}
 		nextFun = now + 1.0;
+		StartCatcher();
 		if (preferences.MoodDay != Today)
 		{
 			RollMood();
@@ -364,9 +367,23 @@ internal sealed partial class Companion
 
 	// ---- feeding her files ----
 
+	// the wide net that catches files dragged near her (Snack.Catcher); its drops go through the same handlers as hers
+	private void StartCatcher()
+	{
+		if (testing || catcher != null)
+		{
+			return;
+		}
+		catcher = new Snack.Catcher(() => !hidden && !FunBusy && !dragging && !pressed && Visible && !IsDisposed, ZapBody, Mouth);
+		catcher.DragEnter += (object sender, DragEventArgs e) => OnDragEnter(e);
+		catcher.DragOver += (object sender, DragEventArgs e) => OnDragOver(e);
+		catcher.DragLeave += (object sender, EventArgs e) => OnDragLeave(e);
+		catcher.DragDrop += (object sender, DragEventArgs e) => OnDragDrop(e);
+	}
+
 	private Point Mouth()
 	{
-		Rectangle body = BodyOnScreen(anchor, (seat != null || riding || onPanel) ? PerchedBody : Body);
+		Rectangle body = ZapBody();
 		return new Point(body.Left + body.Width / 2, body.Top + body.Height / 5);
 	}
 
@@ -391,36 +408,35 @@ internal sealed partial class Companion
 			return;
 		}
 		drgevent.Effect = DragDropEffects.Copy;
-		if (hungry == null)
-		{
-			hungry = new Snack.Hungry(Mouth);
-			Sfx.Play(Cue.Peek);
-		}
+		feeding = true;
+		StartCatcher();
+		catcher?.Begin();
 	}
 
 	protected override void OnDragOver(DragEventArgs drgevent)
 	{
 		base.OnDragOver(drgevent);
-		drgevent.Effect = (hungry != null && HasFiles(drgevent)) ? DragDropEffects.Copy : DragDropEffects.None;
+		drgevent.Effect = (feeding && HasFiles(drgevent)) ? DragDropEffects.Copy : DragDropEffects.None;
 	}
 
 	protected override void OnDragLeave(EventArgs e)
 	{
 		base.OnDragLeave(e);
-		hungry?.Dispose();
-		hungry = null;
+		feeding = false;
+		catcher?.End(ate: false);
 	}
 
 	protected override void OnDragDrop(DragEventArgs drgevent)
 	{
 		base.OnDragDrop(drgevent);
-		bool wanted = hungry != null;
-		hungry?.Dispose();
-		hungry = null;
+		bool wanted = feeding;
+		feeding = false;
 		if (!wanted)
 		{
+			catcher?.End(ate: false);
 			return;
 		}
+		catcher?.End(ate: true);
 		string[] files = null;
 		try
 		{
@@ -455,7 +471,7 @@ internal sealed partial class Companion
 				}
 			});
 		}
-		Sfx.Play(Cue.Whoosh);
+		Sfx.Play(Cue.Slurp);
 	}
 
 	private void Fed(string[] files, string line, bool first)
@@ -692,8 +708,9 @@ internal sealed partial class Companion
 		eyeHunt = null;
 		hideSeek?.Stop();
 		hideSeek = null;
-		hungry?.Dispose();
-		hungry = null;
+		catcher?.Dispose();
+		catcher = null;
+		feeding = false;
 		snooze?.Dispose();
 		snooze = null;
 		Toast.ClearAll();

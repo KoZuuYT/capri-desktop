@@ -48,6 +48,17 @@ internal static class Sfx
 		action(samples);
 	}
 
+	// mod: a quick sniff while files hover near her, higher the closer they get
+	internal static void Sniff(double close)
+	{
+		Action<short[]> action = Out;
+		int level = Level;
+		if (action != null && level > 0)
+		{
+			action(Blip(0.045, 620.0 + 900.0 * Math.Clamp(close, 0.0, 1.0), 1.5, level / 4));
+		}
+	}
+
 	internal static void Type(string text, double pace, int seed)
 	{
 		Untype();
@@ -142,6 +153,8 @@ internal static class Sfx
 			Cue.Peek => Mix(Blip(0.06, 1300.0, 1.5, level / 3), Blip(0.06, 1700.0, 1.3, level / 4), 1500),
 			Cue.Found => Mix(Mix(Chime(level * 3 / 4), Sweep(0.35, 500.0, 1600.0, 0.01, level / 3), 0), Giggle(level * 3 / 5), 7000),
 			Cue.Dismiss => Sweep(0.14, 1300.0, 480.0, 0.004, level / 3),
+			Cue.Hungry => Mix(Sweep(0.2, 480.0, 1150.0, 0.01, level / 3), Mix(Blip(0.06, 1400.0, 1.3, level / 3), Blip(0.07, 1800.0, 1.3, level / 3), 1700), 3200),
+			Cue.Slurp => Mix(Whoosh(0.32, level * 3 / 4, strokes.Next()), Sweep(0.28, 1500.0, 260.0, 0.005, level / 3), 0),
 			_ => Sweep(0.05, 1600.0, 1350.0, 0.003, level * 3 / 4),
 		};
 	}

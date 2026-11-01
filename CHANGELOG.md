@@ -2,6 +2,12 @@
 
 > A partir daqui, cada alteração é uma nova versão do mod (mostrada no Mainframe como "Modded vX.Y.Z").
 
+## v0.0.28 — Comer arquivos mais fácil e animado
+
+- **Rede invisível:** antes ela só percebia o arquivo arrastado bem em cima dos pixels do corpo dela. Agora, enquanto você arrasta algo perto dela, aparece uma rede invisível bem maior em volta, então dá pra soltar o arquivo perto dela que ela pega.
+- **Feedback ao arrastar:** um oval neon tracejado mostra a área da rede, uma trilha de pontos puxa o arquivo até a boca dela, migalhas giram pra dentro e anéis se fecham na boca. Quanto mais perto o arquivo, mais rápido fica tudo, e o "nhac?" vira "nhac nhac" e depois um "NHAM!" tremendo.
+- **Sons:** um somzinho animado quando o arquivo chega, "fungadas" que ficam mais agudas e rápidas conforme ele se aproxima, um "slurp" ao engolir e um muxoxo se você desistir e levar o arquivo embora. Os arquivos continuam onde estavam, nada é apagado.
+
 ## v0.0.27 — Correções no Pega o olho e sons no tempo certo
 
 - **Pega o olho:** clicar fora de um olho fazia a camada escura do jogo passar na frente dos olhos, deixando a tela mais escura e os olhos impossíveis de clicar. Agora os olhos, o placar e os avisos voltam pra frente a cada quadro, e o fundo da arena ficou mais claro.

@@ -34,5 +34,7 @@ internal enum Cue
 	Yawn,
 	Peek,
 	Found,
-	Dismiss
+	Dismiss,
+	Hungry,
+	Slurp
 }

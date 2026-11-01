@@ -123,6 +123,46 @@ internal static class Native
 	[DllImport("user32.dll")]
 	internal static extern short GetKeyState(int key);
 
+	private struct GuiThreadInfo
+	{
+		internal int Size;
+
+		internal int Flags;
+
+		internal IntPtr Active;
+
+		internal IntPtr Focus;
+
+		internal IntPtr Capture;
+
+		internal IntPtr MenuOwner;
+
+		internal IntPtr MoveSize;
+
+		internal IntPtr Caret;
+
+		internal int CaretLeft;
+
+		internal int CaretTop;
+
+		internal int CaretRight;
+
+		internal int CaretBottom;
+	}
+
+	[DllImport("user32.dll")]
+	private static extern bool GetGUIThreadInfo(int thread, ref GuiThreadInfo info);
+
+	// mod: true while a window of the app in front holds the mouse, as it does all through a drag
+	internal static bool MouseCaptured()
+	{
+		GuiThreadInfo info = new GuiThreadInfo
+		{
+			Size = Marshal.SizeOf(typeof(GuiThreadInfo))
+		};
+		return GetGUIThreadInfo(0, ref info) && info.Capture != IntPtr.Zero;
+	}
+
 	[DllImport("user32.dll", CharSet = CharSet.Unicode)]
 	internal static extern int MapVirtualKey(int code, int type);
 
