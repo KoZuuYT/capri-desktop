@@ -2,6 +2,19 @@
 
 > A partir daqui, cada alteração é uma nova versão do mod (mostrada no Mainframe como "Modded vX.Y.Z").
 
+## v0.0.22 — Travessuras turbinadas
+
+- **Mais efeitos e sons:** cada travessura agora tem um som próprio (estalo de tela quebrando, "vush", sirene, mola, tremor, lata de spray) e a Capri reage a todas: aparecem chifrinhos neon na cabeça dela, um "hehe" pulando e faíscas, com uma risadinha.
+- **Travessuras antigas melhoradas:** o "bug" de tela ficou mais forte, com cores separadas e uma mensagem de erro piscando; o cursor roubado deixa um rastro neon com um coraçãozinho; o aviso de hacker liga e desliga como um monitor antigo, digita a mensagem sozinho e mostra uma barra de "copiando seus memes".
+- **Travessuras novas:**
+  - **Enxame de olhos:** de 8 a 12 olhos aparecem de uma vez, passando do limite normal.
+  - **Puxar uma janela:** ela laça a janela da frente com uma corda neon, puxa pra perto dela e solta, e a janela volta pro lugar.
+  - **Sacudir uma janela:** a janela da frente treme como num terremoto e volta pro lugar.
+  - **Virar a tela:** a tela gira de cabeça pra baixo como uma carta e depois desvira (um clique desvira antes).
+  - **Pichar a tela:** ela picha "CAPRI ESTEVE AQUI" com tinta escorrendo; some sozinho ou com um clique.
+- Novo submenu **Travessuras → Escolher travessura** para disparar qualquer uma na hora.
+- Continua tudo inofensivo: nada é clicado, digitado ou apagado, as janelas sempre voltam pro lugar, e se você pegar o mouse ou a janela ela solta na hora. Janelas maximizadas ou em tela cheia não são mexidas.
+
 ## v0.0.21 — Saudação na sua voz, medidor de carinho e modo travessura
 
 - **Saudação ao abrir:** a Capri não toca mais a gravação fixa em inglês quando liga. Agora ela fala o "Bom dia, choom." (e as outras saudações) em português, com a voz que você escolheu.

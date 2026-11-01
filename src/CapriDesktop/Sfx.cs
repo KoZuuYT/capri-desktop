@@ -101,6 +101,13 @@ internal static class Sfx
 			Cue.PetHappy => Chime(level * 3 / 4),
 			Cue.PetPurr => Mix(Chime(level * 3 / 5), Purr(level), 2400),
 			Cue.PetEnd => Mix(Blip(0.12, 1500.0, 0.6, level / 2), Blip(0.16, 900.0, 0.55, level / 2), 2600),
+			Cue.Giggle => Giggle(level),
+			Cue.Crunch => Mix(Crackle(0.45, level * 4 / 5, strokes.Next()), Glitch(open: false, level / 2), 300),
+			Cue.Whoosh => Mix(Whoosh(0.45, level, strokes.Next()), Sweep(0.3, 260.0, 900.0, 0.02, level / 4), 1200),
+			Cue.Alarm => Alarm(level * 3 / 4),
+			Cue.Boing => Boing(level * 3 / 4),
+			Cue.Rumble => Rumble(1.2, level * 3 / 4, strokes.Next()),
+			Cue.Spray => Spray(level * 3 / 4, strokes.Next()),
 			_ => Sweep(0.05, 1600.0, 1350.0, 0.003, level * 3 / 4),
 		};
 	}
@@ -298,6 +305,137 @@ internal static class Sfx
 				value += Math.Sin(Math.PI * 2.0 * 2400.0 * t) * 0.5 * (1.0 - (p - 0.68) / 0.08); // lock-on blip
 			}
 			samples[i] = (short)(Math.Max(-1.0, Math.Min(1.0, value / 1.3)) * gain * 32767.0);
+		}
+		return samples;
+	}
+
+	// mischief: a cheeky "he-he-he-he", quick bouncy blips wobbling up and down
+	private static short[] Giggle(int level)
+	{
+		double[] notes = { 1180.0, 1420.0, 1250.0, 1560.0 };
+		short[] samples = new short[0];
+		for (int n = 0; n < notes.Length; n++)
+		{
+			samples = Mix(samples, Blip(0.075, notes[n], n % 2 == 0 ? 1.18 : 0.86, level * 3 / 5), n * 2300);
+		}
+		return samples;
+	}
+
+	// air rushing past: noise through a low-pass that opens and closes again
+	private static short[] Whoosh(double seconds, int level, int seed)
+	{
+		int count = (int)(seconds * 24000.0);
+		short[] samples = new short[count];
+		Random noise = new Random(seed);
+		double gain = 0.32 * (double)Math.Max(0, Math.Min(100, level)) / 100.0;
+		double low = 0.0;
+		double lower = 0.0;
+		for (int i = 0; i < count; i++)
+		{
+			double p = (double)i / (double)count;
+			double open = Math.Sin(Math.PI * p);
+			double cutoff = 0.02 + 0.25 * open * open;
+			double white = noise.NextDouble() * 2.0 - 1.0;
+			low += (white - low) * cutoff;
+			lower += (low - lower) * cutoff;
+			samples[i] = (short)(Math.Max(-1.0, Math.Min(1.0, lower * 3.0 * Math.Pow(open, 1.5))) * gain * 32767.0);
+		}
+		return samples;
+	}
+
+	// a fake security siren: two bit-crushed square tones trading places, pulsing
+	private static short[] Alarm(int level)
+	{
+		double seconds = 1.15;
+		int count = (int)(seconds * 24000.0);
+		short[] samples = new short[count];
+		double gain = 0.2 * (double)Math.Max(0, Math.Min(100, level)) / 100.0;
+		double phase = 0.0;
+		double held = 0.0;
+		for (int i = 0; i < count; i++)
+		{
+			double t = (double)i / 24000.0;
+			double freq = (int)(t / 0.19) % 2 == 0 ? 1046.0 : 784.0;
+			phase += Math.PI * 2.0 * freq / 24000.0;
+			double tone = 0.6 * Math.Sign(Math.Sin(phase)) + 0.4 * Math.Sin(phase);
+			if (i % 4 == 0)
+			{
+				held = tone;
+			}
+			double envelope = Math.Min(1.0, t / 0.01) * Math.Min(1.0, (seconds - t) / 0.12) * (0.75 + 0.25 * Math.Sin(t * Math.PI * 24.0));
+			samples[i] = (short)(Math.Max(-1.0, Math.Min(1.0, held * envelope)) * gain * 32767.0);
+		}
+		return samples;
+	}
+
+	// a cartoon spring: a tone wobbling fast around a rising pitch and settling
+	private static short[] Boing(int level)
+	{
+		double seconds = 0.7;
+		int count = (int)(seconds * 24000.0);
+		short[] samples = new short[count];
+		double gain = 0.28 * (double)Math.Max(0, Math.Min(100, level)) / 100.0;
+		double phase = 0.0;
+		for (int i = 0; i < count; i++)
+		{
+			double t = (double)i / 24000.0;
+			double p = (double)i / (double)count;
+			double freq = 190.0 + 140.0 * p + 120.0 * Math.Sin(t * Math.PI * 22.0) * Math.Exp(-t * 4.5);
+			phase += Math.PI * 2.0 * freq / 24000.0;
+			double tone = Math.Sin(phase) + 0.25 * Math.Sin(phase * 2.0);
+			double envelope = Math.Min(1.0, t / 0.005) * Math.Exp(-t * 3.2);
+			samples[i] = (short)(Math.Max(-1.0, Math.Min(1.0, tone * envelope / 1.25)) * gain * 32767.0);
+		}
+		return samples;
+	}
+
+	// a shaky low rumble with a rattle on top, for the window earthquake
+	private static short[] Rumble(double seconds, int level, int seed)
+	{
+		int count = (int)(seconds * 24000.0);
+		short[] samples = new short[count];
+		Random noise = new Random(seed);
+		double gain = 0.34 * (double)Math.Max(0, Math.Min(100, level)) / 100.0;
+		double low = 0.0;
+		double phase = 0.0;
+		for (int i = 0; i < count; i++)
+		{
+			double t = (double)i / 24000.0;
+			double p = (double)i / (double)count;
+			double white = noise.NextDouble() * 2.0 - 1.0;
+			low += (white - low) * 0.03;
+			phase += Math.PI * 2.0 * (48.0 + 8.0 * Math.Sin(t * 7.0)) / 24000.0;
+			double rattle = Math.Sign(Math.Sin(t * Math.PI * 110.0)) * 0.15 * (0.5 + 0.5 * Math.Sin(t * Math.PI * 18.0));
+			double sample = low * 5.0 + Math.Sin(phase) * 0.5 + rattle;
+			double envelope = Math.Min(1.0, t / 0.03) * Math.Pow(1.0 - p, 0.7);
+			samples[i] = (short)(Math.Max(-1.0, Math.Min(1.0, sample * envelope / 1.4)) * gain * 32767.0);
+		}
+		return samples;
+	}
+
+	// a spray can: two rattle clicks, then a long hiss that pulses as the hand sweeps
+	private static short[] Spray(int level, int seed)
+	{
+		double seconds = 1.6;
+		int count = (int)(seconds * 24000.0);
+		short[] samples = new short[count];
+		Random noise = new Random(seed);
+		double gain = 0.26 * (double)Math.Max(0, Math.Min(100, level)) / 100.0;
+		double last = 0.0;
+		for (int i = 0; i < count; i++)
+		{
+			double t = (double)i / 24000.0;
+			double white = noise.NextDouble() * 2.0 - 1.0;
+			double bright = white - last;
+			last = white;
+			double hiss = t < 0.18 ? 0.0 : bright * 0.6 * (0.7 + 0.3 * Math.Sin(t * Math.PI * 7.0)) * Math.Min(1.0, (t - 0.18) / 0.05) * Math.Min(1.0, (seconds - t) / 0.2);
+			double rattle = 0.0;
+			if (t < 0.16)
+			{
+				double c = t % 0.08;
+				rattle = Math.Sin(Math.PI * 2.0 * 2600.0 * c) * Math.Exp(-c / 0.006) * 0.8;
+			}
+			samples[i] = (short)(Math.Max(-1.0, Math.Min(1.0, hiss + rattle)) * gain * 32767.0);
 		}
 		return samples;
 	}

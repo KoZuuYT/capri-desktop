@@ -601,6 +601,19 @@ internal sealed class Companion : Form
 
 	private static readonly string[] HackPranks = new string[4] { "Relaxa, é só uma brincadeira.", "Você foi hackeado. Por mim. De nada.", "Cuidado, choom. Brincadeirinha.", "Seus arquivos estão salvos. Por enquanto." };
 
+	private static readonly string[] EyePranks = new string[4] { "Tô de olho em você. Em todos os ângulos.", "Olhos extras, cortesia da casa.", "Relaxa, são só uns olhinhos.", "Contei: você está sendo observado." };
+
+	private static readonly string[] YankPranks = new string[4] { "Essa janela tava longe demais. Puxei.", "Vem cá, janelinha.", "Só queria ver de perto.", "Peguei emprestada. Já devolvi." };
+
+	private static readonly string[] ShakePranks = new string[4] { "Terremoto! Brincadeira.", "Acorda, janela!", "Ops, tropecei no cabo.", "Sacode, sacode." };
+
+	private static readonly string[] FlipPranks = new string[4] { "Mundo de cabeça pra baixo, choom.", "Novo ponto de vista. De nada.", "Tá tonto? Eu também.", "Virei tudo. Desvirei. Quase." };
+
+	private static readonly string[] GraffitiPranks = new string[4] { "Deixei minha assinatura.", "Arte de rua, versão desktop.", "Gostou da decoração?", "Capri esteve aqui. Literalmente." };
+
+	// menu names for each prank, in Prank's order
+	private static readonly string[] PrankNames = new string[8] { "Bugar a tela", "Roubar o cursor", "Aviso de hacker", "Enxame de olhos", "Puxar uma janela", "Sacudir uma janela", "Virar a tela", "Pichar a tela" };
+
 	private readonly Shatter shatter = new Shatter();
 
 	private readonly Crackle crackle = new Crackle();
@@ -1849,6 +1862,16 @@ internal sealed class Companion : Form
 		{
 			Prank();
 		}));
+		ToolStripMenuItem pickPrank = new ToolStripMenuItem("Escolher travessura");
+		for (int i = 0; i < PrankNames.Length; i++)
+		{
+			int which = i;
+			pickPrank.DropDownItems.Add(new ToolStripMenuItem(PrankNames[i], null, (object param0, EventArgs param1) =>
+			{
+				Prank(which);
+			}));
+		}
+		pranks.DropDownItems.Add(pickPrank);
 		menu.Items.Add(pranks);
 		menu.Opening += (object param0, CancelEventArgs param1) =>
 		{
@@ -4547,35 +4570,76 @@ internal sealed class Companion : Form
 		}
 	}
 
-	// one harmless prank: a screen glitch, stealing the cursor for a moment, or a fake "you've been hacked" note
-	private void Prank()
+	// one harmless prank, picked at random (never the same twice in a row) unless asked for by number; see PrankNames.
+	// Pulling or shaking a window falls back to the glitch when there is no window she can grab.
+	private void Prank(int pick = -1)
 	{
-		int pick = random.Next(3);
-		if (pick == lastMischief)
+		if (pick < 0)
 		{
-			pick = (pick + 1 + random.Next(2)) % 3;
+			pick = random.Next(PrankNames.Length);
+			if (pick == lastMischief)
+			{
+				pick = (pick + 1 + random.Next(PrankNames.Length - 1)) % PrankNames.Length;
+			}
 		}
 		lastMischief = pick;
 		Rectangle screen = Screen.FromPoint(Cursor.Position).Bounds;
-		string line;
+		Rectangle work = Screen.FromPoint(Cursor.Position).WorkingArea;
+		Point her = new Point(Left + Width / 2, Top + Height / 2);
+		string[] lines;
 		switch (pick)
 		{
-		case 0:
-			mischief.Glitch(screen);
-			line = GlitchPranks[random.Next(GlitchPranks.Length)];
-			break;
 		case 1:
-			mischief.Steal(new Point(Left + Width / 2, Top + Height / 2));
-			line = CursorPranks[random.Next(CursorPranks.Length)];
+			mischief.Steal(her);
+			lines = CursorPranks;
+			break;
+		case 2:
+			mischief.Hacked(work);
+			lines = HackPranks;
+			break;
+		case 3:
+			EyeSwarm();
+			lines = EyePranks;
+			break;
+		case 4 when mischief.Yank(her):
+			lines = YankPranks;
+			break;
+		case 5 when mischief.Shake():
+			lines = ShakePranks;
+			break;
+		case 6:
+			mischief.Flip(screen);
+			lines = FlipPranks;
+			break;
+		case 7:
+			mischief.Graffiti(work);
+			lines = GraffitiPranks;
 			break;
 		default:
-			mischief.Hacked(Screen.FromPoint(Cursor.Position).WorkingArea);
-			line = HackPranks[random.Next(HackPranks.Length)];
+			mischief.Glitch(screen);
+			lines = GlitchPranks;
 			break;
+		}
+		if (!hidden)
+		{
+			mischief.Smirk(Bounds);
 		}
 		if (!hidden && !chatting && speech == null && talkState == TalkState.Off && !typer.Visible)
 		{
-			Remark("mischief", line);
+			Remark("mischief", lines[random.Next(lines.Length)]);
+		}
+	}
+
+	// mischief: a whole swarm of eyes at once, well past the usual limit
+	private void EyeSwarm()
+	{
+		eyePopups.RemoveAll((EyePopup eye) => eye.IsDisposed);
+		int count = 8 + random.Next(5);
+		for (int i = 0; i < count; i++)
+		{
+			EyePopup eye = new EyePopup(eyePopups.ConvertAll((EyePopup other) => other.Bounds), i * random.Next(90, 260), 0.45f + (float)random.NextDouble() * 0.7f);
+			eyePopups.Add(eye);
+			eye.Show();
 		}
 	}
 

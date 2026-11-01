@@ -13,5 +13,12 @@ internal enum Cue
 	PetPurr,
 	PetEnd,
 	Zap,
-	Spark
+	Spark,
+	Giggle,
+	Crunch,
+	Whoosh,
+	Alarm,
+	Boing,
+	Rumble,
+	Spray
 }
