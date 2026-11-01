@@ -2,6 +2,12 @@
 
 > A partir daqui, cada alteração é uma nova versão do mod (mostrada no Mainframe como "Modded vX.Y.Z").
 
+## v0.0.18 — Instalador para usar a Capri modificada em outro computador
+
+- Agora existe um instalador (`Capri-Mod-Setup-0.0.18.exe`) que leva a Capri modificada para outro PC, sem precisar instalar o .NET lá.
+- Ele instala no mesmo lugar da Capri oficial, cria atalhos no Menu Iniciar (e na Área de Trabalho, se quiser) e aparece em Configurações > Aplicativos para desinstalar.
+- Ao desinstalar, dá para escolher se apaga também as memórias, configurações e modelos baixados.
+
 ## v0.0.17 — Capri ouve os amigos com mais clareza e entende quando é chamada
 
 - O som da call agora passa por um filtro de verdade antes de virar texto (antes ele era reduzido de um jeito grosseiro que embaralhava as palavras), com volume ajustado e uma pausa de silêncio nas pontas para ela não perder a primeira e a última palavra.

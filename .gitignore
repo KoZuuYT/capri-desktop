@@ -3,3 +3,9 @@ src/out/
 bin/
 *.log
 *.bak
+installer/app/
+installer/uninstall/
+installer/out/
+installer/Setup/obj/
+installer/Setup/bin/
+installer/*.exe
