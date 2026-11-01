@@ -107,6 +107,17 @@ internal sealed class Preferences
 	[DataMember]
 	public bool NoSitting;
 
+	// mod: charm meter (0-100) and when she last saw you
+	[DataMember]
+	public double Charm;
+
+	[DataMember]
+	public long CharmSeen;
+
+	// mod: mischief mode pranks
+	[DataMember]
+	public bool Mischief;
+
 	[DataMember]
 	public bool NvidiaGlm;
 

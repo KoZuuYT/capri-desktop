@@ -2,6 +2,12 @@
 
 > A partir daqui, cada alteração é uma nova versão do mod (mostrada no Mainframe como "Modded vX.Y.Z").
 
+## v0.0.21 — Saudação na sua voz, medidor de carinho e modo travessura
+
+- **Saudação ao abrir:** a Capri não toca mais a gravação fixa em inglês quando liga. Agora ela fala o "Bom dia, choom." (e as outras saudações) em português, com a voz que você escolheu.
+- **Medidor de carinho:** ela vai gostando mais de você conforme vocês passam tempo juntos (um pouco a cada minuto com você por perto, mais quando conversam, e quando você faz carinho nela). São 5 níveis: Desconfiada, Curiosa, Amiga, Apegada e Inseparável. Ao subir de nível ela solta corações e comenta. Se você sumir por vários dias, ela esfria um pouquinho. O jeito dela falar muda conforme o nível, e você vê o medidor no menu do botão direito.
+- **Modo travessura** (desligado por padrão; ligue no menu do botão direito → Travessuras): de vez em quando ela apronta uma de três: faz a tela "bugar" por um instante, rouba seu cursor e dá uma voltinha com ele, ou abre um aviso falso de "VOCÊ FOI HACKEADO". Tudo inofensivo: ela não clica nem mexe em nada, não faz isso em jogos/tela cheia, e se você puxar o mouse de volta ela solta na hora. Tem também "Fazer uma travessura agora" para testar.
+
 ## v0.0.20 — "corp" em vez de "corpo"
 
 - Quando fala português, a Capri agora usa a gíria "corp" (ex.: "Típico corp.") em vez de "corpo", que em português quer dizer outra coisa.

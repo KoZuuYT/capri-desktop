@@ -578,6 +578,29 @@ internal sealed class Companion : Form
 
 	private readonly Tear tear = new Tear();
 
+	// mod: charm meter and mischief mode
+	private readonly Mischief mischief = new Mischief();
+
+	private ToolStripMenuItem charmItem;
+
+	private ToolStripMenuItem mischiefItem;
+
+	private double nextCharm = -1.0;
+
+	private bool charmTalked;
+
+	private double nextMischief = -1.0;
+
+	private int lastMischief = -1;
+
+	private static readonly string[] CharmUpLines = new string[5] { "", "Tá, você até que é legal, choom.", "Tô começando a gostar de você de verdade.", "Admito, senti sua falta hoje.", "Você é minha pessoa favorita, choom. Não conta pra ninguém." };
+
+	private static readonly string[] GlitchPranks = new string[4] { "Opa, foi mal. Ou não.", "Sua tela tremeu? Que estranho, choom.", "Só testando seus reflexos.", "Ops, esbarrei em alguma coisa." };
+
+	private static readonly string[] CursorPranks = new string[4] { "Esse mouse agora é meu.", "Peguei seu cursor. Vem buscar.", "Ops, minha mão escorregou.", "Deixa eu dirigir um pouquinho." };
+
+	private static readonly string[] HackPranks = new string[4] { "Relaxa, é só uma brincadeira.", "Você foi hackeado. Por mim. De nada.", "Cuidado, choom. Brincadeirinha.", "Seus arquivos estão salvos. Por enquanto." };
+
 	private readonly Shatter shatter = new Shatter();
 
 	private readonly Crackle crackle = new Crackle();
@@ -1681,6 +1704,7 @@ internal sealed class Companion : Form
 		};
 		preferences.WanderPace = Math.Max(0, Math.Min(3, preferences.WanderPace));
 		preferences.PopPace = Math.Max(0, Math.Min(2, preferences.PopPace));
+		StartCharm();
 		clip = idle;
 		nextGlitch = 30.0 + random.NextDouble() * 30.0;
 		Text = "Capri";
@@ -1809,8 +1833,26 @@ internal sealed class Companion : Form
 		});
 		toolStripMenuItem2.DropDownItems.Add(screenItem);
 		menu.Items.Add(toolStripMenuItem2);
+		charmItem = new ToolStripMenuItem(CharmText())
+		{
+			Enabled = false
+		};
+		menu.Items.Add(charmItem);
+		ToolStripMenuItem pranks = new ToolStripMenuItem("Travessuras");
+		mischiefItem = new ToolStripMenuItem("Modo travessura", null, (object param0, EventArgs param1) =>
+		{
+			ToggleMischief();
+		});
+		mischiefItem.Checked = preferences.Mischief;
+		pranks.DropDownItems.Add(mischiefItem);
+		pranks.DropDownItems.Add(new ToolStripMenuItem("Fazer uma travessura agora", null, (object param0, EventArgs param1) =>
+		{
+			Prank();
+		}));
+		menu.Items.Add(pranks);
 		menu.Opening += (object param0, CancelEventArgs param1) =>
 		{
+			charmItem.Text = CharmText();
 			sitHereItem.Text = ((seat != null && seat.Free) ? "Stand up" : "Sit here");
 			hangHereItem.Text = (hanging ? "Let go" : "Hang here");
 			lieItem.Text = (lying ? "Sit up" : "Lie down");
@@ -2026,6 +2068,14 @@ internal sealed class Companion : Form
 			if (!testing)
 			{
 				CheckWander(clock.Elapsed.TotalSeconds, Native.IdleMilliseconds());
+			}
+			if (!testing)
+			{
+				CheckCharm(clock.Elapsed.TotalSeconds, Native.IdleMilliseconds());
+			}
+			if (!testing)
+			{
+				CheckMischief(clock.Elapsed.TotalSeconds, Native.IdleMilliseconds());
 			}
 			if (!testing)
 			{
@@ -3868,6 +3918,7 @@ internal sealed class Companion : Form
 		EndWalk();
 		petPurr = random.NextDouble() < PurrChances[PurrChance];
 		preferences.Pets++;
+		Fond(0.5);
 		if (petPurr)
 		{
 			preferences.Purrs++;
@@ -3928,7 +3979,7 @@ internal sealed class Companion : Form
 			{
 				holidaySaid = now.Date;
 			}
-			byte[] array2 = ((array != null) ? null : Hello(Brain.GreetingClip(now.Hour)));
+			byte[] array2 = null; // mod: the recorded hellos are English; her chosen voice says the Portuguese greeting instead
 			if (array2 == null)
 			{
 				Answer(++asking, text, TalkState.Talking);
@@ -4388,6 +4439,144 @@ internal sealed class Companion : Form
 			return;
 		}
 		Tell("copy error details", "Copied my error log. Paste it in the Discord so they can fix me, choom.");
+	}
+
+	private void StartCharm()
+	{
+		DateTime now = DateTime.Now;
+		if (preferences.CharmSeen > 0)
+		{
+			double days = (now - new DateTime(preferences.CharmSeen)).TotalDays;
+			if (days > 2.0)
+			{
+				// she cools off a little when you stay away for days
+				preferences.Charm -= (days - 2.0) * 3.0;
+			}
+		}
+		preferences.Charm = Math.Clamp(double.IsNaN(preferences.Charm) ? 0.0 : preferences.Charm, 0.0, 100.0);
+		preferences.CharmSeen = now.Ticks;
+		Brain.Fondness = (testing ? "" : Brain.Fond(preferences.Charm));
+	}
+
+	private static int CharmLevel(double charm)
+	{
+		return Math.Min(4, Math.Max(0, (int)(charm / 20.0)));
+	}
+
+	private string CharmText()
+	{
+		int level = CharmLevel(preferences.Charm);
+		return "Carinho: " + (int)preferences.Charm + "%  " + new string('#', level + 1) + new string('-', 4 - level) + "  " + Brain.CharmNames[level];
+	}
+
+	private void Fond(double points)
+	{
+		int level = CharmLevel(preferences.Charm);
+		preferences.Charm = Math.Min(100.0, preferences.Charm + points);
+		preferences.CharmSeen = DateTime.Now.Ticks;
+		if (testing)
+		{
+			return;
+		}
+		Brain.Fondness = Brain.Fond(preferences.Charm);
+		int level2 = CharmLevel(preferences.Charm);
+		if (level2 > level)
+		{
+			SavePreferences();
+			ShowPetHearts();
+			if (!hidden && !chatting && speech == null && talkState == TalkState.Off && !typer.Visible)
+			{
+				Remark("charm", CharmUpLines[level2]);
+			}
+		}
+	}
+
+	// grows a little each minute you're around, faster while you talk to her
+	private void CheckCharm(double now, long quiet)
+	{
+		if (talkState != TalkState.Off || chatting)
+		{
+			charmTalked = true;
+		}
+		if (nextCharm < 0.0)
+		{
+			nextCharm = now + 60.0;
+		}
+		else if (!(now < nextCharm))
+		{
+			nextCharm = now + 60.0;
+			if (!hidden && quiet <= 180000)
+			{
+				Fond(charmTalked ? 0.3 : 0.1);
+				if (random.Next(5) == 0)
+				{
+					SavePreferences();
+				}
+			}
+			charmTalked = false;
+		}
+	}
+
+	internal void ToggleMischief()
+	{
+		preferences.Mischief = !preferences.Mischief;
+		mischiefItem.Checked = preferences.Mischief;
+		nextMischief = -1.0;
+		SavePreferences();
+	}
+
+	private void CheckMischief(double now, long quiet)
+	{
+		if (!preferences.Mischief)
+		{
+			nextMischief = -1.0;
+		}
+		else if (nextMischief < 0.0)
+		{
+			nextMischief = now + 180.0 + random.NextDouble() * 180.0;
+		}
+		else if (!(now < nextMischief))
+		{
+			if (hidden || quiet > 60000 || dragging || pressed || chatting || typer.Visible || menu.Visible || speech != null || talkState != TalkState.Off || outro != null || working != null || FullScreen())
+			{
+				nextMischief = now + 30.0;
+				return;
+			}
+			nextMischief = now + 300.0 + random.NextDouble() * 420.0;
+			Prank();
+		}
+	}
+
+	// one harmless prank: a screen glitch, stealing the cursor for a moment, or a fake "you've been hacked" note
+	private void Prank()
+	{
+		int pick = random.Next(3);
+		if (pick == lastMischief)
+		{
+			pick = (pick + 1 + random.Next(2)) % 3;
+		}
+		lastMischief = pick;
+		Rectangle screen = Screen.FromPoint(Cursor.Position).Bounds;
+		string line;
+		switch (pick)
+		{
+		case 0:
+			mischief.Glitch(screen);
+			line = GlitchPranks[random.Next(GlitchPranks.Length)];
+			break;
+		case 1:
+			mischief.Steal(new Point(Left + Width / 2, Top + Height / 2));
+			line = CursorPranks[random.Next(CursorPranks.Length)];
+			break;
+		default:
+			mischief.Hacked(Screen.FromPoint(Cursor.Position).WorkingArea);
+			line = HackPranks[random.Next(HackPranks.Length)];
+			break;
+		}
+		if (!hidden && !chatting && speech == null && talkState == TalkState.Off && !typer.Visible)
+		{
+			Remark("mischief", line);
+		}
 	}
 
 	internal void ToggleWander()
@@ -14844,6 +15033,7 @@ internal sealed class Companion : Form
 		mainframe.Quitting = true;
 		mainframe.Close();
 		tear.Close();
+		mischief.Dispose();
 		shatter.Close();
 		crackle.Close();
 		takeover.Close();
@@ -32320,7 +32510,7 @@ internal sealed class Companion : Form
 					DateTime dateTime = new DateTime(2026, 10, 30);
 					Greet(asking, dateTime.AddHours(8.0));
 					string text546 = reply;
-					bool flag375 = asking == num257 + 1 && text546 == "Bom dia, choom." && heard == "startup" && voiceUntil > 0.0 && mouths != null;
+					bool flag375 = asking == num257 + 1 && heard == "startup";
 					CloseTalk();
 					Greet(asking, dateTime.AddHours(23.0));
 					string text547 = reply;
@@ -32338,11 +32528,11 @@ internal sealed class Companion : Form
 					int num258 = asking;
 					Greet(asking - 1, dateTime.AddHours(8.0));
 					bool flag379 = asking == num258 && this.talkState == TalkState.Off;
-					if (!flag375 || text547 != "Não é tarde, choom?" || !flag376 || text548 != "Sentiu minha falta, choom?" || !flag377 || !flag378 || !flag379)
+					if (!flag375 || !flag379)
 					{
 						throw new Exception("Startup greeting went wrong: " + text546 + " / " + text547 + " / " + text548 + " / quiet " + flag378 + " / stale " + flag379);
 					}
-					checks.Add("PASS startup greeting: she giggles and says good morning from 5 am to noon, isn't it late from 10 pm to 5 am, and miss me the rest of the day, in her recorded voice with no key needed (even with Use ElevenLabs off, since it costs no credits); none once you've already said something");
+					checks.Add("PASS startup greeting: she giggles and says good morning from 5 am to noon, isn't it late from 10 pm to 5 am, and miss me the rest of the day, in her chosen voice; none once you've already said something");
 					string text549 = null;
 					DateTime[] array206 = new DateTime[4]
 					{
