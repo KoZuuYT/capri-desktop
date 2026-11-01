@@ -2,6 +2,13 @@
 
 > A partir daqui, cada alteração é uma nova versão do mod (mostrada no Mainframe como "Modded vX.Y.Z").
 
+## v0.0.17 — Capri ouve os amigos com mais clareza e entende quando é chamada
+
+- O som da call agora passa por um filtro de verdade antes de virar texto (antes ele era reduzido de um jeito grosseiro que embaralhava as palavras), com volume ajustado e uma pausa de silêncio nas pontas para ela não perder a primeira e a última palavra.
+- Ela reconhece mais jeitos de chamar o nome dela ("Cap", "Capre", "Cabre", "Captain"...).
+- Quando alguém diz só "Capri" e faz a pergunta logo depois, ela espera um pouquinho e junta as duas partes.
+- Depois de ser chamada, ela continua atenta ao amigo por uns 15 segundos, mesmo que ele não repita o nome.
+
 ## v0.0.16 — Capri entende os amigos mesmo sem o seu modo de voz ligado
 
 - A transcrição da call usava os ouvidos dela só enquanto o seu chat de voz estava ativo. Fora disso caía no reconhecedor do Windows, que dava erro, e a fala dos amigos sumia. Agora ela usa os próprios ouvidos sempre que estão instalados.

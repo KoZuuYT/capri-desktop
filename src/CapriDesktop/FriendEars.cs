@@ -170,10 +170,7 @@ internal sealed class FriendEars : IDisposable
 
 	private void Listen(ISoundCapture capture, int rate, int channels, int bits, bool isFloat)
 	{
-		double step = rate / 16000.0;
-		double sum = 0.0;
-		double taken = 0.0;
-		double edge = step;
+		Shrink shrink = new Shrink(rate);
 		short[] chunk = new short[Chunk];
 		int filled = 0;
 		float[] floats = new float[0];
@@ -229,19 +226,15 @@ internal sealed class FriendEars : IDisposable
 						}
 						value /= channels;
 					}
-					sum += value;
-					taken += 1.0;
-					if (taken >= edge)
+					shrink.Add(value);
+				}
+				foreach (double value in shrink.Take())
+				{
+					chunk[filled++] = (short)Math.Max(-32768.0, Math.Min(32767.0, value * 32767.0));
+					if (filled == Chunk)
 					{
-						edge += step;
-						double average = sum / Math.Max(1.0, Math.Round(step));
-						sum = 0.0;
-						chunk[filled++] = (short)Math.Max(-32768.0, Math.Min(32767.0, average * 32767.0));
-						if (filled == Chunk)
-						{
-							filled = 0;
-							Take(line, (short[])chunk.Clone());
-						}
+						filled = 0;
+						Take(line, (short[])chunk.Clone());
 					}
 				}
 				capture.ReleaseBuffer(frames);
@@ -256,6 +249,80 @@ internal sealed class FriendEars : IDisposable
 				quietSince = Environment.TickCount64;
 				Take(line, new short[Chunk]);
 			}
+		}
+	}
+
+	// turns the speaker's rate into 16 kHz through a proper low-pass filter; averaging a few samples let the
+	// hiss above 8 kHz fold back into the voices and muddied every word
+	private sealed class Shrink
+	{
+		private const int Phases = 64;
+
+		private readonly double step;
+
+		private readonly int half;
+
+		private readonly double[][] kernels = new double[Phases][];
+
+		private readonly List<double> held = new List<double>();
+
+		private double at;
+
+		internal Shrink(int rate)
+		{
+			step = rate / 16000.0;
+			double cut = 7400.0 / rate;
+			half = (int)Math.Ceiling(16.0 * step);
+			for (int p = 0; p < Phases; p++)
+			{
+				double[] kernel = new double[half * 2];
+				double total = 0.0;
+				for (int k = 0; k < kernel.Length; k++)
+				{
+					double d = k - half + 1 - (double)p / Phases;
+					double x = 2.0 * cut * d;
+					double sinc = (Math.Abs(x) < 1E-09) ? 1.0 : (Math.Sin(Math.PI * x) / (Math.PI * x));
+					double w = 0.42 + 0.5 * Math.Cos(Math.PI * d / half) + 0.08 * Math.Cos(2.0 * Math.PI * d / half);
+					kernel[k] = (Math.Abs(d) >= half) ? 0.0 : (sinc * w);
+					total += kernel[k];
+				}
+				for (int k = 0; k < kernel.Length; k++)
+				{
+					kernel[k] /= total;
+				}
+				kernels[p] = kernel;
+			}
+			at = half;
+		}
+
+		internal void Add(double value)
+		{
+			held.Add(value);
+		}
+
+		internal List<double> Take()
+		{
+			List<double> made = new List<double>();
+			while (at + half < held.Count)
+			{
+				int whole = (int)at;
+				double[] kernel = kernels[Math.Min(Phases - 1, (int)((at - whole) * Phases))];
+				double sum = 0.0;
+				int first = whole - half + 1;
+				for (int k = 0; k < kernel.Length; k++)
+				{
+					sum += held[first + k] * kernel[k];
+				}
+				made.Add(sum);
+				at += step;
+			}
+			int drop = (int)at - half;
+			if (drop > 0)
+			{
+				held.RemoveRange(0, drop);
+				at -= drop;
+			}
+			return made;
 		}
 	}
 
@@ -353,10 +420,25 @@ internal sealed class FriendEars : IDisposable
 		{
 			return;
 		}
-		short[] samples = new short[parts.Count * Chunk];
+		// a bit of silence on both sides and an even level help her ears catch the first and last words
+		const int pad = 4800;
+		short[] samples = new short[parts.Count * Chunk + pad * 2];
+		int peak = 1;
 		for (int i = 0; i < parts.Count; i++)
 		{
-			Array.Copy(parts[i], 0, samples, i * Chunk, Chunk);
+			Array.Copy(parts[i], 0, samples, pad + i * Chunk, Chunk);
+			foreach (short s in parts[i])
+			{
+				peak = Math.Max(peak, Math.Abs((int)s));
+			}
+		}
+		double gain = Math.Min(6.0, 22000.0 / peak);
+		if (gain > 1.05)
+		{
+			for (int i = 0; i < samples.Length; i++)
+			{
+				samples[i] = (short)Math.Max(-32768.0, Math.Min(32767.0, samples[i] * gain));
+			}
 		}
 		sent++;
 		try

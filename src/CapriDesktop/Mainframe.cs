@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -3853,7 +3853,7 @@ internal sealed class Mainframe : Form, IMessageFilter
 	internal string VoiceStatus => voiceNote.Text + " | " + voiceEntry.Box.Text + " | " + speechModels.Text + " | " + connect.Text;
 
 	// version of this personal mod: bumped on every change (see CHANGELOG.md)
-	internal const string ModVersion = "0.0.16";
+	internal const string ModVersion = "0.0.17";
 
 	internal Mainframe(Companion owner, Icon icon, string version)
 	{

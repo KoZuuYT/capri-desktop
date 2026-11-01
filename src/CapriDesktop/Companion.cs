@@ -785,6 +785,10 @@ internal sealed class Companion : Form
 
 	private long friendWaitAt;
 
+	private long friendCalledAt = -100000L;
+
+	private long friendHoldUntil;
+
 	private readonly Speaker effects;
 
 	private readonly Speaker typist;
@@ -12922,22 +12926,50 @@ internal sealed class Companion : Form
 		{
 			return;
 		}
+		text = FixName(text);
 		Brain.Overhear(text);
 		Brain.Transcribe("Friend (Discord)", text);
-		if (!preferences.FriendsReply || (preferences.FriendsAnswer == 0 && !CalledHer(text)))
+		long now = Environment.TickCount64;
+		bool called = CalledHer(text);
+		// a friend who just called her keeps talking to her for a while, even when the next line
+		// doesn't say her name again ("Capri." ... "me recomenda um filme de terror")
+		bool following = now - friendCalledAt < 15000;
+		if (called)
+		{
+			friendCalledAt = now;
+		}
+		if (!preferences.FriendsReply || (preferences.FriendsAnswer == 0 && !called && !following))
 		{
 			return;
 		}
+		if (friendWaiting != null && now - friendWaitAt < 10000)
+		{
+			text = friendWaiting + " " + text;
+		}
 		friendWaiting = text;
-		friendWaitAt = Environment.TickCount64;
+		friendWaitAt = now;
+		// only her name so far: give them a moment to say the rest
+		friendHoldUntil = JustName(text) ? (now + 2500) : 0;
 		FriendTurn();
 	}
 
+	private static string Plain(string text)
+	{
+		return new string((text ?? "").Normalize(NormalizationForm.FormD).Where((char c) => CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark).ToArray()).ToLowerInvariant();
+	}
+
+	// the call's audio is rough, so her name comes out as cabre, kapri, cabri, capre, or just "cap"
+	private const string CallName = "\\b([ck]a[bp]+r[eiy]+[ae]?|cap ri|captain|capitao)\\b|^\\W*((ei|oi|o|hey|e ai)\\W+)?cap\\b";
+
 	private static bool CalledHer(string text)
 	{
-		string plain = new string((text ?? "").Normalize(NormalizationForm.FormD).Where((char c) => CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark).ToArray()).ToLowerInvariant();
-		// the call's audio is rough, so her name comes out as cabre, kapri, cabri, capre...
-		return Regex.IsMatch(plain, "\\b([ck]a[bp]+r[eiy]+[ae]?|cap ri)\\b");
+		return Regex.IsMatch(Plain(text), CallName);
+	}
+
+	private static bool JustName(string text)
+	{
+		string rest = Regex.Replace(Plain(text), CallName + "|\\b(ei|oi|o|hey|e ai)\\b", "");
+		return CalledHer(text) && !Regex.IsMatch(rest, "\\p{L}");
 	}
 
 	// you come first: a friend's line waits while you talk, she's busy with you, or she's still speaking
@@ -12995,7 +13027,7 @@ internal sealed class Companion : Form
 			}
 			friendWaiting = null;
 		}
-		else if (!YoursFirst())
+		else if (Environment.TickCount64 >= friendHoldUntil && !YoursFirst())
 		{
 			friendWaiting = null;
 			AnswerFriend(text);
