@@ -2,6 +2,11 @@
 
 > A partir daqui, cada alteração é uma nova versão do mod (mostrada no Mainframe como "Modded vX.Y.Z").
 
+## v0.0.14 — Capri ouve melhor os amigos
+
+- Ela reconhece o nome dela mesmo quando a call distorce ("Cabre", "Kapri", "Cabri", "Capre"...).
+- A fala dos amigos não é mais descartada quando o seu microfone capta som: ela ouve e espera a sua vez para responder. Só a própria voz dela continua sendo ignorada.
+
 ## v0.0.13 — Ouvir os amigos no Discord
 
 - Nova seção **DISCORD FRIENDS** nas configurações: a Capri escuta o que toca nos seus fones/caixas (a call do Discord) e entende o que seus amigos falam.

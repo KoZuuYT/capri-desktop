@@ -1610,7 +1610,8 @@ internal sealed class Companion : Form
 		if (!smoke)
 		{
 			ApplyBroadcast();
-			friendEars.Hold = () => speaker.Busy || Voice.Playing || Environment.TickCount64 - Interlocked.Read(ref micLoudAt) < 1200;
+			// only her own voice is dropped; friends talking over you are still heard and wait their turn
+			friendEars.Hold = () => speaker.Busy || Voice.Playing;
 			friendEars.Said += FriendSpoke;
 			ApplyFriends();
 		}
@@ -12929,7 +12930,8 @@ internal sealed class Companion : Form
 	private static bool CalledHer(string text)
 	{
 		string plain = new string((text ?? "").Normalize(NormalizationForm.FormD).Where((char c) => CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark).ToArray()).ToLowerInvariant();
-		return Regex.IsMatch(plain, "\\b(capri|kapri|capry|caprie|capree|cap ri)\\b");
+		// the call's audio is rough, so her name comes out as cabre, kapri, cabri, capre...
+		return Regex.IsMatch(plain, "\\b([ck]a[bp]+r[eiy]+[ae]?|cap ri)\\b");
 	}
 
 	// you come first: a friend's line waits while you talk, she's busy with you, or she's still speaking
