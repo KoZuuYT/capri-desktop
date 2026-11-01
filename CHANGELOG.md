@@ -2,6 +2,11 @@
 
 > A partir daqui, cada alteração é uma nova versão do mod (mostrada no Mainframe como "Modded vX.Y.Z").
 
+## v0.0.24 — Enxame de olhos sincronizado e com olhos vermelhos
+
+- **Sons no tempo certo:** na travessura "Enxame de olhos", os sons não ficam mais numa fila, um esperando o outro acabar. Agora cada olho faz o som exatamente quando abre e quando fecha.
+- **Olhos vermelhos:** o enxame sempre traz de 3 a 5 olhos vermelhos misturados aos verdes.
+
 ## v0.0.23 — Menu de travessuras em branco e carinho mais limpo
 
 - Os textos do menu **Travessuras** (e da lista "Escolher travessura") estavam aparecendo em preto. Agora ficam brancos como o resto do menu.

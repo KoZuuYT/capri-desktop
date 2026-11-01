@@ -4641,12 +4641,29 @@ internal sealed class Companion : Form
 	{
 		eyePopups.RemoveAll((EyePopup eye) => eye.IsDisposed);
 		int count = 8 + random.Next(5);
+		// a few of them always come in red
+		int reds = 3 + random.Next(3);
+		List<(Cue Cue, int Ms)> hits = new List<(Cue Cue, int Ms)>();
+		int delay = 0;
+		// eyes take a moment to build, so count each one's sounds from when it was made
+		Stopwatch built = Stopwatch.StartNew();
 		for (int i = 0; i < count; i++)
 		{
-			EyePopup eye = new EyePopup(eyePopups.ConvertAll((EyePopup other) => other.Bounds), i * random.Next(90, 260), 0.45f + (float)random.NextDouble() * 0.7f);
+			bool red = random.Next(count - i) < reds;
+			if (red)
+			{
+				reds--;
+			}
+			int made = (int)built.ElapsedMilliseconds;
+			EyePopup eye = new EyePopup(eyePopups.ConvertAll((EyePopup other) => other.Bounds), delay, 0.45f + (float)random.NextDouble() * 0.7f, red, quiet: true);
 			eyePopups.Add(eye);
 			eye.Show();
+			hits.Add((Cue.EyeOpen, made + eye.OpensAt));
+			hits.Add((Cue.EyeClose, made + eye.ClosesAt));
+			delay += random.Next(90, 200);
 		}
+		// one premixed track, so each sound lands exactly when its eye opens or shuts
+		Sfx.Play(hits);
 	}
 
 	internal void ToggleWander()

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace CapriDesktop;
 
@@ -26,6 +27,25 @@ internal static class Sfx
 		{
 			action(Make(cue, level));
 		}
+	}
+
+	// several cues laid over each other as one sound, each starting `Ms` in, so they don't queue up one after another
+	internal static void Play(IList<(Cue Cue, int Ms)> hits)
+	{
+		Action<short[]> action = Out;
+		int level = Level;
+		if (action == null || level <= 0 || hits.Count == 0)
+		{
+			return;
+		}
+		// a little softer per cue, since many of them overlap
+		int each = Math.Max(1, level * 4 / 5);
+		short[] samples = new short[0];
+		foreach ((Cue cue, int ms) in hits)
+		{
+			samples = Mix(samples, Make(cue, each), Math.Max(0, ms) * Rate / 1000);
+		}
+		action(samples);
 	}
 
 	internal static void Type(string text, double pace, int seed)

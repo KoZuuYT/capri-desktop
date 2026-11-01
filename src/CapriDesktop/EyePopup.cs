@@ -30,6 +30,14 @@ internal sealed class EyePopup : Form
 		(Color.FromArgb(24, 240, 100), Color.FromArgb(40, 140, 255))
 	};
 
+	// angry red eyes for the mischief swarm
+	private static readonly (Color Accent, Color Iris)[] RedPalettes =
+	{
+		(Color.FromArgb(255, 36, 64), Color.FromArgb(200, 0, 24)),
+		(Color.FromArgb(255, 60, 40), Color.FromArgb(230, 16, 30)),
+		(Color.FromArgb(235, 20, 50), Color.FromArgb(160, 0, 16))
+	};
+
 	private static readonly Color Ink = Color.FromArgb(12, 10, 16);
 
 	private readonly Stopwatch watch = Stopwatch.StartNew();
@@ -58,6 +66,9 @@ internal sealed class EyePopup : Form
 
 	private readonly string tag;
 
+	// the swarm plays every eye's sound as one premixed track, so single eyes stay silent
+	private readonly bool quiet;
+
 	// the green visor panel behind the eye is a slightly crooked quad, like her face art
 	private readonly PointF[] skew = new PointF[6];
 
@@ -83,9 +94,10 @@ internal sealed class EyePopup : Form
 
 	private float peak;
 
-	internal EyePopup(IList<Rectangle> taken, int delayMs, float scale = 1f)
+	internal EyePopup(IList<Rectangle> taken, int delayMs, float scale = 1f, bool red = false, bool quiet = false)
 	{
 		this.delayMs = delayMs;
+		this.quiet = quiet;
 		// moods: squinting, sleepy, wide awake, or plain watching
 		switch (rolls.Next(4))
 		{
@@ -117,7 +129,7 @@ internal sealed class EyePopup : Form
 		eyeWidth *= scale;
 		tilt = Roll(-12f, 12f);
 		coreScale = Roll(0.32f, 0.5f);
-		(accent, iris) = Palettes[rolls.Next(Palettes.Length)];
+		(accent, iris) = red ? RedPalettes[rolls.Next(RedPalettes.Length)] : Palettes[rolls.Next(Palettes.Length)];
 		holdMs = rolls.Next(2800, 6500);
 		// box shapes: crooked quad, trapezoids, slanted parallelogram, or a jagged 5-6 corner shard
 		int box = rolls.Next(5);
@@ -164,6 +176,11 @@ internal sealed class EyePopup : Form
 		canvas = new Bitmap(Width, Height, PixelFormat.Format32bppArgb);
 		clock.Tick += (sender, args) => Step();
 	}
+
+	// when the eye starts to open and starts to shut, counted from when it was made
+	internal int OpensAt => delayMs;
+
+	internal int ClosesAt => delayMs + IntroMs + holdMs;
 
 	protected override bool ShowWithoutActivation => true;
 
@@ -248,12 +265,18 @@ internal sealed class EyePopup : Form
 		if (ms >= 0.0 && !opened)
 		{
 			opened = true;
-			Sfx.Play(Cue.EyeOpen);
+			if (!quiet)
+			{
+				Sfx.Play(Cue.EyeOpen);
+			}
 		}
 		if (ms >= IntroMs + holdMs && !closing)
 		{
 			closing = true;
-			Sfx.Play(Cue.EyeClose);
+			if (!quiet)
+			{
+				Sfx.Play(Cue.EyeClose);
+			}
 		}
 		if (ms >= IntroMs + holdMs + OutroMs)
 		{
