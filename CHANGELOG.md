@@ -2,6 +2,10 @@
 
 > A partir daqui, cada alteração é uma nova versão do mod (mostrada no Mainframe como "Modded vX.Y.Z").
 
+## v0.0.16 — Capri entende os amigos mesmo sem o seu modo de voz ligado
+
+- A transcrição da call usava os ouvidos dela só enquanto o seu chat de voz estava ativo. Fora disso caía no reconhecedor do Windows, que dava erro, e a fala dos amigos sumia. Agora ela usa os próprios ouvidos sempre que estão instalados.
+
 ## v0.0.15 — Diário da escuta dos amigos
 
 - A Capri agora anota no `errors.txt` o que acontece com o som da call: o volume que chega, cada fala enviada para transcrição, quantas palavras ela entendeu, e por que uma fala ficou sem resposta. Serve para achar onde a fala dos amigos se perde.

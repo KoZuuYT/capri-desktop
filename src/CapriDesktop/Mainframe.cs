@@ -3853,7 +3853,7 @@ internal sealed class Mainframe : Form, IMessageFilter
 	internal string VoiceStatus => voiceNote.Text + " | " + voiceEntry.Box.Text + " | " + speechModels.Text + " | " + connect.Text;
 
 	// version of this personal mod: bumped on every change (see CHANGELOG.md)
-	internal const string ModVersion = "0.0.15";
+	internal const string ModVersion = "0.0.16";
 
 	internal Mainframe(Companion owner, Icon icon, string version)
 	{

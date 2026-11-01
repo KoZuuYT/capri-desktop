@@ -12896,11 +12896,13 @@ internal sealed class Companion : Form
 			string seconds = (samples.Length / 16000.0).ToString("0.0") + " s of call";
 			try
 			{
-				text = Hearing.Text(samples);
+				// her own ears are only handed to Hearing while your voice chat runs, so use them directly
+				// whenever they're installed; Windows' recognizer is the fallback
+				text = parakeet.Ready ? Hearing.Clean(parakeet.Hear(samples)) : Hearing.Text(samples);
 			}
 			catch (Exception ex)
 			{
-				Brain.Log("friend ears", took.ElapsedMilliseconds, seconds + ", hearing failed: " + ex.Message);
+				Brain.Log("friend ears", took.ElapsedMilliseconds, seconds + ", hearing failed: " + ex.GetType().Name + ": " + ex.Message);
 				return;
 			}
 			Brain.Log("friend ears", took.ElapsedMilliseconds, seconds + ", " + (string.IsNullOrEmpty(text) ? "no words" : ("heard " + text.Split(' ').Length + " words")));
