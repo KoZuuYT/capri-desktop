@@ -69,6 +69,18 @@ internal sealed class Preferences
 	public bool BroadcastMic = true;
 
 	[DataMember]
+	public bool FriendsHear;
+
+	[DataMember]
+	public bool FriendsReply;
+
+	[DataMember]
+	public string FriendsFrom;
+
+	[DataMember]
+	public int FriendsAnswer;
+
+	[DataMember]
 	public int Pets;
 
 	[DataMember]

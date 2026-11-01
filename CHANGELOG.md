@@ -2,6 +2,14 @@
 
 > A partir daqui, cada alteração é uma nova versão do mod (mostrada no Mainframe como "Modded vX.Y.Z").
 
+## v0.0.13 — Ouvir os amigos no Discord
+
+- Nova seção **DISCORD FRIENDS** nas configurações: a Capri escuta o que toca nos seus fones/caixas (a call do Discord) e entende o que seus amigos falam.
+- **Auto reply** liga o modo de resposta: ela responde os amigos em voz alta. Em "Answer" você escolhe se ela responde só quando chamam "Capri" ou tudo o que falam.
+- **Você vem primeiro**: enquanto você fala, ou ela está cuidando de um pedido seu, a fala dos amigos espera, e a sua voz sempre corta a resposta para eles.
+- **Amigos não dão ordens**: a resposta para os amigos não tem ferramentas. Ela só conversa e nunca abre, envia ou muda nada porque um amigo pediu.
+- Por voz: "Capri, ouve meus amigos no Discord" / "para de ouvir o Discord", e "liga/desliga o modo de resposta pros amigos".
+
 ## v0.0.12 — Transmissão de Voz
 
 - O botão **Settings** do Mainframe voltou (o texto da versão estava por cima dele).

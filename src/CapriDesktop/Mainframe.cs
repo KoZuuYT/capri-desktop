@@ -2871,7 +2871,7 @@ internal sealed class Mainframe : Form, IMessageFilter
 
 	private const int SetupHeight = 118;
 
-	private const int PageTall = 1300;
+	private const int PageTall = 1490;
 
 	private const int Column = 380;
 
@@ -3030,6 +3030,18 @@ internal sealed class Mainframe : Form, IMessageFilter
 	private Label castNote;
 
 	private ContextMenuStrip castMenu;
+
+	private Toggle friendsHear;
+
+	private Toggle friendsReply;
+
+	private Key friendsFrom;
+
+	private Key friendsWho;
+
+	private Label friendsNote;
+
+	private ContextMenuStrip friendsMenu;
 
 	private Slider pomo;
 
@@ -3309,7 +3321,7 @@ internal sealed class Mainframe : Form, IMessageFilter
 
 	private readonly Dictionary<Control, int> tops = new Dictionary<Control, int>();
 
-	private int pageView = 1300;
+	private int pageView = 1490;
 
 	private int pageScroll;
 
@@ -3530,15 +3542,15 @@ internal sealed class Mainframe : Form, IMessageFilter
 			{
 				return ClientRectangle;
 			}
-			return new Rectangle(0, -Scaled(pageScroll), ClientSize.Width, Math.Max(ClientSize.Height, Scaled(1300)));
+			return new Rectangle(0, -Scaled(pageScroll), ClientSize.Width, Math.Max(ClientSize.Height, Scaled(1490)));
 		}
 	}
 
-	internal string ScrollStatus => ((paged && pageView < 1300) ? (pageView + " tall") : "whole") + " | " + ((topRim.Visible && bottomRim.Visible) ? "rims" : "-");
+	internal string ScrollStatus => ((paged && pageView < 1490) ? (pageView + " tall") : "whole") + " | " + ((topRim.Visible && bottomRim.Visible) ? "rims" : "-");
 
 	internal int Scrolled => pageScroll;
 
-	internal int ScrollMost => Math.Max(0, 1300 - pageView);
+	internal int ScrollMost => Math.Max(0, 1490 - pageView);
 
 	internal int BackTop => more.Top;
 
@@ -3841,7 +3853,7 @@ internal sealed class Mainframe : Form, IMessageFilter
 	internal string VoiceStatus => voiceNote.Text + " | " + voiceEntry.Box.Text + " | " + speechModels.Text + " | " + connect.Text;
 
 	// version of this personal mod: bumped on every change (see CHANGELOG.md)
-	internal const string ModVersion = "0.0.12";
+	internal const string ModVersion = "0.0.13";
 
 	internal Mainframe(Companion owner, Icon icon, string version)
 	{
@@ -4735,6 +4747,39 @@ internal sealed class Mainframe : Form, IMessageFilter
 		castTo.Chevron = true;
 		castTo.AccessibleName = "The device her voice goes into";
 		castNote = Caption("", 28, 1274, font, Faint);
+		Section("DISCORD FRIENDS >", 0, 1306);
+		friendsHear = Switch("Hear my friends", 0, 1330, (object param0, EventArgs param1) =>
+		{
+			if (!syncing)
+			{
+				capri.SetFriendsHear(friendsHear.Checked);
+				ShowFriends();
+			}
+		});
+		friendsHear.AccessibleName = "Hear my friends: she listens to what plays on your speakers, like friends in a Discord call";
+		friendsReply = Switch("Auto reply", 0, 1358, (object param0, EventArgs param1) =>
+		{
+			if (!syncing)
+			{
+				capri.SetFriendsReply(friendsReply.Checked);
+				ShowFriends();
+			}
+		});
+		friendsReply.AccessibleName = "Auto reply: she answers your friends out loud, but never takes orders from them";
+		friendsMenu = Dropdown();
+		friendsFrom = Make("From: default speakers", 28, 1389, 328, 28, (object param0, EventArgs param1) =>
+		{
+			ShowFriendSpeakers();
+		});
+		friendsFrom.Chevron = true;
+		friendsFrom.AccessibleName = "The speaker or headset your Discord call plays on";
+		friendsWho = Make("Answer: when they say Capri", 28, 1421, 328, 28, (object param0, EventArgs param1) =>
+		{
+			ShowFriendAnswers();
+		});
+		friendsWho.Chevron = true;
+		friendsWho.AccessibleName = "Which friend lines she answers";
+		friendsNote = Caption("", 28, 1454, font, Faint);
 		Section("HELPERS >", 380, 958);
 		pomo = Setting("Pomodoro", PomoNames, 380, 982, "Pomodoro: focus and break timer");
 		pomoName = new Readout(pomo);
@@ -4993,7 +5038,7 @@ internal sealed class Mainframe : Form, IMessageFilter
 
 	private void Reveal(Control control)
 	{
-		if (paged && pageView < 1300 && Control.MouseButtons == MouseButtons.None)
+		if (paged && pageView < 1490 && Control.MouseButtons == MouseButtons.None)
 		{
 			float num = Unit();
 			int num2 = Scaled(8);
@@ -5011,7 +5056,7 @@ internal sealed class Mainframe : Form, IMessageFilter
 
 	private void ScrollPage(int to)
 	{
-		int num = (paged ? Math.Max(0, Math.Min(1300 - pageView, to)) : 0);
+		int num = (paged ? Math.Max(0, Math.Min(1490 - pageView, to)) : 0);
 		if (num == pageScroll)
 		{
 			return;
@@ -5047,13 +5092,13 @@ internal sealed class Mainframe : Form, IMessageFilter
 		{
 			val = Math.Min(val, capri.MainframeTall);
 		}
-		return Math.Max(144, Math.Min(1300, val));
+		return Math.Max(144, Math.Min(1490, val));
 	}
 
 	protected override void OnMouseWheel(MouseEventArgs e)
 	{
 		base.OnMouseWheel(e);
-		if (paged && pageView < 1300)
+		if (paged && pageView < 1490)
 		{
 			wheel += e.Delta;
 			int num = wheel / 120;
@@ -5300,7 +5345,7 @@ internal sealed class Mainframe : Form, IMessageFilter
 		if (top || bottom)
 		{
 			float unit = DeviceScale() * size / 100f;
-			h = Math.Max((int)(144f * unit), Math.Min((int)(1300f * unit), start.Height + (bottom ? dy : (-dy))));
+			h = Math.Max((int)(144f * unit), Math.Min((int)(1490f * unit), start.Height + (bottom ? dy : (-dy))));
 		}
 		int x = left ? (start.Right - w) : start.Left;
 		int y = top ? (start.Bottom - h) : start.Top;
@@ -5344,8 +5389,8 @@ internal sealed class Mainframe : Form, IMessageFilter
 		}
 		if (paged)
 		{
-			int tall = Math.Max(144, Math.Min(1300, (int)Math.Round((float)to.Height / Unit())));
-			capri.MainframeTall = (tall >= 1300) ? 0 : tall;
+			int tall = Math.Max(144, Math.Min(1490, (int)Math.Round((float)to.Height / Unit())));
+			capri.MainframeTall = (tall >= 1490) ? 0 : tall;
 		}
 		Arrange(expanded);
 		bool fromLeft = resizeStart.Right == to.Right && resizeStart.Left != to.Left;
@@ -5489,7 +5534,7 @@ internal sealed class Mainframe : Form, IMessageFilter
 			ScrollPage(0);
 			SuspendLayout();
 			Grow(this, factor);
-			ContextMenuStrip[] array = new ContextMenuStrip[8] { modelMenu, cloudMenu, voiceMenu, speechModelMenu, freeMenu, micMenu, languageMenu, castMenu };
+			ContextMenuStrip[] array = new ContextMenuStrip[9] { modelMenu, cloudMenu, voiceMenu, speechModelMenu, freeMenu, micMenu, languageMenu, castMenu, friendsMenu };
 			foreach (ContextMenuStrip contextMenuStrip in array)
 			{
 				contextMenuStrip.Font = Font;
@@ -5552,11 +5597,11 @@ internal sealed class Mainframe : Form, IMessageFilter
 		Edging(graphics, this, num);
 		if (paged)
 		{
-			if (pageView < 1300)
+			if (pageView < 1490)
 			{
 				float num2 = (float)Height - 36f * num;
 				float num3 = num2 * (float)pageView / 860f;
-				float num4 = 18f * num + (num2 - num3) * (float)pageScroll / (float)(1300 - pageView);
+				float num4 = 18f * num + (num2 - num3) * (float)pageScroll / (float)(1490 - pageView);
 				using (Brush brush = new SolidBrush(Dash))
 				{
 					graphics.FillRectangle(brush, (float)Width - 8f * num, 18f * num, 2f * num, num2);
@@ -5772,7 +5817,7 @@ internal sealed class Mainframe : Form, IMessageFilter
 		}
 		ClientSize = new Size(Scaled(paged ? 760 : 380), Scaled(paged ? pageView : (642 + num2 + num3 - num4)));
 		ScrollPage(pageScroll);
-		bool flag2 = paged && pageView < 1300;
+		bool flag2 = paged && pageView < 1490;
 		Rim rim = topRim;
 		bool visible2 = (bottomRim.Visible = flag2);
 		rim.Visible = visible2;
@@ -5804,6 +5849,7 @@ internal sealed class Mainframe : Form, IMessageFilter
 			speechModelMenu.Dispose();
 			micMenu.Dispose();
 			castMenu.Dispose();
+			friendsMenu.Dispose();
 			languageMenu.Dispose();
 			freeMenu.Dispose();
 		}
@@ -5928,6 +5974,9 @@ internal sealed class Mainframe : Form, IMessageFilter
 		broadcast.Checked = capri.BroadcastOn;
 		broadcastMic.Checked = capri.BroadcastMicOn;
 		ShowBroadcast();
+		friendsHear.Checked = capri.FriendsHearOn;
+		friendsReply.Checked = capri.FriendsReplyOn;
+		ShowFriends();
 		pomo.Value = capri.Pomodoro;
 		pomoName.Text = PomoNames[pomo.Value];
 		chime.Value = capri.Chime;
@@ -7135,6 +7184,55 @@ internal sealed class Mainframe : Form, IMessageFilter
 		{
 			castNote.Text = "In Discord, use \"" + (other ?? "its recording side") + "\" as the mic.";
 		}
+	}
+
+	private void ShowFriends()
+	{
+		string name = VoiceCast.NameOf(capri.FriendsFrom);
+		friendsFrom.Text = "From: " + (name ?? "default speakers");
+		friendsFrom.Invalidate();
+		friendsWho.Text = "Answer: " + ((capri.FriendsAnswer == 0) ? "when they say Capri" : "everything they say");
+		friendsWho.Invalidate();
+		string problem = capri.FriendsProblem;
+		friendsNote.Text = (problem != null && capri.FriendsHearOn) ? problem : "You come first. Friends can chat, never give orders.";
+	}
+
+	private void ShowFriendSpeakers()
+	{
+		string chosen = capri.FriendsFrom;
+		friendsMenu.Items.Clear();
+		friendsMenu.Items.Add(Choice("Default speakers", string.IsNullOrEmpty(chosen), (object param0, EventArgs param1) =>
+		{
+			capri.SetFriendsFrom(null);
+			ShowFriends();
+		}));
+		foreach (Mic item in VoiceCast.List())
+		{
+			string id = item.Id;
+			friendsMenu.Items.Add(Choice(item.Name, id == chosen, (object param0, EventArgs param1) =>
+			{
+				capri.SetFriendsFrom(id);
+				ShowFriends();
+			}));
+		}
+		friendsMenu.Show(friendsFrom, new Point(0, friendsFrom.Height));
+	}
+
+	private void ShowFriendAnswers()
+	{
+		int who = capri.FriendsAnswer;
+		friendsMenu.Items.Clear();
+		friendsMenu.Items.Add(Choice("When they say Capri", who == 0, (object param0, EventArgs param1) =>
+		{
+			capri.SetFriendsAnswer(0);
+			ShowFriends();
+		}));
+		friendsMenu.Items.Add(Choice("Everything they say", who == 1, (object param0, EventArgs param1) =>
+		{
+			capri.SetFriendsAnswer(1);
+			ShowFriends();
+		}));
+		friendsMenu.Show(friendsWho, new Point(0, friendsWho.Height));
 	}
 
 	private void ShowCastTargets()

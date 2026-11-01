@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Media;
 using System.Net;
@@ -8,6 +9,7 @@ using System.Runtime.Serialization.Json;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 
 namespace CapriDesktop;
 
@@ -566,12 +568,20 @@ internal sealed class Voice
 		Stop();
 		VoiceCast.Clear();
 		VoiceCast.Feed(wav);
+		int rate = (wav.Length >= 44) ? BitConverter.ToInt32(wav, 28) : 0;
+		Interlocked.Exchange(ref until, Stopwatch.GetTimestamp() + ((rate > 0) ? ((long)((double)(wav.Length - 44) / rate * Stopwatch.Frequency)) : 0));
 		player = new SoundPlayer(new MemoryStream(wav));
 		player.Play();
 	}
 
+	// the mod: while her cloud voice plays, so friend ears don't take her for a friend
+	private static long until;
+
+	internal static bool Playing => Stopwatch.GetTimestamp() < Interlocked.Read(ref until) + Stopwatch.Frequency * 35 / 100;
+
 	internal void Stop()
 	{
+		Interlocked.Exchange(ref until, 0L);
 		if (player != null)
 		{
 			player.Stop();

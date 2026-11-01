@@ -776,6 +776,15 @@ internal sealed class Companion : Form
 
 	private readonly Speaker speaker;
 
+	// the mod: friend ears, plus when your mic was last loud (you always come first)
+	private readonly FriendEars friendEars = new FriendEars();
+
+	private long micLoudAt = -100000L;
+
+	private string friendWaiting;
+
+	private long friendWaitAt;
+
 	private readonly Speaker effects;
 
 	private readonly Speaker typist;
@@ -1601,6 +1610,9 @@ internal sealed class Companion : Form
 		if (!smoke)
 		{
 			ApplyBroadcast();
+			friendEars.Hold = () => speaker.Busy || Voice.Playing || Environment.TickCount64 - Interlocked.Read(ref micLoudAt) < 1200;
+			friendEars.Said += FriendSpoke;
+			ApplyFriends();
 		}
 		kokoro.Style = LocalVoice.Find(preferences.VoiceStyle);
 		Brain.Language = ((Brain.LanguageCode(preferences.Language) == "en") ? null : preferences.Language);
@@ -1934,6 +1946,10 @@ internal sealed class Companion : Form
 		ears.Heard += Listen;
 		ears.Level += (double value2) =>
 		{
+			if (value2 >= 0.03 && !ears.Muted)
+			{
+				Interlocked.Exchange(ref micLoudAt, Environment.TickCount64);
+			}
 			Post(() =>
 			{
 				HeardLevel(value2);
@@ -1980,6 +1996,7 @@ internal sealed class Companion : Form
 		signals.Interval = 250;
 		signals.Tick += (object param0, EventArgs param1) =>
 		{
+			FriendTurn();
 			if (restore.WaitOne(0))
 			{
 				RestoreAtCursor();
@@ -12503,6 +12520,12 @@ internal sealed class Companion : Form
 			bool off = Regex.IsMatch(text, "\\b(par[ae]r? (de|a|com)|desliga\\w*|desativ\\w*|encerr\\w*|termin\\w*|cort[ae]\\w*|chega de|stop\\w*|turn off|off)\\b");
 			action = () => BroadcastByVoice(!off);
 		}
+		else if (Regex.IsMatch(text, "\\b(discord|amig[oa]s?|friends?|galera|call)\\b") && Regex.IsMatch(text, "\\b(respond\\w*|respost\\w*|reply\\w*|answer\\w*|ouv\\w*|ou[cs]a\\w*|escut\\w*|hear\\w*|listen\\w*)\\b"))
+		{
+			bool off = Regex.IsMatch(text, "\\b(par[ae]r? (de|a|com)|desliga\\w*|desativ\\w*|encerr\\w*|termin\\w*|chega de|stop\\w*|turn off|off)\\b");
+			bool reply = Regex.IsMatch(text, "\\b(respond\\w*|respost\\w*|reply\\w*|answer\\w*)\\b");
+			action = () => FriendsByVoice(!off, reply);
+		}
 		else if (Regex.IsMatch(text, "\\b(d[ei]s?[cs]?[ae]r?|d[ei]ce|d[ei]ss?[ae]|sai[ar]?|sai[ar]? de cima|hop off|get off|get down|para de andar)\\b"))
 		{
 			action = () =>
@@ -12804,6 +12827,212 @@ internal sealed class Companion : Form
 		else
 		{
 			SayOne("she stopped broadcasting her voice into their microphone, as they asked", "Transmissão desligada.", "Saí do seu microfone, choom.", "Fora do ar.");
+		}
+	}
+
+	internal bool FriendsHearOn => preferences.FriendsHear;
+
+	internal bool FriendsReplyOn => preferences.FriendsReply;
+
+	internal string FriendsFrom => preferences.FriendsFrom;
+
+	internal int FriendsAnswer => preferences.FriendsAnswer;
+
+	internal string FriendsProblem => friendEars.Problem;
+
+	// the mod: friend ears. She hears your friends in a Discord call through your speakers and, with auto reply on, answers them
+	internal void SetFriendsHear(bool on)
+	{
+		preferences.FriendsHear = on;
+		SavePreferences();
+		ApplyFriends();
+	}
+
+	internal void SetFriendsReply(bool on)
+	{
+		preferences.FriendsReply = on;
+		SavePreferences();
+		if (!on)
+		{
+			friendWaiting = null;
+		}
+	}
+
+	internal void SetFriendsFrom(string id)
+	{
+		preferences.FriendsFrom = id;
+		SavePreferences();
+		ApplyFriends();
+	}
+
+	internal void SetFriendsAnswer(int who)
+	{
+		preferences.FriendsAnswer = who;
+		SavePreferences();
+	}
+
+	private void ApplyFriends()
+	{
+		if (preferences.FriendsHear && !testing)
+		{
+			friendEars.Start(preferences.FriendsFrom);
+			return;
+		}
+		friendEars.Stop();
+		friendWaiting = null;
+	}
+
+	private void FriendSpoke(short[] samples)
+	{
+		if (!preferences.FriendsHear)
+		{
+			return;
+		}
+		ThreadPool.QueueUserWorkItem((object param0) =>
+		{
+			string text;
+			try
+			{
+				text = Hearing.Text(samples);
+			}
+			catch (Exception)
+			{
+				return;
+			}
+			if (!string.IsNullOrEmpty(text))
+			{
+				Post(() =>
+				{
+					FriendHeard(text);
+				});
+			}
+		});
+	}
+
+	private void FriendHeard(string text)
+	{
+		if (!preferences.FriendsHear || IsDisposed)
+		{
+			return;
+		}
+		Brain.Overhear(text);
+		Brain.Transcribe("Friend (Discord)", text);
+		if (!preferences.FriendsReply || (preferences.FriendsAnswer == 0 && !CalledHer(text)))
+		{
+			return;
+		}
+		friendWaiting = text;
+		friendWaitAt = Environment.TickCount64;
+		FriendTurn();
+	}
+
+	private static bool CalledHer(string text)
+	{
+		string plain = new string((text ?? "").Normalize(NormalizationForm.FormD).Where((char c) => CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark).ToArray()).ToLowerInvariant();
+		return Regex.IsMatch(plain, "\\b(capri|kapri|capry|caprie|capree|cap ri)\\b");
+	}
+
+	// you come first: a friend's line waits while you talk, she's busy with you, or she's still speaking
+	private bool YoursFirst()
+	{
+		if (!(talkState == TalkState.Thinking || transcribing || speaker.Busy || Voice.Playing || Environment.TickCount64 - Interlocked.Read(ref micLoudAt) < 1500 || working != null || meeting.Asking))
+		{
+			return Security.Holding != null;
+		}
+		return true;
+	}
+
+	private void FriendTurn()
+	{
+		string text = friendWaiting;
+		if (text == null)
+		{
+			return;
+		}
+		if (!preferences.FriendsHear || !preferences.FriendsReply || Environment.TickCount64 - friendWaitAt > 10000)
+		{
+			friendWaiting = null;
+		}
+		else if (!YoursFirst())
+		{
+			friendWaiting = null;
+			AnswerFriend(text);
+		}
+	}
+
+	private void AnswerFriend(string text)
+	{
+		Brain mind = brain;
+		if (mind == null || mind.Model == null)
+		{
+			return;
+		}
+		if (hidden)
+		{
+			SetHidden(value: false);
+		}
+		int ticket = ++asking;
+		heard = text;
+		box.Prompt = "> friend: ";
+		reply = null;
+		replyDone = -1.0;
+		Say(null);
+		talkState = TalkState.Thinking;
+		thinkingSince = clock.Elapsed.TotalSeconds;
+		slowWarned = false;
+		box.Leaving = -1.0;
+		UpdateAnimation();
+		bool quiet = local;
+		ThreadPool.QueueUserWorkItem((object param0) =>
+		{
+			string said;
+			TalkState state = TalkState.Talking;
+			try
+			{
+				said = Computer.Mask(mind.Friend(text));
+			}
+			catch (Exception)
+			{
+				said = "...";
+				state = TalkState.Dormant;
+			}
+			Post(() =>
+			{
+				Answer(ticket, said, state, quiet);
+			});
+		});
+	}
+
+	private void FriendsByVoice(bool on, bool reply)
+	{
+		Zap(0.4, ground: seat != null, on ? Cue.Zap : Cue.Spark);
+		if (reply)
+		{
+			if (on && !preferences.FriendsHear)
+			{
+				SetFriendsHear(on: true);
+			}
+			SetFriendsReply(on);
+			mainframe.Sync();
+			if (on)
+			{
+				SayOne("they turned on her auto reply for their Discord friends, so she now answers friends who talk to her in the call (they still can't give her orders)", "Modo de resposta ligado. Se seus amigos me chamarem, eu respondo.", "Beleza, agora eu respondo a galera do Discord.");
+			}
+			else
+			{
+				SayOne("they turned off her auto reply for their Discord friends: she keeps listening, but won't answer them", "Modo de resposta desligado. Só escuto.", "Ok, fico só ouvindo a call.");
+			}
+			return;
+		}
+		SetFriendsHear(on);
+		mainframe.Sync();
+		if (on)
+		{
+			SayOne("they asked her to listen to their friends in their Discord call through the PC sound", "Tô ouvindo a call agora.", "Pronto, tô de ouvido na galera do Discord.");
+		}
+		else
+		{
+			SayOne("they asked her to stop listening to their friends in their Discord call", "Parei de ouvir a call.", "Ok, não tô mais ouvindo o Discord.");
 		}
 	}
 
@@ -13450,6 +13679,10 @@ internal sealed class Companion : Form
 		if (text.Length == 0)
 		{
 			return;
+		}
+		if (prompt == "> you: ")
+		{
+			friendWaiting = null;
 		}
 		if (prompt == "> you: " && VoiceShortcut(text))
 		{
@@ -14500,6 +14733,7 @@ internal sealed class Companion : Form
 		clickDelay.Stop();
 		frames.Stop();
 		signals.Stop();
+		friendEars.Stop();
 		brain.Cancel();
 		StopChat();
 		mouseKeys.Stop();
