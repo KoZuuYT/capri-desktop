@@ -2,6 +2,10 @@
 
 > A partir daqui, cada alteração é uma nova versão do mod (mostrada no Mainframe como "Modded vX.Y.Z").
 
+## v0.0.20 — "corp" em vez de "corpo"
+
+- Quando fala português, a Capri agora usa a gíria "corp" (ex.: "Típico corp.") em vez de "corpo", que em português quer dizer outra coisa.
+
 ## v0.0.19 — Capri no Linux (Fedora) pelo Wine
 
 - Novo instalador para Linux (`Capri-Mod-Linux-0.0.19.sh`): ele instala o Wine e o que mais faltar, prepara tudo, coloca a Capri no menu de aplicativos e faz ela abrir junto com o computador.
