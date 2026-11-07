@@ -60,6 +60,7 @@ internal sealed class Mod
 		new Mod(Better, "Português mais natural", "Tradução ajustada, com gírias como \"corp\" no lugar de \"corpo\"."),
 		new Mod(Better, "Menu com a cara do mod", "O menu do botão direito mostra \"CAPRI / K.mod\", o medidor de carinho e as travessuras."),
 		new Mod(Fixed, "Atualizações oficiais bloqueadas", "O app oficial não baixa mais uma versão por cima do mod (dá para desligar no Mainframe)."),
+		new Mod(Fixed, "\"Bom dia\" não tira ela do mouse", "Ela só desce do cursor quando você pede de verdade (\"desce\", \"sai de cima\", \"sai do mouse\"), e não mais com palavras como \"dia\", \"de\" ou \"disse\"."),
 		new Mod(Fixed, "Sem travadas no Windows", "O mouse do Windows não engasga mais quando a Capri está ocupada."),
 		new Mod(Fixed, "Nome escrito certo", "Quando o reconhecimento de voz escreve \"capre\", \"cápria\" ou \"kapri\", o texto vira \"Capri\".")
 	};

@@ -12856,7 +12856,7 @@ internal sealed partial class Companion : Form
 			bool reply = Regex.IsMatch(text, "\\b(respond\\w*|respost\\w*|reply\\w*|answer\\w*)\\b");
 			action = () => FriendsByVoice(!off, reply);
 		}
-		else if (Regex.IsMatch(text, "\\b(d[ei]s?[cs]?[ae]r?|d[ei]ce|d[ei]ss?[ae]|sai[ar]?|sai[ar]? de cima|hop off|get off|get down|para de andar)\\b"))
+		else if (Regex.IsMatch(text, "\\b(desc[ea]r?|descendo|dece|decer|hop off|get off|get down|para de andar)\\b") || Regex.IsMatch(text, "\\bsai[ar]?\\b.*\\b(de cima|d[oa] (m[ao]u?s[ei]?|mouse|curs[oa]r?|ponteiro|seta|setinha))\\b"))
 		{
 			action = () =>
 			{

@@ -2,6 +2,10 @@
 
 > A partir daqui, cada alteração é uma nova versão do mod (mostrada no Mainframe como "Modded vX.Y.Z").
 
+## v0.0.30 — "Bom dia" não tira ela do mouse
+
+- Antes, frases comuns como "bom dia", "de", "da" ou "eu disse" contavam como pedido pra ela descer do cursor. Agora ela só desce quando você pede de verdade: "desce", "descer", "sai de cima", "sai do mouse/cursor", "get off" ou "hop off".
+
 ## v0.0.29 — Stats novos: nível, XP e comentários dela
 
 - **Nível e XP:** tudo que você faz com ela vale XP (carinho, arremesso, arquivo comido, partidas, esconde-esconde, dias juntos, conquistas...). O XP é calculado com os números que ela já guardava, então tudo que você fez antes já conta. A cada nível vem um título novo: Visitante, Colega, Cúmplice, Dupla dinâmica, Inseparáveis, Alma gêmea e Lenda do Mainframe.
